@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'SFXTHT,IWJJLM'}
+  name: label_info
+  properties: {text: Nápověda k aplikaci}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true
