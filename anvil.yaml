@@ -1,10 +1,15 @@
 allow_embedding: false
-name: Material Design 2
-package_name: Material_Design_2
+metadata: {description: Vícekriteriální analýza variant., title: MCApp}
+name: MCAplikace
+package_name: MCAplikace
 runtime_options:
   client_version: '3'
   server_spec: {base: python310-minimal}
   server_version: python3-sandbox
   version: 2
-services: []
-startup_form: Form1
+services:
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/tables.yml
+startup: {module: Hlavni_okno, type: form}
+startup_form: null

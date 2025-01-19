@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'FUWMFH,TLKTOP'}
+  name: label_ucet
+  properties: {text: Informace o uzivateli.}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

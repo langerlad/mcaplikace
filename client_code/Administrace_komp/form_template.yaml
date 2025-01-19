@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'QTAJVD,MAWXLH'}
+  name: label_administrace
+  properties: {text: '# TODO: přidat dashbooard pro stprávu uživatelů (přidat/odebrat uživatele) a náhled na spracované analýzy'}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

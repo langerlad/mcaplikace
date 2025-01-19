@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'VDYJCF,KJLUTN'}
+  name: label_vyber_analyzy
+  properties: {text: AHP | TOPIS | a další}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

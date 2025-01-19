@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'RFHITW,GLCTJO'}
+  name: label_neznam_uziv
+  properties: {text: Úvodní stránka pro přihlášení / registraci uživatele.}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

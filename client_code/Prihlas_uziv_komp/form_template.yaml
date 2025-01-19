@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'RSFOZZ,EWBNCI'}
+  name: label_prihles_uziv
+  properties: {text: Rozcestník pro přihlášeného uživatele.}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

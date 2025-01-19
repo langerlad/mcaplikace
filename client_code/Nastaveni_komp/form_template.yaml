@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'YTFRDO,TROLBH'}
+  name: label_nastaveni
+  properties: {text: '# TODO: placeholder pro featury typu dark theme, jazykové mutace a preference uživatelského rozhraní.'}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true
