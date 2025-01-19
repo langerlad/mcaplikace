@@ -13,6 +13,7 @@ unique_ids:
     Prihlas_uziv_komp: '1737299065830248037371597.99487'
     Ucet_komp: '1737298944583311256697953.4275'
     Vyber_analyzy_komp: '1737298549921911011432147.5342'
-  modules: {}
+  modules:
+    Navigace: '1737316009237347898474774.64453'
   scripts: {}
   server_modules: {}
