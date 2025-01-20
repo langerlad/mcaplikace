@@ -29,3 +29,10 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     """"funkce nahraje komponent pomocí add_component na konec panelu"""
     self.pravy_panel.clear()
     self.pravy_panel.add_component(komp)
+
+  def set_active_nav(self, stav):
+    self.link_domu.role = 'selected' if stav == 'domu' else None
+    self.link_pridat_analyzu.role = 'selected' if stav == 'pridat' else None
+    self.link_nastaveni.role = 'selected' if stav == 'nastaveni' else None
+    self.link_info.role = 'selected' if stav == 'info' else None
+    self.link_administrace.role = 'selected' if stav == 'administrace' else None

@@ -12,74 +12,44 @@ components:
       Zvolte metodu MC analýzy:
   type: RichText
 - components:
-  - components:
-    - event_bindings: {click: link_ahp_click}
-      layout_properties: {grid_position: 'KDFYSQ,VLSJSL'}
-      name: link_ahp
-      properties: {align: center, bold: true, font_size: 28, role: null, text: AHP}
-      type: Link
-    - layout_properties: {grid_position: 'LFDSGU,ICAPWR'}
-      name: label_1
-      properties: {align: center, text: Rozkládá problém do hierarchické struktury (cíl → kritéria → subkritéria → alternativy).}
-      type: Label
-    layout_properties: {col_xs: 0, row: ESGEDQ, width_xs: 4}
-    name: card_1
-    properties: {role: card}
-    type: ColumnPanel
-  - components:
-    - layout_properties: {grid_position: 'TUPIKY,BQLZRR'}
-      name: link_ANP
-      properties: {align: center, bold: true, font_size: 28, text: ANP}
-      type: Link
-    - layout_properties: {grid_position: 'IDPQWF,QHYNWK'}
-      name: label_2
-      properties: {align: center, text: 'Rozšíření AHP, které místo stromové hierarchie využívá síťové modely (kriteria se mohou ovlivňovat navzájem).'}
-      type: Label
-    layout_properties: {col_xs: 4, row: ESGEDQ, width_xs: 4}
-    name: card_2
-    properties: {role: card}
-    type: ColumnPanel
-  - components:
-    - layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
-      name: link_SAW
-      properties: {align: center, bold: true, font_size: 28, text: SAW}
-      type: Link
-    - layout_properties: {grid_position: 'XOWXZP,RPSZXA'}
-      name: label_3
-      properties: {align: center, text: Jedna z nejjednodušších metod; každé kritérium má určitou váhu a hodnocení se provádí formou normalizovaného součtu těchto vah.}
-      type: Label
-    layout_properties: {col_xs: 8, row: ESGEDQ, width_xs: 4}
-    name: card_3
-    properties: {role: card}
-    type: ColumnPanel
-  - components:
-    - layout_properties: {grid_position: 'TPDWZD,COFPBD'}
-      name: link_4
-      properties: {}
-      type: Link
-    layout_properties: {col_xs: 0, row: JIWSKN, width_xs: 4}
-    name: card_4
-    properties: {role: card, visible: false}
-    type: ColumnPanel
-  - layout_properties: {col_xs: 4, row: JIWSKN, width_xs: 4}
-    name: card_5
-    properties: {role: card, visible: false}
-    type: ColumnPanel
-  - layout_properties: {col_xs: 8, row: JIWSKN, width_xs: 4}
-    name: card_6
-    properties: {role: card, visible: false}
-    type: ColumnPanel
-  - layout_properties: {col_xs: 0, row: YYBGHO, width_xs: 4}
-    name: card_7
-    properties: {role: card, visible: false}
-    type: ColumnPanel
-  - layout_properties: {col_xs: 4, row: YYBGHO, width_xs: 4}
-    name: card_8
-    properties: {role: card, visible: false}
-    type: ColumnPanel
-  layout_properties: {grid_position: 'IWXFPK,UPKGQV'}
-  name: grid_panel_1
-  properties: {}
-  type: GridPanel
+  - event_bindings: {click: link_ahp_click}
+    layout_properties: {grid_position: 'KDFYSQ,VLSJSL'}
+    name: link_ahp
+    properties: {align: left, bold: true, font_size: 28, role: null, text: AHP}
+    type: Link
+  - layout_properties: {grid_position: 'LFDSGU,ICAPWR'}
+    name: label_1
+    properties: {align: left, text: Rozkládá problém do hierarchické struktury (cíl → kritéria → subkritéria → alternativy).}
+    type: Label
+  layout_properties: {grid_position: 'FTWRWG,YOIAGD'}
+  name: card_1
+  properties: {role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'TUPIKY,BQLZRR'}
+    name: link_ANP
+    properties: {align: left, bold: true, font_size: 28, text: ANP}
+    type: Link
+  - layout_properties: {grid_position: 'IDPQWF,QHYNWK'}
+    name: label_2
+    properties: {align: left, text: 'Rozšíření AHP, které místo stromové hierarchie využívá síťové modely (kriteria se mohou ovlivňovat navzájem).'}
+    type: Label
+  layout_properties: {grid_position: 'KBCOPA,ZNHHWN'}
+  name: card_2
+  properties: {role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
+    name: link_SAW
+    properties: {align: left, bold: true, font_size: 28, text: SAW}
+    type: Link
+  - layout_properties: {grid_position: 'XOWXZP,RPSZXA'}
+    name: label_3
+    properties: {align: left, text: Jedna z nejjednodušších metod; každé kritérium má určitou váhu a hodnocení se provádí formou normalizovaného součtu těchto vah.}
+    type: Label
+  layout_properties: {grid_position: 'WPVLEZ,HNLVGS'}
+  name: card_3
+  properties: {role: card}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
