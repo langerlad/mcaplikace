@@ -1,3 +1,7 @@
+import anvil.tables as tables
+import anvil.tables.query as q
+from anvil.tables import app_tables
+import anvil.users
 from .Administrace_komp import Administrace_komp
 from .Analyza_ahp_komp import Analyza_ahp_komp
 from .Analyza_vystup_komp import Analyza_vystup_komp
@@ -22,7 +26,11 @@ def go_domu():
   set_active_nav("domu")
   #set_title("")
   komp = get_komp()
-  komp.nahraj_komponentu(Neznam_uziv_komp())
+  uzivatel = anvil.users.get_user() # ptáme se anvilu jestli má uživatele
+  if uzivatel:
+    komp.nahraj_komponentu(Prihlas_uziv_komp()) 
+  else:
+    komp.nahraj_komponentu(Neznam_uziv_komp())
 
 def go_pridat_analyzu():
   set_active_nav("pridat")

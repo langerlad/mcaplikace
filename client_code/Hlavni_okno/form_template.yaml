@@ -10,15 +10,18 @@ components:
     name: link_ucet
     properties: {text: Můj účet}
     type: Link
-  - layout_properties: {}
+  - event_bindings: {click: link_odhlasit_click}
+    layout_properties: {}
     name: link_odhlasit
     properties: {text: Odhlásit se}
     type: Link
-  - layout_properties: {}
+  - event_bindings: {click: link_registrace_click}
+    layout_properties: {}
     name: link_registrace
     properties: {text: Registrace}
     type: Link
-  - layout_properties: {}
+  - event_bindings: {click: link_prihlasit_click}
+    layout_properties: {}
     name: link_prihlasit
     properties: {text: Přihlásit se}
     type: Link
