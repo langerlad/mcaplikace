@@ -35,12 +35,24 @@ def go_domu():
 def go_pridat_analyzu():
   set_active_nav("pridat")
   #set_title("")
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
   komp = get_komp()
   komp.nahraj_komponentu(Vyber_analyzy_komp())
 
 def go_nastaveni():
   set_active_nav("nastaveni")
   #set_title("")
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
   komp = get_komp()
   komp.nahraj_komponentu(Nastaveni_komp())
 
@@ -53,20 +65,50 @@ def go_info():
 def go_administrace():
   set_active_nav("administrace")
   #set_title("")
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
   komp = get_komp()
   komp.nahraj_komponentu(Administrace_komp())
 
 def go_ucet():
   #set_title("")
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
   komp = get_komp()
   komp.nahraj_komponentu(Ucet_komp())
 
 # link je na komponentě Výběr analýzy
 def go_ahp():
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
   komp = get_komp()
   komp.nahraj_komponentu(Analyza_ahp_komp())
+
+# řízení přístupu uživatelů
+def kontrola_prihlaseni():
+  uzivatel = anvil.users.get_user()
+  if uzivatel:
+    return uzivatel
+
+  uzivatel = anvil.users.login_with_form(allow_cancel=True)
+  komp = get_komp()
+  komp.nastav_ucet(uzivatel)
+  return uzivatel
 
 # aktivní polozka v levém menu
 def set_active_nav(stav):
   komp = get_komp()
   komp.set_active_nav(stav)
+
