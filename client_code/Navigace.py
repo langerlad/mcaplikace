@@ -26,7 +26,7 @@ def go_domu():
   set_active_nav("domu")
   #set_title("")
   komp = get_komp()
-  uzivatel = anvil.users.get_user() # ptáme se anvilu jestli má uživatele
+  uzivatel = anvil.users.get_user() # ptáme se anvilu jestli máme přihlášeného uživatele
   if uzivatel:
     komp.nahraj_komponentu(Prihlas_uziv_komp()) 
   else:
