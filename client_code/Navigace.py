@@ -11,6 +11,7 @@ from .Neznam_uziv_komp import Neznam_uziv_komp
 from .Prihlas_uziv_komp import Prihlas_uziv_komp
 from .Ucet_komp import Ucet_komp
 from .Vyber_analyzy_komp import Vyber_analyzy_komp
+from . import Sprava_dat
 
 
 komponenta_hl_okna = None
@@ -26,7 +27,7 @@ def go_domu():
   set_active_nav("domu")
   #set_title("")
   komp = get_komp()
-  uzivatel = anvil.users.get_user() # ptáme se anvilu jestli máme přihlášeného uživatele
+  uzivatel = Sprava_dat.je_prihlasen() # ptáme se anvilu jestli máme přihlášeného uživatele
   if uzivatel:
     komp.nahraj_komponentu(Prihlas_uziv_komp()) 
   else:
@@ -98,7 +99,7 @@ def go_ahp():
 
 # řízení přístupu uživatelů
 def kontrola_prihlaseni():
-  uzivatel = anvil.users.get_user()
+  uzivatel = Sprava_dat.je_prihlasen()
   if uzivatel:
     return uzivatel
 

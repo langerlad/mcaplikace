@@ -7,7 +7,7 @@ from anvil.tables import app_tables
 __uzivatel = None
 
 # ptáme se anvilu na stav uživatele - přihlášený / bez účtu
-def je_prihlase(): 
+def je_prihlasen(): 
   global __uzivatel
 
   if __uzivatel:

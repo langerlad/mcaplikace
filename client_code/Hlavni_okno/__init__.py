@@ -15,7 +15,7 @@ class Hlavni_okno(Hlavni_oknoTemplate):
 
     # Any code you write here will run before the form opens.
     Navigace.komponenta_hl_okna = self # obsah pravého panelu
-    uzivatel = anvil.users.get_user() 
+    uzivatel = Sprava_dat.je_prihlasen() 
     self.nastav_ucet(uzivatel)
     Navigace.go_domu()
 
@@ -60,8 +60,9 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     Navigace.go_domu()
 
   def link_odhlasit_click(self, **event_args):
-    anvil.users.logout()
+    anvil.users.logout() # odhlášení na serveru
     self.nastav_ucet(None)
+    Sprava_dat.logout() # smaže cache z klienta
     Navigace.go_domu()
 
   def link_prihlasit_click(self, **event_args):
