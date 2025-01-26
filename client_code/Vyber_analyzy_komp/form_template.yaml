@@ -1,7 +1,7 @@
 components:
 - layout_properties: {grid_position: 'CKLEWZ,QOGTND'}
   name: label_4
-  properties: {text: 'POZNÁMKA: A/B testování  uživatelského rozhraní.'}
+  properties: {background: 'theme:Secondary 500', text: 'POZNÁMKA: A/B testování  uživatelského rozhraní. (Tato stránka bude odstraněna)'}
   type: Label
 - layout_properties: {grid_position: 'BSDKUL,VNOMTB'}
   name: headline_1
