@@ -29,9 +29,9 @@ def go_domu():
   komp = get_komp()
   uzivatel = Sprava_dat.je_prihlasen() # ptáme se anvilu jestli máme přihlášeného uživatele
   if uzivatel:
-    komp.nahraj_komponentu(Prihlas_uziv_komp()) 
+    komp.nahraj_komponentu(Prihlas_uziv_komp()) # Dashboard
   else:
-    komp.nahraj_komponentu(Neznam_uziv_komp())
+    komp.nahraj_komponentu(Neznam_uziv_komp()) # Landing page
 
 def go_pridat_analyzu():
   set_active_nav("pridat")
