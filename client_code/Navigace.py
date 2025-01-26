@@ -107,7 +107,7 @@ def kontrola_prihlaseni():
   komp.nastav_ucet(uzivatel)
   return uzivatel
 
-# aktivní polozka v levém menu
+# aktivní položka v levém menu
 def set_active_nav(stav):
   komp = get_komp()
   komp.set_active_nav(stav)
