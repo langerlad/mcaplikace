@@ -5,6 +5,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
 from ..import Navigace
+from .. import Sprava_dat
 
 
 class Hlavni_okno(Hlavni_oknoTemplate):
@@ -14,7 +15,7 @@ class Hlavni_okno(Hlavni_oknoTemplate):
 
     # Any code you write here will run before the form opens.
     Navigace.komponenta_hl_okna = self # obsah pravého panelu
-    uzivatel = anvil.users.get_user()  # ptáme se anvilu na stav uživatele - přihlášený / bez účtu
+    uzivatel = anvil.users.get_user() 
     self.nastav_ucet(uzivatel)
     Navigace.go_domu()
 
