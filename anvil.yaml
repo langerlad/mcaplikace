@@ -1,5 +1,66 @@
 allow_embedding: false
 db_schema:
+  analyza:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: nazev
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: popis
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: uzivatel
+      target: users
+      type: link_single
+    - admin_ui: {order: 3, width: 200}
+      name: datum_vytvoreni
+      type: datetime
+    - admin_ui: {order: 4, width: 200}
+      name: datum_upravy
+      type: datetime
+    - admin_ui: {order: 5, width: 200}
+      name: stav
+      type: string
+    - admin_ui: {order: 6, width: 200}
+      name: zvolena_metoda
+      type: string
+    server: full
+    title: Analyza
+  hodnotakriteria:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: varianta
+      target: varianta
+      type: link_single
+    - admin_ui: {order: 1, width: 200}
+      name: kriterium
+      target: kriterium
+      type: link_single
+    - admin_ui: {order: 2, width: 200}
+      name: hodnota
+      type: number
+    server: full
+    title: HodnotaKriteria
+  kriterium:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: analyza
+      target: analyza
+      type: link_single
+    - admin_ui: {order: 1, width: 200}
+      name: nazev_kriteria
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: typ_kriteria
+      type: string
+    - admin_ui: {order: 3, width: 200}
+      name: vaha
+      type: number
+    server: full
+    title: Kriterium
   users:
     client: none
     columns:
@@ -29,6 +90,49 @@ db_schema:
       type: simpleObject
     server: full
     title: Users
+  varianta:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: analyza
+      target: analyza
+      type: link_single
+    - admin_ui: {order: 1, width: 200}
+      name: nazev_varianty
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: popis_varianty
+      type: string
+    server: full
+    title: Varianta
+  vysledekanalyzy:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: analyza
+      target: analyza
+      type: link_single
+    - admin_ui: {order: 1, width: 200}
+      name: varianta
+      target: varianta
+      type: link_single
+    - admin_ui: {order: 2, width: 200}
+      name: metoda
+      type: string
+    - admin_ui: {order: 3, width: 200}
+      name: skore
+      type: number
+    - admin_ui: {order: 4, width: 200}
+      name: poradi
+      type: number
+    - admin_ui: {order: 5, width: 200}
+      name: datum_vypoctu
+      type: datetime
+    - admin_ui: {order: 6, width: 200}
+      name: detailni_vystup
+      type: string
+    server: full
+    title: VysledekAnalyzy
 metadata: {description: Vícekriteriální analýza variant., title: MCApp}
 name: MCAplikace
 package_name: MCAplikace
