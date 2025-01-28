@@ -6,6 +6,7 @@ import anvil.users
 from .Administrace_komp import Administrace_komp
 from .Analyza_ahp_komp import Analyza_ahp_komp
 from .Analyza_vystup_komp import Analyza_vystup_komp
+from .Analyza_saw_komp import Analyza_saw_komp
 from .Info_komp import Info_komp
 from .Nastaveni_komp import Nastaveni_komp
 from .Neznam_uziv_komp import Neznam_uziv_komp
@@ -97,6 +98,16 @@ def go_ahp():
   
   komp = get_komp()
   komp.nahraj_komponentu(Analyza_ahp_komp())
+
+def go_saw():
+
+  uzivatel = kontrola_prihlaseni()
+  if not uzivatel:
+    go_domu()
+    return
+  
+  komp = get_komp()
+  komp.nahraj_komponentu(Analyza_saw_komp())
 
 # řízení přístupu uživatelů
 def kontrola_prihlaseni():

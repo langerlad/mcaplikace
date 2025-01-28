@@ -43,7 +43,8 @@ components:
   properties: {role: card}
   type: ColumnPanel
 - components:
-  - layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
+  - event_bindings: {click: link_SAW_click}
+    layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
     name: link_SAW
     properties: {align: left, bold: true, font_size: 28, text: SAW}
     type: Link

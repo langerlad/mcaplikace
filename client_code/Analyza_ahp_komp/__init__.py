@@ -21,11 +21,11 @@ class Analyza_ahp_komp(Analyza_ahp_kompTemplate):
     # Definování možností dropdown menu jako tuple ("text", "hodnota" -> tabulka Analyza)
     self.dostupne_metody = (
         ("Simple Additive Weighting (SAW)", "SAW"),
-        ("Weighted Product Model (WPM)", "WPM"),
-        ("TOPSIS", "TOPSIS"),
-        ("VIKOR", "VIKOR"),
-        ("PROMETHEE I, II", "PROMETHEE"),
-        ("ELECTRE I, II, III", "ELECTRE"),
+        #("Weighted Product Model (WPM)", "WPM"),
+        #("TOPSIS", "TOPSIS"),
+        #("VIKOR", "VIKOR"),
+        #("PROMETHEE I, II", "PROMETHEE"),
+        #("ELECTRE I, II, III", "ELECTRE"),
     )
   
     # Nastavení hodnot dropdown menu (pouze viditelné texty)
@@ -61,7 +61,7 @@ class Analyza_ahp_komp(Analyza_ahp_kompTemplate):
       return "Vyberte metodu výpočtu analýzy"
 
     if not self.text_box_nazev.text:
-      "Zadejte název analýzy"
+      return "Zadejte název analýzy"
 
     self.nazev = self.text_box_nazev.text
     self.popis =self.text_area_popis.text

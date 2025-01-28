@@ -18,3 +18,6 @@ class Vyber_analyzy_komp(Vyber_analyzy_kompTemplate):
   def link_ahp_click(self, **event_args):
     Navigace.go_ahp()
 
+  def link_SAW_click(self, **event_args):
+    Navigace.go_saw()
+
