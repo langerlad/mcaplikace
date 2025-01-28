@@ -1,0 +1,20 @@
+components:
+- layout_properties: {column: JKSDUP}
+  name: text_box_nazev_kriteria
+  properties:
+    margin: [null, '4', null, '4']
+  type: TextBox
+- layout_properties: {column: VJQQOR}
+  name: text_box_typ
+  properties:
+    margin: [null, '4', null, '4']
+    type: text
+  type: TextBox
+- layout_properties: {column: OJLQEN}
+  name: text_box_vaha
+  properties:
+    margin: [null, '4', null, '4']
+    type: number
+  type: TextBox
+container: {type: DataRowPanel}
+is_package: true

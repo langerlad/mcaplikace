@@ -41,5 +41,40 @@ components:
   name: card_krok_1
   properties: {col_widths: '{"NJBMLW":35,"KHDNYW":35}', role: card}
   type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'YLREWR,CWEFBM'}
+    name: label_2
+    properties: {bold: true, text: 'KROK 2: Definujte kritéria výběru.'}
+    type: Label
+  - components:
+    - name: repeating_panel_kriteria
+      properties: {item_template: Analyza_saw_komp.RowTemplate1}
+      type: RepeatingPanel
+    - layout_properties: {slot: footer}
+      name: link_pridej_kriterium
+      properties: {icon: 'fa:plus-square', text: Přidej kriterium}
+      type: Link
+    - layout_properties: {slot: footer}
+      name: button_dalsi_2
+      properties: {align: right, role: primary-color, text: Další krok}
+      type: Button
+    - layout_properties: {slot: footer}
+      name: label_chyba_2
+      properties: {align: center, bold: true, foreground: 'theme:Secondary 700', text: CHYBOVÁ HLÁŠKA, visible: false}
+      type: Label
+    layout_properties: {grid_position: 'UEEROT,ERJJNR'}
+    name: data_grid_kriteria
+    properties:
+      columns:
+      - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 389}
+      - {data_key: typ_kriteria, id: VJQQOR, title: 'Typ [min / max]'}
+      - {data_key: vaha, id: OJLQEN, title: Váha}
+      rows_per_page: 60
+      show_page_controls: false
+    type: DataGrid
+  layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
+  name: card_kork_2
+  properties: {role: card}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
