@@ -52,9 +52,10 @@ components:
     type: Spacer
   - components:
     - name: repeating_panel_kriteria
-      properties: {item_template: Analyza_saw_komp.RowTemplate1}
+      properties: {item_template: Analyza_saw_komp.Kriterium_Row}
       type: RepeatingPanel
-    - layout_properties: {slot: footer}
+    - event_bindings: {click: link_pridej_kriterium_click}
+      layout_properties: {slot: footer}
       name: link_pridej_kriterium
       properties: {icon: 'fa:plus-square', text: Přidej kriterium}
       type: Link
@@ -71,7 +72,7 @@ components:
     properties:
       columns:
       - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 386}
-      - {data_key: typ_kriteria, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 146}
+      - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 146}
       - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 121}
       - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 49}
       rows_per_page: 60
@@ -79,7 +80,7 @@ components:
     type: DataGrid
   layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
   name: card_kork_2
-  properties: {role: card}
+  properties: {role: card, visible: true}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

@@ -4,13 +4,15 @@ components:
   properties:
     margin: [null, '4', null, '4']
   type: TextBox
-- layout_properties: {column: OJLQEN}
-  name: text_box_vaha
+- layout_properties: {column: VJQQOR}
+  name: drop_down_typ
   properties:
-    margin: [null, '4', null, '4']
-    type: number
-  type: TextBox
-- layout_properties: {column: ZSZCEK}
+    include_placeholder: false
+    items: [max, min]
+    placeholder: vyberte typ
+  type: DropDown
+- components: []
+  layout_properties: {column: ZSZCEK}
   name: link_smazat_kriterium
   properties:
     align: left
@@ -21,13 +23,12 @@ components:
       margin: [null, null, null, null]
       padding: [null, null, null, '0']
   type: Link
-- layout_properties: {column: VJQQOR}
-  name: drop_down_typ
+- layout_properties: {column: OJLQEN}
+  name: text_box_vaha
   properties:
-    include_placeholder: true
-    items: [max, min]
-    placeholder: vyberte typ
-  type: DropDown
+    margin: [null, '4', null, '4']
+    type: number
+  type: TextBox
 container:
   properties:
     margin: [null, '4', null, '4']
