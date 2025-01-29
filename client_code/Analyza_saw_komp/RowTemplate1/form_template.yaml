@@ -4,17 +4,32 @@ components:
   properties:
     margin: [null, '4', null, '4']
   type: TextBox
-- layout_properties: {column: VJQQOR}
-  name: text_box_typ
-  properties:
-    margin: [null, '4', null, '4']
-    type: text
-  type: TextBox
 - layout_properties: {column: OJLQEN}
   name: text_box_vaha
   properties:
     margin: [null, '4', null, '4']
     type: number
   type: TextBox
-container: {type: DataRowPanel}
+- layout_properties: {column: ZSZCEK}
+  name: link_smazat_kriterium
+  properties:
+    align: left
+    icon: fa:trash
+    icon_align: right_edge
+    role: null
+    spacing:
+      margin: [null, null, null, null]
+      padding: [null, null, null, '0']
+  type: Link
+- layout_properties: {column: VJQQOR}
+  name: drop_down_typ
+  properties:
+    include_placeholder: true
+    items: [max, min]
+    placeholder: vyberte typ
+  type: DropDown
+container:
+  properties:
+    margin: [null, '4', null, '4']
+  type: DataRowPanel
 is_package: true
