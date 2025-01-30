@@ -16,7 +16,7 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     # Any code you write here will run before the form opens.
 
     # Skrytí druhé karty na začátku
-    self.card_kork_2.visible = False
+    self.card_krok_2.visible = False
     
     # Inicializace vstupů krok 1, krok 2 a krok 3
     self.nazev = None
@@ -43,7 +43,7 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
     # Přepnutí na druhou kartu
     self.card_krok_1.visible = False
-    self.card_kork_2.visible = True
+    self.card_krok_2.visible = True
 
   def validace_vstupu(self):
     if not self.text_box_nazev.text:
@@ -75,6 +75,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
     # Odeslání dat na server  
     anvil.server.call('pridej_kriterium', self.analyza_id, self.nazev_kriteria, self.typ, self.vaha)
+
+    # Resetování vstupních polí
+    self.text_box_nazev_kriteria.text = ""
+    self.drop_down_typ.selected_value = None
+    self.text_box_vaha.text = ""
+
+    # Znovu načtení pouze druhé karty (ponechání uživatele na stejném kroku)
+    self.card_krok_2.visible = False
+    self.card_krok_2.visible = True
 
   def validace_pridej_kryterium(self):
     if not self.text_box_nazev_kriteria.text:

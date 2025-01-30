@@ -100,7 +100,7 @@ components:
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
   layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
-  name: card_kork_2
+  name: card_krok_2
   properties: {col_widths: '{"OHODQT":20,"CXZENQ":15,"RKVGDY":5,"YZYJRA":20}', role: card, visible: true}
   type: ColumnPanel
 container: {type: ColumnPanel}
