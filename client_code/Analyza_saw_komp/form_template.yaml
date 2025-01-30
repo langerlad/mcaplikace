@@ -50,23 +50,36 @@ components:
     name: spacer_2
     properties: {height: 32}
     type: Spacer
+  - data_bindings: []
+    layout_properties: {grid_position: 'LHFDTW,OHODQT'}
+    name: text_box_nazev_kriteria
+    properties: {placeholder: Název kriteria}
+    type: TextBox
+  - data_bindings: []
+    layout_properties: {grid_position: 'LHFDTW,CXZENQ'}
+    name: drop_down_typ
+    properties:
+      include_placeholder: true
+      items: [max, min]
+      placeholder: Typ [max / min]
+    type: DropDown
+  - layout_properties: {grid_position: 'LHFDTW,RKVGDY'}
+    name: text_box_vaha
+    properties: {placeholder: váha, type: number}
+    type: TextBox
+  - event_bindings: {click: button_pridej_kriterium_click}
+    layout_properties: {grid_position: 'LHFDTW,YZYJRA'}
+    name: button_pridej_kriterium
+    properties: {align: right, icon: 'fa:plus-square', role: primary-color, text: Přidat kriterium}
+    type: Button
+  - layout_properties: {grid_position: 'GRLINV,YXKHIE'}
+    name: spacer_3
+    properties: {height: 32}
+    type: Spacer
   - components:
     - name: repeating_panel_kriteria
       properties: {item_template: Analyza_saw_komp.Kriterium_Row}
       type: RepeatingPanel
-    - event_bindings: {click: link_pridej_kriterium_click}
-      layout_properties: {slot: footer}
-      name: link_pridej_kriterium
-      properties: {icon: 'fa:plus-square', text: Přidej kriterium}
-      type: Link
-    - layout_properties: {slot: footer}
-      name: button_dalsi_2
-      properties: {align: right, role: primary-color, text: Další krok}
-      type: Button
-    - layout_properties: {slot: footer}
-      name: label_chyba_2
-      properties: {align: center, bold: true, foreground: 'theme:Secondary 700', text: CHYBOVÁ HLÁŠKA, visible: false}
-      type: Label
     layout_properties: {grid_position: 'UEEROT,ERJJNR'}
     name: data_grid_kriteria
     properties:
@@ -78,9 +91,17 @@ components:
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
+  - layout_properties: {grid_position: 'CTLUSJ,HKOARL'}
+    name: button_dalsi_2
+    properties: {align: right, role: primary-color, text: Další krok}
+    type: Button
+  - layout_properties: {grid_position: 'ERHLYH,CWFYGX'}
+    name: label_chyba_2
+    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', text: CHYBOVÁ HLÁŠKA, visible: false}
+    type: Label
   layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
   name: card_kork_2
-  properties: {role: card, visible: true}
+  properties: {col_widths: '{"OHODQT":20,"CXZENQ":15,"RKVGDY":5,"YZYJRA":20}', role: card, visible: true}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

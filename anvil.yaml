@@ -54,7 +54,7 @@ db_schema:
       name: nazev_kriteria
       type: string
     - admin_ui: {order: 2, width: 200}
-      name: typ_kriteria
+      name: typ
       type: string
     - admin_ui: {order: 3, width: 200}
       name: vaha

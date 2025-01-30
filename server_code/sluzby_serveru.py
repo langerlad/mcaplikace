@@ -28,12 +28,26 @@ def pridej_analyzu(nazev, popis, zvolena_metoda):
   datum_upravy = None
   stav = None
   if not uzivatel:
-    raise Exception("Neznámí uživatel nemuže volat metodu pridej_analyzu")
+    raise Exception("Neznámý uživatel nemuže volat metodu pridej_analyzu.")
     
-  app_tables.analyza.add_row(nazev=nazev, 
-                            popis=popis, 
-                            datum_vytvoreni=datum_vytvoreni,
-                            zvolena_metoda=zvolena_metoda, 
-                            uzivatel=uzivatel,
-                            datum_upravy=datum_upravy,
-                            stav=stav)
+  analyza = app_tables.analyza.add_row(nazev=nazev, 
+                                      popis=popis, 
+                                      datum_vytvoreni=datum_vytvoreni,
+                                      zvolena_metoda=zvolena_metoda, 
+                                      uzivatel=uzivatel,
+                                      datum_upravy=datum_upravy,
+                                      stav=stav)
+
+  return analyza.get_id()
+
+@anvil.server.callable
+def pridej_kriterium(analyza_id, nazev_kriteria, typ, vaha):
+  analyza = app_tables.analyza.get_by_id(analyza_id)
+
+  if not analyza:
+        raise ValueError("Analýza s tímto ID neexistuje.")
+  
+  app_tables.kriterium.add_row(analyza=analyza,
+                              nazev_kriteria=nazev_kriteria,
+                              typ=typ,
+                              vaha=vaha)
