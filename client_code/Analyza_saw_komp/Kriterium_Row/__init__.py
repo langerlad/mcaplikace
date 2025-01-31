@@ -19,3 +19,7 @@ class Kriterium_Row(Kriterium_RowTemplate):
         kriterium = self.item
         anvil.server.call('smazat_kriterium', kriterium["id"])
         self.parent.raise_event('x-refresh')
+
+  def link_upravit_kriterium_click(self, **event_args):
+    """This method is called when the link is clicked"""
+    pass

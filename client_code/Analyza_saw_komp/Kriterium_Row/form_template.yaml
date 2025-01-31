@@ -4,13 +4,14 @@ components:
   layout_properties: {column: ZSZCEK}
   name: link_smazat_kriterium
   properties:
-    align: left
+    align: right
     icon: fa:trash
     icon_align: right_edge
     role: null
     spacing:
       margin: [null, null, null, null]
       padding: [null, null, null, '0']
+    text: Smazat
     tooltip: Smazat kritérium
   type: Link
 - data_bindings:
@@ -31,6 +32,15 @@ components:
   name: label_vaha
   properties: {}
   type: Label
+- layout_properties: {}
+  name: link_1
+  properties: {}
+  type: Link
+- event_bindings: {click: link_upravit_kriterium_click}
+  layout_properties: {column: VSBMVR}
+  name: link_upravit_kriterium
+  properties: {align: right, icon: 'fa:pencil-square', icon_align: right_edge, text: Upravit, tooltip: Upravit hodnoty}
+  type: Link
 container:
   properties:
     margin: [null, '4', null, '4']

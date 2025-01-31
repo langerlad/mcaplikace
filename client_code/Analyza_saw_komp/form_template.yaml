@@ -86,8 +86,9 @@ components:
       columns:
       - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 313.6666259765625}
       - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 239}
-      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 87.333251953125}
-      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 79.6666259765625}
+      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 89}
+      - {data_key: upravit_kriterium, expand: false, id: VSBMVR, title: '', width: 155}
+      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 101}
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
@@ -97,7 +98,7 @@ components:
     type: Button
   - layout_properties: {grid_position: 'ERHLYH,CWFYGX'}
     name: label_chyba_2
-    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', text: CHYBOVÁ HLÁŠKA, visible: false}
+    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
   layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
   name: card_krok_2
