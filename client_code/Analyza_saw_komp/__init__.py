@@ -116,9 +116,17 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
         return "Váha musí být platné číslo."
     self.vaha = self.text_box_vaha.text
 
-  def nacti_kriteria(self):
+  def nacti_kriteria(self, **event_args):
     """Načte uložená kritéria a zobrazí je v repeating panelu""" 
     kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-    for kriterium in kriteria:
-      kriterium['id'] = kriterium.get_id()  # Přidání row_id do slovníku
-    self.repeating_panel_kriteria.items = kriteria
+    # Vytvoříme nový seznam slovníků, abychom neměnili přímo databázové řádky
+    seznam_kriterii = [
+        {
+            "id": kriterium.get_id(),
+            "nazev_kriteria": kriterium["nazev_kriteria"],
+            "typ": kriterium["typ"],
+            "vaha": kriterium["vaha"]
+        }
+        for kriterium in kriteria
+    ]
+    self.repeating_panel_kriteria.items = seznam_kriterii
