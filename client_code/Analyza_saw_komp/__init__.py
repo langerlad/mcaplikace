@@ -117,16 +117,18 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.vaha = self.text_box_vaha.text
 
   def nacti_kriteria(self, **event_args):
-    """Načte uložená kritéria a zobrazí je v repeating panelu""" 
+    """Načte uložená kritéria a zobrazí je v repeating panelu"""
     kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-    # Vytvoříme nový seznam slovníků, abychom neměnili přímo databázové řádky
+
+    # Přidání správného `row_id` pro každé kritérium
     seznam_kriterii = [
         {
-            "id": kriterium.get_id(),
+            "id": kriterium.get_id(),  # Použití `row_id` jako `id`
             "nazev_kriteria": kriterium["nazev_kriteria"],
             "typ": kriterium["typ"],
             "vaha": kriterium["vaha"]
         }
         for kriterium in kriteria
     ]
+
     self.repeating_panel_kriteria.items = seznam_kriterii

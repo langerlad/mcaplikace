@@ -68,19 +68,22 @@ def smazat_kriterium(kriterium_id):
         kriterium.delete()
 
 @anvil.server.callable
-def upravit_kriterium(kriterium_id, kriterium_kopie):
-    """Aktualizuje kritérium v databázi podle jeho ID"""
-    kriterium = app_tables.kriterium.get_by_id(kriterium_id)
+def update_kriterium(kriterium_id, kriterium_dict):
+    """Aktualizuje existující kritérium v databázi podle jeho ID"""
+    
+    kriterium = app_tables.kriterium.get_by_id(kriterium_id)  # Získání řádku podle `row_id`
     
     if not kriterium:
-        raise ValueError("Kritérium neexistuje.")
+        raise Exception(f"Kritérium nenalezeno s ID: {kriterium_id}")  # Debugging
+    
+    print(f"Před úpravou: {kriterium_id} → {kriterium['nazev_kriteria']}, {kriterium['typ']}, {kriterium['vaha']}")
+    print(f"Nové hodnoty: {kriterium_dict}")
 
-    # Explicitní update hodnot
-    kriterium.update(
-        nazev_kriteria=kriterium_kopie["nazev_kriteria"],
-        typ=kriterium_kopie["typ"],
-        vaha=float(kriterium_kopie["vaha"]) if 0 <= float(kriterium_kopie["vaha"]) <= 1 else 0  # Ověření rozsahu
-    )
+    # Odstranění `id` ze slovníku, protože nemůže být uložen v tabulce
+    kriterium_dict.pop("id", None)  # Tím zabráníme chybě "Column 'id' does not exist"
 
-    # Debugging - výpis do logu
-    print(f"Kritérium {kriterium_id} bylo aktualizováno: {kriterium_kopie}")
+    # Aktualizujeme hodnoty
+    kriterium.update(**kriterium_dict)
+
+    print(f"Po úpravě: {kriterium_id} → {kriterium['nazev_kriteria']}, {kriterium['typ']}, {kriterium['vaha']}")
+

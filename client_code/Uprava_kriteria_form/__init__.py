@@ -13,5 +13,5 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
-    
+
 

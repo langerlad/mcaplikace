@@ -28,17 +28,23 @@ class Kriterium_Row(Kriterium_RowTemplate):
     kriterium_kopie = dict(self.item)
     
     # Otevření modálního okna s editací
+    edit_form = Uprava_kriteria_form(item=kriterium_kopie)
+
     save_clicked = alert(
-        content=Uprava_kriteria_form(item=kriterium_kopie),
+        content=edit_form,
         title="Editace kritéria",
         large=True,
         buttons=[("Uložit", True), ("Zrušit", False)]
     )
     
     if save_clicked:
-        # Odeslání změn na server
-        anvil.server.call('upravit_kriterium', self.item["id"], kriterium_kopie)
+        
+      upravene_hodnoty = edit_form.get_updated_values()
 
-        # Obnovení dat v parent formuláři
-        self.parent.raise_event('x-refresh')  # Správné obnovení dat
+      print(f"🔹 Odesílám na server ID: {self.item['id']} s daty: {upravene_hodnoty}")  # Debugging
+      anvil.server.call('update_kriterium', self.item["id"], upravene_hodnoty)
+
+      # Obnovení dat v parent formuláři
+      self.parent.raise_event('x-refresh')  # Správné obnovení dat
+
 
