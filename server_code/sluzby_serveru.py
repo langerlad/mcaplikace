@@ -62,7 +62,7 @@ def nacti_kriteria(analyza_id):
 
 @anvil.server.callable
 def smazat_kriterium(kriterium_id):
-    """Odstraní kritérium z databáze podle jeho ID"""
+    """Odstraní kritérium z databáze podle jeho row_id"""
     kriterium = app_tables.kriterium.get_by_id(kriterium_id)
     if kriterium:
         kriterium.delete()

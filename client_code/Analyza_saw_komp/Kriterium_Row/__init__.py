@@ -1,4 +1,4 @@
-kriteriufrom ._anvil_designer import Kriterium_RowTemplate
+from ._anvil_designer import Kriterium_RowTemplate
 from anvil import *
 import anvil.server
 import anvil.users
@@ -17,5 +17,5 @@ class Kriterium_Row(Kriterium_RowTemplate):
   def link_smazat_kriterium_click(self, **event_args):
         """Smaže vybrané kritérium z databáze a obnoví seznam"""
         kriterium = self.item
-        anvil.server.call('smazat_kriterium', kriterium['id'])
+        anvil.server.call('smazat_kriterium', kriterium.get_id())
         self.parent.raise_event('x-refresh')
