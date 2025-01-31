@@ -84,10 +84,10 @@ components:
     name: data_grid_kriteria
     properties:
       columns:
-      - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 386}
-      - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 146}
-      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 121}
-      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 49}
+      - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 313.6666259765625}
+      - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 239}
+      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 87.333251953125}
+      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 79.6666259765625}
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid

@@ -51,3 +51,18 @@ def pridej_kriterium(analyza_id, nazev_kriteria, typ, vaha):
                               nazev_kriteria=nazev_kriteria,
                               typ=typ,
                               vaha=vaha)
+
+@anvil.server.callable
+def nacti_kriteria(analyza_id):
+    """Načte kritéria z databáze pro danou analýzu"""
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if analyza:
+        return list(app_tables.kriterium.search(analyza=analyza))
+    return []
+
+@anvil.server.callable
+def smazat_kriterium(kriterium_id):
+    """Odstraní kritérium z databáze podle jeho ID"""
+    kriterium = app_tables.kriterium.get_by_id(kriterium_id)
+    if kriterium:
+        kriterium.delete()

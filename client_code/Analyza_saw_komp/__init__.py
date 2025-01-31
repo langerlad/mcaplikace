@@ -25,6 +25,12 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.nazev_kriteria = None
     self.typ = None
     self.vaha = None
+
+    # Načtení uložených kritérií při inicializaci formuláře
+    self.nacti_kriteria()
+
+    # Nastavení event handleru pro aktualizaci seznamu kritérií
+    self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
        
 
   def button_dalsi_click(self, **event_args):
@@ -44,6 +50,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     # Přepnutí na druhou kartu
     self.card_krok_1.visible = False
     self.card_krok_2.visible = True
+
+    self.nacti_kriteria()
 
   def validace_vstupu(self):
     if not self.text_box_nazev.text:
@@ -85,6 +93,9 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.card_krok_2.visible = False
     self.card_krok_2.visible = True
 
+    # Znovu načtení seznamu kritérií
+    self.nacti_kriteria()
+
   def validace_pridej_kryterium(self):
     if not self.text_box_nazev_kriteria.text:
       return "Zadejte název kritéria."    
@@ -98,7 +109,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
         return "Zadejte hodnotu váhy kritéria."
 
     try:
-        float(self.text_box_vaha.text)  # Ověříme, že váha je číslo
+      vaha = float(self.text_box_vaha.text)
+      if not (0 <= vaha <= 1):
+        return "Váha musí být číslo mezi 0 a 1."
     except ValueError:
         return "Váha musí být platné číslo."
     self.vaha = self.text_box_vaha.text
+
+  def nacti_kriteria(self):
+    """Načte uložená kritéria a zobrazí je v repeating panelu"""
+    if hasattr(self, 'analyza_id') and self.analyza_id:
+        kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+        self.repeating_panel_kriteria.items = kriteria

@@ -1,5 +1,6 @@
 components:
 - components: []
+  event_bindings: {click: link_smazat_kriterium_click}
   layout_properties: {column: ZSZCEK}
   name: link_smazat_kriterium
   properties:
@@ -10,6 +11,7 @@ components:
     spacing:
       margin: [null, null, null, null]
       padding: [null, null, null, '0']
+    tooltip: Smazat kritérium
   type: Link
 - data_bindings:
   - {code: 'self.item[''nazev_kriteria'']', property: text, writeback: false}
