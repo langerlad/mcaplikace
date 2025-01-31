@@ -27,7 +27,7 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.vaha = None
 
     # Načtení uložených kritérií při inicializaci formuláře
-    self.nacti_kriteria()
+    # self.nacti_kriteria()
 
     # Nastavení event handleru pro aktualizaci seznamu kritérií
     self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
@@ -117,9 +117,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.vaha = self.text_box_vaha.text
 
   def nacti_kriteria(self):
-    """Načte uložená kritéria a zobrazí je v repeating panelu"""
-    if hasattr(self, 'analyza_id') and self.analyza_id:
-        kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+    """Načte uložená kritéria a zobrazí je v repeating panelu""" 
+    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
     for kriterium in kriteria:
       kriterium['id'] = kriterium.get_id()  # Přidání row_id do slovníku
     self.repeating_panel_kriteria.items = kriteria
