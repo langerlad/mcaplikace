@@ -46,5 +46,5 @@ class Kriterium_Row(Kriterium_RowTemplate):
 
       # Obnovení dat v parent formuláři
       self.parent.raise_event('x-refresh')  # Správné obnovení dat
-
+ě
 
