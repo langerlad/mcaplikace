@@ -15,8 +15,9 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
     # Any code you write here will run before the form opens.
 
-    # Skrytí druhé karty na začátku
+    # Skrytí karet na začátku wizardu
     self.card_krok_2.visible = False
+    self.card_krok_3.visible = False
     
     # Inicializace vstupů krok 1, krok 2 a krok 3
     self.nazev = None
@@ -25,6 +26,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.nazev_kriteria = None
     self.typ = None
     self.vaha = None
+    self.nazev_varianty = None
+    self.popis_varinaty = None
 
     # Načtení uložených kritérií při inicializaci formuláře
     # self.nacti_kriteria()
@@ -133,29 +136,52 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
     self.repeating_panel_kriteria.items = seznam_kriterii
 
-  def button_dalsi_click_2(self, **event_args):
-    """Přepne na druhý krok formuláře a uloží název, popis a metodu do db"""
-    self.label_chyba.visible = False
-    chyba = self.validace_vstupu()
-    if chyba:
-      self.label_chyba.text = chyba
-      self.label_chyba.visible = True
-      return
+  def kontrola_souctu_vah(self):
+    """Kontroluje, zda součet všech vah kritérií je roven 1"""
+    # Načtení všech kritérií pro tuto analýzu
+    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+    
+    # Výpočet součtu vah
+    soucet_vah = sum(float(kriterium['vaha']) for kriterium in kriteria)
+    
+    # Zaokrouhlení na 3 desetinná místa pro přesnější porovnání
+    soucet_vah = round(soucet_vah, 3)
+    
+    if soucet_vah != 1:
+        return False, f"Součet vah musí být přesně 1. Aktuální součet je {soucet_vah}"
+    return True, None
 
-    # Uložení analýzy a získání jejího ID
-    self.analyza_id = anvil.server.call("pridej_analyzu", self.nazev, self.popis, self.zvolena_metoda)
-    print(f"Analýza vytvořena s ID: {self.analyza_id}")
-    print("uložené údaje: {} {} {}".format(self.nazev, self.popis, self.zvolena_metoda))
+  def button_dalsi_2_click(self, **event_args):
+      """Přepne na třetí krok formuláře pro přidání variant a provede kontrolu součtu vah"""
+      
+      # Kontrola, zda existují nějaká kritéria
+      kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+      if not kriteria:
+          self.label_chyba_2.text = "Přidejte alespoň jedno kritérium před pokračováním."
+          self.label_chyba_2.visible = True
+          return
+      
+      # Kontrola součtu vah
+      je_validni, chybova_zprava = self.kontrola_souctu_vah()
+      
+      if not je_validni:
+          self.label_chyba_2.text = chybova_zprava
+          self.label_chyba_2.visible = True
+          return
+          
+      # Pokud jsou všechny kontroly v pořádku, skryjeme chybovou hlášku a přejdeme na další krok
+      self.label_chyba_2.visible = False
+      self.card_krok_2.visible = False
+      self.card_krok_3.visible = True
 
-    # Přepnutí na druhou kartu
-    self.card_krok_1.visible = False
-    self.card_krok_2.visible = True
 
-    self.nacti_kriteria()
+  # def validace_vstupu_2(self):
+  #   if not self.text_box_nazev_varianty.text:
+  #     return "Zadejte název varinaty."
+  #   self.nazev_varianty = self.text_box_nazev_varianty.text
+  #   self.popis_varianty = self.text_area_popis_varinaty.text
+  #   return None
 
-  def validace_vstupu(self):
-    if not self.text_box_nazev.text:
-      return "Zadejte název analýzy."
-    self.nazev = self.text_box_nazev.text
-    self.popis = self.text_area_popis.text
-    return None
+  def button_pridej_variantu_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass

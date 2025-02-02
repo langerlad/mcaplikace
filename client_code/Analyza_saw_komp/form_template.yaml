@@ -123,7 +123,8 @@ components:
     name: text_box_popis_varianty
     properties: {placeholder: Popis (volitelné)}
     type: TextBox
-  - layout_properties: {grid_position: ',PZLXNU'}
+  - event_bindings: {click: button_pridej_variantu_click}
+    layout_properties: {grid_position: ',PZLXNU'}
     name: button_pridej_variantu
     properties: {align: right, icon: 'fa:plus-square', role: primary-color, text: Přidej variantu}
     type: Button
@@ -145,7 +146,8 @@ components:
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
-  - layout_properties: {grid_position: 'RJXKOH,MSAZOD'}
+  - event_bindings: {click: button_dalsi_3_click}
+    layout_properties: {grid_position: 'RJXKOH,MSAZOD'}
     name: button_dalsi_3
     properties: {align: right, role: primary-color, text: Další krok}
     type: Button
@@ -154,7 +156,7 @@ components:
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
   layout_properties: {grid_position: 'QOIUEM,ATAQDI'}
-  name: card_3
+  name: card_krok_3
   properties: {col_widths: '{"undefined":15,"OLNVHG":30,"PZLXNU":15}', role: card}
   type: ColumnPanel
 container: {type: ColumnPanel}
