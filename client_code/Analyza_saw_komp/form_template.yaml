@@ -63,7 +63,8 @@ components:
       items: [max, min]
       placeholder: Typ [max / min]
     type: DropDown
-  - layout_properties: {grid_position: 'LHFDTW,RKVGDY'}
+  - data_bindings: []
+    layout_properties: {grid_position: 'LHFDTW,RKVGDY'}
     name: text_box_vaha
     properties: {placeholder: váha, type: number}
     type: TextBox

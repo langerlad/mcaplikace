@@ -68,11 +68,15 @@ def smazat_kriterium(kriterium_id):
         kriterium.delete()
 
 @anvil.server.callable
-def uprav_kriterium(kriterium, kriterium_dict):
-    """Aktualizuje existující kritérium v databázi podle jeho ID"""
-    
-    if app_tables.kriterium.has_row(kriterium):
-      kriterium.udate(**kriterium_dict)
+def uprav_kriterium(kriterium_id, updated_data):
+    """Aktualizuje existující kritérium v databáze podle jeho ID"""
+    kriterium = app_tables.kriterium.get_by_id(kriterium_id)
+    if kriterium:
+        kriterium.update(
+            nazev_kriteria=updated_data['nazev_kriteria'],
+            typ=updated_data['typ'],
+            vaha=updated_data['vaha']
+        )
     else:
-      raise Exception("Ops ... kriterium neexistuje")
+        raise Exception("Ops ... kriterium neexistuje")
 

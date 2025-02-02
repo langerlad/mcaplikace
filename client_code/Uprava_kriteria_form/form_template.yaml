@@ -11,21 +11,19 @@ components:
   name: label_3
   properties: {text: 'Váha:'}
   type: Label
-- data_bindings:
-  - {code: 'self.item[''nazev_kriteria'']', property: text, writeback: false}
+- data_bindings: []
   layout_properties: {grid_position: 'ASMJZP,MGRTNG'}
   name: text_box_nazev_kriteria
   properties: {}
   type: TextBox
-- data_bindings:
-  - {code: 'self.item[''typ'']', property: items, writeback: false}
+- data_bindings: []
   layout_properties: {grid_position: 'ASMJZP,MGRTNG TFSWGQ,PODLYJ'}
   name: drop_down_typ
   properties:
+    include_placeholder: false
     items: [max, min]
   type: DropDown
-- data_bindings:
-  - {code: 'self.item[''vaha'']', property: text, writeback: false}
+- data_bindings: []
   layout_properties: {grid_position: 'ASMJZP,MGRTNG SSBSKZ,GSTVAJ'}
   name: text_box_vaha
   properties: {}
