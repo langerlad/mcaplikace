@@ -17,7 +17,8 @@ components:
   name: text_box_nazev_kriteria
   properties: {}
   type: TextBox
-- data_bindings: []
+- data_bindings:
+  - {code: 'self.item[''typ'']', property: items, writeback: false}
   layout_properties: {grid_position: 'ASMJZP,MGRTNG TFSWGQ,PODLYJ'}
   name: drop_down_typ
   properties:

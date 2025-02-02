@@ -22,29 +22,21 @@ class Kriterium_Row(Kriterium_RowTemplate):
         self.parent.raise_event('x-refresh')
 
   def link_upravit_kriterium_click(self, **event_args):
-    """Otevře modální okno pro úpravu kritéria"""
-
+    """Otevře modální okno pro úpravu kritéria
+    dokumentace k nastavení: https://anvil.works/docs/client/alerts-and-notifications#custom-popup-styles
+    """
     # Vytvoření kopie dat kritéria
     kriterium_kopie = dict(self.item)
-    
     # Otevření modálního okna s editací
-    edit_form = Uprava_kriteria_form(item=kriterium_kopie)
-
     save_clicked = alert(
-        content=edit_form,
-        title="Editace kritéria",
-        large=True,
-        buttons=[("Uložit", True), ("Zrušit", False)]
+      content=Uprava_kriteria_form(item=kriterium_kopie),
+      title="Upravit kritérium",
+      large=True,
+      dismissible=True,
+      buttons=[("Uložit", True), ("Zrušit", False)]
     )
     
     if save_clicked:
         
-      upravene_hodnoty = edit_form.get_updated_values()
-
-      print(f"🔹 Odesílám na server ID: {self.item['id']} s daty: {upravene_hodnoty}")  # Debugging
-      anvil.server.call('update_kriterium', self.item["id"], upravene_hodnoty)
-
-      # Obnovení dat v parent formuláři
-      self.parent.raise_event('x-refresh')  # Správné obnovení dat
-
+      print(kriterium_kopie)
 
