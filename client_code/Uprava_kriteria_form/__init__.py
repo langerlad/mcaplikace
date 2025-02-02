@@ -19,7 +19,22 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
     
     # Store the original item for reference
     self._item = item
-  
+
+    self.label_chyba.visible = False
+  def validate_weight(self):
+    """Validates the weight value"""
+    try:
+      vaha = float(self.text_box_vaha.text)
+      if not (0 <= vaha <= 1):
+        self.label_chyba.text = "Váha musí být číslo mezi 0 a 1"
+        self.label_chyba.visible = True
+        return False
+      return True
+    except ValueError:
+      self.label_error.text = "Váha musí být platné číslo"
+      self.label_error.visible = True
+      return False
+      
   def get_updated_data(self):
     """Returns the updated criterion data"""
     return {
@@ -28,5 +43,11 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
       'typ': self.drop_down_typ.selected_value,
       'vaha': float(self.text_box_vaha.text)
     }
+
+  def text_box_vaha_lost_focus(self, **event_args):
+    """This method is called when the TextBox loses focus"""
+    self.validate_weight()
+    
+    
 
 

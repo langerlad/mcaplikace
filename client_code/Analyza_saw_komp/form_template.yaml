@@ -101,9 +101,18 @@ components:
     name: label_chyba_2
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
-  layout_properties: {grid_position: 'GOWMQW,NBYXFC'}
+  layout_properties: {grid_position: 'RTKXMX,BPMMQS'}
   name: card_krok_2
   properties: {col_widths: '{"OHODQT":20,"CXZENQ":15,"RKVGDY":5,"YZYJRA":20}', role: card, visible: true}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'QWNITA,CFPCBX'}
+    name: label_5
+    properties: {}
+    type: Label
+  layout_properties: {grid_position: 'QOIUEM,ATAQDI'}
+  name: card_1
+  properties: {role: card}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

@@ -30,24 +30,30 @@ class Kriterium_Row(Kriterium_RowTemplate):
       'typ': self.item['typ'],
       'vaha': self.item['vaha']
     }
-  
+    
     # Vytvoření formuláře pro úpravu
     edit_form = Uprava_kriteria_form(item=kriterium_kopie)
     
-    # Otevření modálního okna s editací
-    save_clicked = alert(
-      content=edit_form,
-      title="Upravit kritérium",
-      large=True,
-      dismissible=True,
-      buttons=[("Uložit", True), ("Zrušit", False)]
-    )
-  
-    if save_clicked:
+    while True:  # Loop until we get valid data or user cancels
+      # Otevření modálního okna s editací
+      save_clicked = alert(
+        content=edit_form,
+        title="Upravit kritérium",
+        large=True,
+        dismissible=True,
+        buttons=[("Uložit", True), ("Zrušit", False)]
+      )
+      
+      if not save_clicked:
+        break  # User clicked Cancel
+        
       # Získání aktualizovaných dat z formuláře
       updated_data = edit_form.get_updated_data()
-      # Volání serverové metody pro aktualizaci
-      anvil.server.call('uprav_kriterium', self.item['id'], updated_data)
-      # Obnovení dat v parent formuláři
-      self.parent.raise_event('x-refresh')
+      if updated_data:  # If validation passed
+        # Volání serverové metody pro aktualizaci
+        anvil.server.call('uprav_kriterium', self.item['id'], updated_data)
+        # Obnovení dat v parent formuláři
+        self.parent.raise_event('x-refresh')
+        break
+      # If validation failed, the form will show the error and stay open
 
