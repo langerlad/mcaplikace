@@ -37,6 +37,7 @@ class Kriterium_Row(Kriterium_RowTemplate):
     )
     
     if save_clicked:
-        
-      print(kriterium_kopie)
+      anvil.server.call('uprav_kriterium', self.item, kriterium_kopie)
+      # Obnovení dat v parent formuláři
+      self.parent.raise_event('x-refresh')  # Správné obnovení dat
 
