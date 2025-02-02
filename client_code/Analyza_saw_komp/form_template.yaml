@@ -13,7 +13,7 @@ components:
     properties: {height: 32}
     type: Spacer
   - layout_properties: {grid_position: 'NBYEAX,KHDNYW'}
-    name: label_3
+    name: label_1a
     properties: {bold: true, text: 'Zadejte název analýzy:'}
     type: Label
   - layout_properties: {grid_position: 'NBYEAX,NJBMLW'}
@@ -21,7 +21,7 @@ components:
     properties: {align: left, placeholder: až 80 znaků, role: null, text: ''}
     type: TextBox
   - layout_properties: {grid_position: 'BEMJWT,RQJVWX'}
-    name: label_4
+    name: label_1b
     properties: {bold: true, text: 'Můžete přidat popis analýzy:'}
     type: Label
   - layout_properties: {grid_position: 'ERDEUJ,ZHTQDN'}
@@ -85,11 +85,11 @@ components:
     name: data_grid_kriteria
     properties:
       columns:
-      - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 313.6666259765625}
-      - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 239}
-      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 89}
-      - {data_key: upravit_kriterium, expand: false, id: VSBMVR, title: '', width: 155}
-      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 101}
+      - {data_key: nazev_kriteria, expand: false, id: JKSDUP, title: Název kritéria, width: 399}
+      - {data_key: typ, expand: false, id: VJQQOR, title: 'Typ [min / max]', width: 235}
+      - {data_key: vaha, expand: false, id: OJLQEN, title: Váha, width: 84}
+      - {data_key: upravit_kriterium, expand: false, id: VSBMVR, title: '', width: 104}
+      - {data_key: smazat_kriterium, expand: false, id: ZSZCEK, title: '', width: 106}
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
@@ -103,16 +103,36 @@ components:
     type: Label
   layout_properties: {grid_position: 'RTKXMX,BPMMQS'}
   name: card_krok_2
-  properties: {col_widths: '{"OHODQT":20,"CXZENQ":15,"RKVGDY":5,"YZYJRA":20}', role: card, visible: true}
+  properties: {col_widths: '{"OHODQT":25,"CXZENQ":15,"RKVGDY":5,"YZYJRA":15}', role: card, visible: true}
   type: ColumnPanel
 - components:
   - layout_properties: {grid_position: 'QWNITA,CFPCBX'}
-    name: label_5
-    properties: {}
+    name: label_3
+    properties: {bold: true, text: 'KROK 3: Přidejte jednotlivé varianty.'}
     type: Label
+  - layout_properties: {grid_position: 'ECPDTB,SLKIOY'}
+    name: spacer_4
+    properties: {height: 32}
+    type: Spacer
+  - layout_properties: {grid_position: ''}
+    name: text_box_nazev_varianty
+    properties: {placeholder: Název varianty}
+    type: TextBox
+  - layout_properties: {grid_position: ',OLNVHG'}
+    name: text_box_popis_varianty
+    properties: {placeholder: Popis (volitelné)}
+    type: TextBox
+  - layout_properties: {grid_position: ',PZLXNU'}
+    name: button_pridej_variantu
+    properties: {align: right, icon: 'fa:plus-square', role: primary-color, text: Přidej variantu}
+    type: Button
+  - layout_properties: {grid_position: 'TRKVQJ,OIEQJN DHZSTO,QUTIHA'}
+    name: spacer_5
+    properties: {height: 32}
+    type: Spacer
   layout_properties: {grid_position: 'QOIUEM,ATAQDI'}
-  name: card_1
-  properties: {role: card}
+  name: card_3
+  properties: {col_widths: '{"undefined":15,"OLNVHG":30,"PZLXNU":15}', role: card}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
