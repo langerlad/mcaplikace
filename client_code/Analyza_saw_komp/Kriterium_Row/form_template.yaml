@@ -11,7 +11,7 @@ components:
     spacing:
       margin: [null, null, null, null]
       padding: [null, null, null, '0']
-    text: Smazat
+    text: Odstranit
     tooltip: Smazat kritérium
   type: Link
 - data_bindings:

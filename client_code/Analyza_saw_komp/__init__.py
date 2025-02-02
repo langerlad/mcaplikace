@@ -132,3 +132,30 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     ]
 
     self.repeating_panel_kriteria.items = seznam_kriterii
+
+  def button_dalsi_click_2(self, **event_args):
+    """Přepne na druhý krok formuláře a uloží název, popis a metodu do db"""
+    self.label_chyba.visible = False
+    chyba = self.validace_vstupu()
+    if chyba:
+      self.label_chyba.text = chyba
+      self.label_chyba.visible = True
+      return
+
+    # Uložení analýzy a získání jejího ID
+    self.analyza_id = anvil.server.call("pridej_analyzu", self.nazev, self.popis, self.zvolena_metoda)
+    print(f"Analýza vytvořena s ID: {self.analyza_id}")
+    print("uložené údaje: {} {} {}".format(self.nazev, self.popis, self.zvolena_metoda))
+
+    # Přepnutí na druhou kartu
+    self.card_krok_1.visible = False
+    self.card_krok_2.visible = True
+
+    self.nacti_kriteria()
+
+  def validace_vstupu(self):
+    if not self.text_box_nazev.text:
+      return "Zadejte název analýzy."
+    self.nazev = self.text_box_nazev.text
+    self.popis = self.text_area_popis.text
+    return None

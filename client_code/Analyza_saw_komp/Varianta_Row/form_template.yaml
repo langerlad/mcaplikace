@@ -1,0 +1,15 @@
+components:
+- layout_properties: {column: JKSDUP}
+  name: label_nazev_varianty
+  properties: {}
+  type: Label
+- layout_properties: {column: VJQQOR}
+  name: label_popis_varianty
+  properties: {}
+  type: Label
+- layout_properties: {column: OJLQEN}
+  name: link_smazat_variantu
+  properties: {align: left, icon: 'fa:trash', icon_align: right, text: Odstranit, tooltip: Smazat variantu}
+  type: Link
+container: {type: DataRowPanel}
+is_package: true
