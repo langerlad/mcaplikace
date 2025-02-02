@@ -32,10 +32,6 @@ components:
   name: label_vaha
   properties: {}
   type: Label
-- layout_properties: {}
-  name: link_1
-  properties: {}
-  type: Link
 - event_bindings: {click: link_upravit_kriterium_click}
   layout_properties: {column: VSBMVR}
   name: link_upravit_kriterium

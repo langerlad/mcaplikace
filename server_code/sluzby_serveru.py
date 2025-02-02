@@ -80,3 +80,32 @@ def uprav_kriterium(kriterium_id, updated_data):
     else:
         raise Exception("Ops ... kriterium neexistuje")
 
+@anvil.server.callable
+def pridej_variantu(analyza_id, nazev_varianty, popis_varianty):
+    """Přidá novou variantu do databáze"""
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+
+    if not analyza:
+        raise ValueError("Analýza s tímto ID neexistuje.")
+  
+    app_tables.varianta.add_row(
+        analyza=analyza,
+        nazev_varianty=nazev_varianty,
+        popis_varianty=popis_varianty
+    )
+
+@anvil.server.callable
+def nacti_varianty(analyza_id):
+    """Načte varianty z databáze pro danou analýzu"""
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if analyza:
+        return list(app_tables.varianta.search(analyza=analyza))
+    return []
+
+@anvil.server.callable
+def smazat_variantu(varianta_id):
+    """Odstraní variantu z databáze podle jejího ID"""
+    varianta = app_tables.varianta.get_by_id(varianta_id)
+    if varianta:
+        varianta.delete()
+

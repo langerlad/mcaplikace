@@ -13,3 +13,11 @@ class Varianta_Row(Varianta_RowTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
+
+  def link_smazat_variantu_click(self, **event_args):
+    """Smaže vybranou variantu z databáze a obnoví seznam"""
+    varianta = self.item
+    anvil.server.call('smazat_variantu', varianta["id"])
+    self.parent.raise_event('x-refresh')
+
+   

@@ -32,8 +32,9 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     # Načtení uložených kritérií při inicializaci formuláře
     # self.nacti_kriteria()
 
-    # Nastavení event handleru pro aktualizaci seznamu kritérií
+    # Nastavení event handleru pro aktualizaci seznamu kritérií / variant
     self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
+    self.repeating_panel_varianty.set_event_handler('x-refresh', self.nacti_varianty)
        
 
   def button_dalsi_click(self, **event_args):
@@ -179,9 +180,59 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
   #   if not self.text_box_nazev_varianty.text:
   #     return "Zadejte název varinaty."
   #   self.nazev_varianty = self.text_box_nazev_varianty.text
-  #   self.popis_varianty = self.text_area_popis_varinaty.text
+  #   self.popis_varianty = self.text_box_popis_varinaty.text
   #   return None
 
   def button_pridej_variantu_click(self, **event_args):
-    """This method is called when the button is clicked"""
-    pass
+    """Uloží variantu do db"""
+    self.label_chyba_3.visible = False
+    chyba_3 = self.validace_pridej_variantu()
+    
+    if chyba_3:
+        self.label_chyba_3.text = chyba_3
+        self.label_chyba_3.visible = True
+        return
+
+    # Kontrola, zda existuje analýza
+    if not hasattr(self, 'analyza_id') or not self.analyza_id:
+        alert("Nejdříve musíte vytvořit analýzu.")
+        return
+
+    # Odeslání dat na server  
+    anvil.server.call('pridej_variantu', self.analyza_id, self.nazev_varianty, self.popis_varianty)
+
+    # Resetování vstupních polí
+    self.text_box_nazev_varianty.text = ""
+    self.text_box_popis_varianty.text = ""
+
+    # Znovu načtení pouze třetí karty
+    self.card_krok_3.visible = False
+    self.card_krok_3.visible = True
+
+    # Znovu načtení seznamu variant
+    self.nacti_varianty()
+
+  def validace_pridej_variantu(self):
+      """Validace vstupů pro přidání varianty"""
+      if not self.text_box_nazev_varianty.text:
+          return "Zadejte název varianty."    
+      self.nazev_varianty = self.text_box_nazev_varianty.text
+      
+      self.popis_varianty = self.text_box_popis_varianty.text
+      return None
+  
+  def nacti_varianty(self, **event_args):
+      """Načte uložené varianty a zobrazí je v repeating panelu"""
+      varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+  
+      # Přidání správného `row_id` pro každou variantu
+      seznam_variant = [
+          {
+              "id": varianta.get_id(),
+              "nazev_varianty": varianta["nazev_varianty"],
+              "popis_varianty": varianta["popis_varianty"]
+          }
+          for varianta in varianty
+      ]
+  
+      self.repeating_panel_varianty.items = seznam_variant
