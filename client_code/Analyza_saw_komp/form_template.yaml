@@ -169,7 +169,7 @@ components:
     properties: {height: 32}
     type: Spacer
   - layout_properties: {grid_position: 'RGVCDG,MTHNVB'}
-    name: repeating_panel_matice_var
+    name: Matice_var
     properties: {item_template: Analyza_saw_komp.Matice_var}
     type: RepeatingPanel
   - event_bindings: {click: button_dalsi_3_click}

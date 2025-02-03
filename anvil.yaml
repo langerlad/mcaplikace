@@ -27,7 +27,7 @@ db_schema:
       type: string
     server: full
     title: Analyza
-  hodnotakriteria:
+  hodnota:
     client: none
     columns:
     - admin_ui: {order: 0, width: 200}
@@ -41,8 +41,12 @@ db_schema:
     - admin_ui: {order: 2, width: 200}
       name: hodnota
       type: number
+    - admin_ui: {order: -1, width: 200}
+      name: analyza
+      target: analyza
+      type: link_single
     server: full
-    title: HodnotaKriteria
+    title: Hodnota
   kriterium:
     client: none
     columns:

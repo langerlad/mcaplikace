@@ -18,6 +18,7 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     # Skrytí karet na začátku wizardu
     self.card_krok_2.visible = False
     self.card_krok_3.visible = False
+    self.card_krok_4.visible = False
     
     # Inicializace vstupů krok 1, krok 2 a krok 3
     self.nazev = None
@@ -176,12 +177,6 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
       self.card_krok_3.visible = True
 
 
-  # def validace_vstupu_2(self):
-  #   if not self.text_box_nazev_varianty.text:
-  #     return "Zadejte název varinaty."
-  #   self.nazev_varianty = self.text_box_nazev_varianty.text
-  #   self.popis_varianty = self.text_box_popis_varinaty.text
-  #   return None
 
   def button_pridej_variantu_click(self, **event_args):
     """Uloží variantu do db"""
@@ -236,3 +231,89 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
       ]
   
       self.repeating_panel_varianty.items = seznam_variant
+
+  def button_dalsi_3_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    self.card_krok_3.visible = False
+    self.card_krok_4.visible = True
+
+    self.card_krok_4_show()
+
+  def card_krok_4_show(self, **event_args):
+    """Inicializace čtvrté karty - načtení variant a kritérií pro matici hodnot"""
+    # Načtení variant pro tuto analýzu
+    varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+    
+    # Příprava dat pro matici
+    matice_data = []
+    for varianta in varianty:
+      # Pro každou variantu vytvoříme seznam kritérií
+      kriteria_pro_variantu = [
+        {
+            'nazev_kriteria': kriterium['nazev_kriteria'],
+            'id_varianty': varianta.get_id(),
+            'id_kriteria': kriterium.get_id(),
+            # Načtení existující hodnoty, pokud existuje
+            'hodnota': self.nacti_existujici_hodnotu(varianta.get_id(), kriterium.get_id())
+        }
+        for kriterium in kriteria
+      ]
+      
+      matice_data.append({
+        'nazev_varianty': varianta['nazev_varianty'],
+        'kriteria': kriteria_pro_variantu
+      })
+    
+    # Nastavení dat do repeating panelu
+    self.Matice_var.items = matice_data
+
+  def nacti_existujici_hodnotu(self, id_varianty, id_kriteria):
+    """Načte existující hodnotu pro danou variantu a kritérium"""
+    hodnota = anvil.server.call('nacti_existujici_hodnotu', self.analyza_id, id_varianty, id_kriteria)
+    return hodnota if hodnota is not None else ''
+
+    def button_ulozit_4_click(self, **event_args):
+      """Uložení hodnot matice do databáze"""
+      # Sbírání všech zadaných hodnot
+      ulozene_hodnoty = []
+      chyby = []
+      
+      # Procházení všech variant v matici
+      for varianta_row in self.Matice_var.get_components():
+        nazev_varianty = varianta_row.label_matice_nazev_varianty.text
+        #id_varianty = None
+        
+        # Procházení všech kritérií pro danou variantu
+        for kriterium_row in varianta_row.Matice_krit.get_components():
+          nazev_kriteria = kriterium_row.label_matice_nazev_kriteria.text
+          hodnota_text = kriterium_row.text_box_matice_hodnota.text
+          
+          # Validace hodnoty
+          try:
+            hodnota = float(hodnota_text)
+            ulozene_hodnoty.append({
+                'nazev_varianty': nazev_varianty,
+                'nazev_kriteria': nazev_kriteria,
+                'hodnota': hodnota
+            })
+          except ValueError:
+            chyby.append(f"Neplatná hodnota pro variantu {nazev_varianty}, kritérium {nazev_kriteria}")
+      
+      # Kontrola chyb
+      if chyby:
+        # Zobrazení chyb
+        self.label_chyba_4.text = "\n".join(chyby)
+        self.label_chyba_4.visible = True
+        return
+      
+      # Volání serverové metody pro uložení všech hodnot
+      try:
+        anvil.server.call('uloz_hodnoty_matice', self.analyza_id, ulozene_hodnoty)
+        # Skrytí chybové zprávy
+        self.label_chyba_4.visible = False
+        # Volitelně: zpráva o úspěchu
+        alert("Hodnoty byly úspěšně uloženy.")
+      except Exception as e:
+        self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
+        self.label_chyba_4.visible = True
