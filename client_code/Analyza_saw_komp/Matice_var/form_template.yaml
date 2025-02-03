@@ -1,0 +1,17 @@
+components:
+- layout_properties: {grid_position: 'JHTXOF,KYVQFV'}
+  name: label_matice_nazev_varianty
+  properties: {}
+  type: Label
+- layout_properties: {grid_position: 'BLBQED,ABDBTD'}
+  name: spacer_1
+  properties: {height: 32}
+  type: Spacer
+- layout_properties: {grid_position: 'BLBQED,OQYDGT'}
+  name: repeating_panel_matice_krit
+  properties: {item_template: Analyza_saw_komp.Matice_var.Matice_krit}
+  type: RepeatingPanel
+container:
+  properties: {col_widths: '{"ABDBTD":5,"OQYDGT":55}'}
+  type: ColumnPanel
+is_package: true
