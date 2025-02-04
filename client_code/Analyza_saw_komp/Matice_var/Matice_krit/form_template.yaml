@@ -16,6 +16,6 @@ components:
   properties: {height: 32}
   type: Spacer
 container:
-  properties: {col_widths: '{"BVEQJL":30,"DYWLDB":30,"NGMZUO":25,"GYRUPR":35}'}
+  properties: {col_widths: '{"BVEQJL":25,"DYWLDB":35,"NGMZUO":25,"GYRUPR":35}'}
   type: ColumnPanel
 is_package: true

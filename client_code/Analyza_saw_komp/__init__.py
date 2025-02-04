@@ -242,12 +242,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
   def card_krok_4_show(self, **event_args):
     """Inicializace čtvrté karty - načtení variant a kritérií pro matici hodnot"""
     # Načtení variant pro tuto analýzu
-    varianty = anvil.server.call('nacti_varianty', self.analyza_id)
-    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+    self.seznam_variant = anvil.server.call('nacti_varianty', self.analyza_id)
+    self.seznam_kriterii = anvil.server.call('nacti_kriteria', self.analyza_id)
+
+    print("Loaded variants:", len(self.seznam_variant))  # Debug
+    print("Loaded criteria:", len(self.seznam_variant))  # Debug
     
     # Příprava dat pro matici
     matice_data = []
-    for varianta in varianty:
+    for varianta in self.seznam_variant:
       # Pro každou variantu vytvoříme seznam kritérií
       kriteria_pro_variantu = [
         {
@@ -257,15 +260,17 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
             # Načtení existující hodnoty, pokud existuje
             'hodnota': self.nacti_existujici_hodnotu(varianta.get_id(), kriterium.get_id())
         }
-        for kriterium in kriteria
+        for kriterium in self.seznam_kriterii
       ]
       
       matice_data.append({
         'nazev_varianty': varianta['nazev_varianty'],
-        'kriteria': kriteria_pro_variantu
+        'id_varianty': varianta.get_id(),
+        'nazev_kriteria': kriteria_pro_variantu
       })
     
     # Nastavení dat do repeating panelu
+    print("Matrix data prepared:", len(matice_data))  # Debug
     self.Matice_var.items = matice_data
 
   def nacti_existujici_hodnotu(self, id_varianty, id_kriteria):
@@ -273,47 +278,38 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     hodnota = anvil.server.call('nacti_existujici_hodnotu', self.analyza_id, id_varianty, id_kriteria)
     return hodnota if hodnota is not None else ''
 
-    def button_ulozit_4_click(self, **event_args):
-      """Uložení hodnot matice do databáze"""
-      # Sbírání všech zadaných hodnot
-      ulozene_hodnoty = []
-      chyby = []
-      
-      # Procházení všech variant v matici
-      for varianta_row in self.Matice_var.get_components():
-        nazev_varianty = varianta_row.label_matice_nazev_varianty.text
-        #id_varianty = None
+  def button_ulozit_4_click(self, **event_args):
+    """Uložení hodnot matice do databáze"""
+    ulozene_hodnoty = []
+    chyby = []
+    
+    for varianta_row in self.Matice_var.get_components():
+        # Get IDs from the item data
+        id_varianty = varianta_row.item['id_varianty']
         
-        # Procházení všech kritérií pro danou variantu
         for kriterium_row in varianta_row.Matice_krit.get_components():
-          nazev_kriteria = kriterium_row.label_matice_nazev_kriteria.text
-          hodnota_text = kriterium_row.text_box_matice_hodnota.text
-          
-          # Validace hodnoty
-          try:
-            hodnota = float(hodnota_text)
-            ulozene_hodnoty.append({
-                'nazev_varianty': nazev_varianty,
-                'nazev_kriteria': nazev_kriteria,
-                'hodnota': hodnota
-            })
-          except ValueError:
-            chyby.append(f"Neplatná hodnota pro variantu {nazev_varianty}, kritérium {nazev_kriteria}")
-      
-      # Kontrola chyb
-      if chyby:
-        # Zobrazení chyb
+            id_kriteria = kriterium_row.item['id_kriteria']
+            hodnota_text = kriterium_row.text_box_matice_hodnota.text
+            
+            try:
+                hodnota = float(hodnota_text) if hodnota_text.strip() else None
+                ulozene_hodnoty.append({
+                    'varianta_id': id_varianty,
+                    'kriterium_id': id_kriteria,
+                    'hodnota': hodnota
+                })
+            except ValueError:
+                chyby.append(f"Neplatná hodnota pro variantu {varianta_row.item['nazev_varianty']}")
+    
+    if chyby:
         self.label_chyba_4.text = "\n".join(chyby)
         self.label_chyba_4.visible = True
         return
-      
-      # Volání serverové metody pro uložení všech hodnot
-      try:
+        
+    try:
         anvil.server.call('uloz_hodnoty_matice', self.analyza_id, ulozene_hodnoty)
-        # Skrytí chybové zprávy
         self.label_chyba_4.visible = False
-        # Volitelně: zpráva o úspěchu
         alert("Hodnoty byly úspěšně uloženy.")
-      except Exception as e:
+    except Exception as e:
         self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
         self.label_chyba_4.visible = True

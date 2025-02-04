@@ -13,3 +13,5 @@ class Matice_krit(Matice_kritTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
+    self.label_matice_nazev_kriteria.text = self.item['nazev_kriteria']
+    self.text_box_matice_hodnota.text = str(self.item['hodnota'])

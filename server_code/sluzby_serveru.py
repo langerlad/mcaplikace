@@ -117,7 +117,7 @@ def nacti_existujici_hodnotu(analyza_id, id_varianty, id_kriteria):
     kriterium = app_tables.kriterium.get_by_id(id_kriteria)
     
     # Hledání existující hodnoty
-    existujici_hodnota = app_tables.hodnota.search(
+    existujici_hodnota = app_tables.hodnota.get(
         analyza=analyza, 
         varianta=varianta, 
         kriterium=kriterium
@@ -132,26 +132,26 @@ def uloz_hodnoty_matice(analyza_id, hodnoty):
   analyza = app_tables.analyza.get_by_id(analyza_id)
   
   # Pro každou hodnotu najdi nebo vytvoř záznam
-  for hodnotaItem in hodnoty:
+  for hodnota_item in hodnoty:
     # Najdi variantu a kritérium podle názvů
-    varianta = app_tables.varianta.get(nazev_varianty=hodnotaItem['nazev_varianty'], analyza=analyza)
-    kriterium = app_tables.kriterium.get(nazev_kriteria=hodnotaItem['nazev_kriteria'], analyza=analyza)
+    varianta = app_tables.varianta.get_by_id(hodnota_item['varianta_id'])
+    kriterium = app_tables.kriterium.get_by_id(hodnota_item['kriterium_id'])
     
     # Najdi existující záznam nebo vytvoř nový
-    existujici_hodnota = app_tables.hodnota.search(
+    existujici = app_tables.hodnota.get(
         analyza=analyza, 
         varianta=varianta, 
         kriterium=kriterium
     )
     
-    if existujici_hodnota:
+    if existujici:
       # Aktualizace existujícího záznamu
-      existujici_hodnota[0]['hodnota'] = hodnotaItem['hodnota']
+      existujici['hodnota'] = hodnota_item['hodnota']
     else:
       # Vytvoření nového záznamu
       app_tables.hodnota.add_row(
           analyza=analyza,
           varianta=varianta,
           kriterium=kriterium,
-          hodnota=hodnotaItem['hodnota']
+          hodnota=hodnota_item['hodnota']
       )
