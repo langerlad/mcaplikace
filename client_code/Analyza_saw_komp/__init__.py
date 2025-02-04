@@ -49,8 +49,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
     # Uložení analýzy a získání jejího ID
     self.analyza_id = anvil.server.call("pridej_analyzu", self.nazev, self.popis, self.zvolena_metoda)
-    print(f"Analýza vytvořena s ID: {self.analyza_id}")
-    print("uložené údaje: {} {} {}".format(self.nazev, self.popis, self.zvolena_metoda))
+    # print(f"Analýza vytvořena s ID: {self.analyza_id}")
+    # print("uložené údaje: {} {} {}".format(self.nazev, self.popis, self.zvolena_metoda))
 
     # Přepnutí na druhou kartu
     self.card_krok_1.visible = False
@@ -242,15 +242,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
   def card_krok_4_show(self, **event_args):
     """Inicializace čtvrté karty - načtení variant a kritérií pro matici hodnot"""
     # Načtení variant pro tuto analýzu
-    self.seznam_variant = anvil.server.call('nacti_varianty', self.analyza_id)
-    self.seznam_kriterii = anvil.server.call('nacti_kriteria', self.analyza_id)
+    varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
 
-    print("Loaded variants:", len(self.seznam_variant))  # Debug
-    print("Loaded criteria:", len(self.seznam_variant))  # Debug
+    print("Loaded variants:", len(varianty))  # Debug
+    print("Loaded criteria:", len(kriteria))  # Debug
     
     # Příprava dat pro matici
     matice_data = []
-    for varianta in self.seznam_variant:
+    for varianta in varianty:
       # Pro každou variantu vytvoříme seznam kritérií
       kriteria_pro_variantu = [
         {
@@ -260,42 +260,39 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
             # Načtení existující hodnoty, pokud existuje
             'hodnota': self.nacti_existujici_hodnotu(varianta.get_id(), kriterium.get_id())
         }
-        for kriterium in self.seznam_kriterii
+        for kriterium in kriteria
       ]
       
       matice_data.append({
         'nazev_varianty': varianta['nazev_varianty'],
         'id_varianty': varianta.get_id(),
-        'nazev_kriteria': kriteria_pro_variantu
+        'kriteria': kriteria_pro_variantu
       })
     
     # Nastavení dat do repeating panelu
     print("Matrix data prepared:", len(matice_data))  # Debug
     self.Matice_var.items = matice_data
 
-  def nacti_existujici_hodnotu(self, id_varianty, id_kriteria):
-    """Načte existující hodnotu pro danou variantu a kritérium"""
-    hodnota = anvil.server.call('nacti_existujici_hodnotu', self.analyza_id, id_varianty, id_kriteria)
-    return hodnota if hodnota is not None else ''
-
   def button_ulozit_4_click(self, **event_args):
-    """Uložení hodnot matice do databáze"""
+    print("Starting save process...")
     ulozene_hodnoty = []
     chyby = []
     
     for varianta_row in self.Matice_var.get_components():
-        # Get IDs from the item data
+        print(f"Processing variant: {varianta_row.item['id_varianty']}")
         id_varianty = varianta_row.item['id_varianty']
         
         for kriterium_row in varianta_row.Matice_krit.get_components():
+            print(f"Processing criterion: {kriterium_row.item['id_kriteria']}")
             id_kriteria = kriterium_row.item['id_kriteria']
             hodnota_text = kriterium_row.text_box_matice_hodnota.text
+            print(f"Value: {hodnota_text}")
             
             try:
-                hodnota = float(hodnota_text) if hodnota_text.strip() else None
+                hodnota = float(hodnota_text) if isinstance(hodnota_text, str) else hodnota_text
                 ulozene_hodnoty.append({
-                    'varianta_id': id_varianty,
-                    'kriterium_id': id_kriteria,
+                    'id_varianty': id_varianty,
+                    'id_kriteria': id_kriteria,
                     'hodnota': hodnota
                 })
             except ValueError:
@@ -305,11 +302,19 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
         self.label_chyba_4.text = "\n".join(chyby)
         self.label_chyba_4.visible = True
         return
-        
+    
+    print(f"Prepared values: {ulozene_hodnoty}")    
     try:
         anvil.server.call('uloz_hodnoty_matice', self.analyza_id, ulozene_hodnoty)
+        print("Server call completed")
         self.label_chyba_4.visible = False
         alert("Hodnoty byly úspěšně uloženy.")
     except Exception as e:
+        print(f"Server error: {str(e)}")
         self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
         self.label_chyba_4.visible = True
+
+  def nacti_existujici_hodnotu(self, id_varianty, id_kriteria):
+    """Načte existující hodnotu pro danou variantu a kritérium"""
+    hodnota = anvil.server.call('nacti_existujici_hodnotu', self.analyza_id, id_varianty, id_kriteria)
+    return hodnota if hodnota is not None else ''

@@ -110,11 +110,11 @@ def smazat_variantu(varianta_id):
     varianta.delete()
 
 @anvil.server.callable
-def nacti_existujici_hodnotu(analyza_id, id_varianty, id_kriteria):
+def nacti_existujici_hodnotu(analyza_id, varianta_id, kriterium_id):
     """Načte existující hodnotu pro danou variantu a kritérium"""
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    varianta = app_tables.varianta.get_by_id(id_varianty)
-    kriterium = app_tables.kriterium.get_by_id(id_kriteria)
+    varianta = app_tables.varianta.get_by_id(varianta_id)
+    kriterium = app_tables.kriterium.get_by_id(kriterium_id)
     
     # Hledání existující hodnoty
     existujici_hodnota = app_tables.hodnota.get(
@@ -124,34 +124,30 @@ def nacti_existujici_hodnotu(analyza_id, id_varianty, id_kriteria):
     )
     
     # Vrátí první nalezená hodnota nebo None
-    return existujici_hodnota[0]['hodnota'] if existujici_hodnota else None
+    return existujici_hodnota['hodnota'] if existujici_hodnota else None
 
 @anvil.server.callable
 def uloz_hodnoty_matice(analyza_id, hodnoty):
-  """Uloží všechny hodnoty matice do databáze"""
-  analyza = app_tables.analyza.get_by_id(analyza_id)
-  
-  # Pro každou hodnotu najdi nebo vytvoř záznam
-  for hodnota_item in hodnoty:
-    # Najdi variantu a kritérium podle názvů
-    varianta = app_tables.varianta.get_by_id(hodnota_item['varianta_id'])
-    kriterium = app_tables.kriterium.get_by_id(hodnota_item['kriterium_id'])
+    print(f"Server received {len(hodnoty)} values")
+    analyza = app_tables.analyza.get_by_id(analyza_id)
     
-    # Najdi existující záznam nebo vytvoř nový
-    existujici = app_tables.hodnota.get(
-        analyza=analyza, 
-        varianta=varianta, 
-        kriterium=kriterium
-    )
-    
-    if existujici:
-      # Aktualizace existujícího záznamu
-      existujici['hodnota'] = hodnota_item['hodnota']
-    else:
-      # Vytvoření nového záznamu
-      app_tables.hodnota.add_row(
-          analyza=analyza,
-          varianta=varianta,
-          kriterium=kriterium,
-          hodnota=hodnota_item['hodnota']
-      )
+    for hodnota_item in hodnoty:
+        print(f"Processing: {hodnota_item}")
+        varianta = app_tables.varianta.get_by_id(hodnota_item['id_varianty'])
+        kriterium = app_tables.kriterium.get_by_id(hodnota_item['id_kriteria'])
+        
+        existujici = app_tables.hodnota.get(
+            analyza=analyza, 
+            varianta=varianta, 
+            kriterium=kriterium
+        )
+        
+        if existujici:
+            existujici['hodnota'] = hodnota_item['hodnota']
+        else:
+            app_tables.hodnota.add_row(
+                analyza=analyza,
+                varianta=varianta,
+                kriterium=kriterium,
+                hodnota=hodnota_item['hodnota']
+            )

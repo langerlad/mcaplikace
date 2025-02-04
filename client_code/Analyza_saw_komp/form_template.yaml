@@ -172,7 +172,7 @@ components:
     name: Matice_var
     properties: {item_template: Analyza_saw_komp.Matice_var}
     type: RepeatingPanel
-  - event_bindings: {click: button_dalsi_3_click}
+  - event_bindings: {click: button_ulozit_4_click}
     layout_properties: {grid_position: 'FFXGJU,SHYKQC'}
     name: button_ulozit_4
     properties: {align: right, role: primary-color, text: Uložit a provést výpočet}

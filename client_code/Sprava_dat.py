@@ -12,7 +12,7 @@ def je_prihlasen():
   global __uzivatel
 
   if __uzivatel:
-    print("přhlášený uživatel (cache): {}".format(__uzivatel['email']))
+    #print("přhlášený uživatel (cache): {}".format(__uzivatel['email']))
     return __uzivatel
 
   __uzivatel = anvil.users.get_user()
