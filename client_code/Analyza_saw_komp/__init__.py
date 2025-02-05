@@ -298,10 +298,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     return hodnota if hodnota is not None else ''
 
   def button_zrusit_click(self, **event_args):
-   if confirm("Opravdu chcete zrušit tuto analýzu? Všechna data budou smazána."):
+   if confirm(
+          "Opravdu chcete odstranit tuto analýzu? Všechna data budou smazána.",
+          title="Odstranit analýzu",
+          large=True,
+          dismissible=True,
+          buttons=[("Ano", True), ("Ne", False)]
+          ):
     try:
       anvil.server.call('smaz_analyzu', self.analyza_id)
-      from .. import Navigace
       Navigace.go_domu()
     except Exception as e:
       alert(f"Chyba při mazání analýzy: {str(e)}")

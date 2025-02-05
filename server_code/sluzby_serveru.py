@@ -195,3 +195,17 @@ def uloz_hodnoty_matice(analyza_id, hodnoty):
                 kriterium=kriterium,
                 hodnota=hodnota_item['hodnota']
             )
+
+@anvil.server.callable
+def smaz_analyzu(analyza_id):
+   analyza = app_tables.analyza.get_by_id(analyza_id)
+   if not analyza:
+       return
+       
+   # Delete related rows first
+   app_tables.hodnota.delete_all(analyza=analyza)
+   app_tables.varianta.delete_all(analyza=analyza)
+   app_tables.kriterium.delete_all(analyza=analyza)
+   
+   # Delete the analysis itself
+   analyza.delete()
