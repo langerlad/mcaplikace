@@ -111,7 +111,7 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.typ = self.drop_down_typ.selected_value
 
     if not self.text_box_vaha.text:
-        return "Zadejte hodnotu váhy kritéria."
+      return "Zadejte hodnotu váhy kritéria."
 
     try:
       vaha = float(self.text_box_vaha.text)
@@ -150,31 +150,31 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     soucet_vah = round(soucet_vah, 3)
     
     if soucet_vah != 1:
-        return False, f"Součet vah musí být přesně 1. Aktuální součet je {soucet_vah}"
+      return False, f"Součet vah musí být přesně 1. Aktuální součet je {soucet_vah}"
     return True, None
 
   def button_dalsi_2_click(self, **event_args):
-      """Přepne na třetí krok formuláře pro přidání variant a provede kontrolu součtu vah"""
-      
-      # Kontrola, zda existují nějaká kritéria
-      kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-      if not kriteria:
-          self.label_chyba_2.text = "Přidejte alespoň jedno kritérium před pokračováním."
-          self.label_chyba_2.visible = True
-          return
-      
-      # Kontrola součtu vah
-      je_validni, chybova_zprava = self.kontrola_souctu_vah()
-      
-      if not je_validni:
-          self.label_chyba_2.text = chybova_zprava
-          self.label_chyba_2.visible = True
-          return
-          
-      # Pokud jsou všechny kontroly v pořádku, skryjeme chybovou hlášku a přejdeme na další krok
-      self.label_chyba_2.visible = False
-      self.card_krok_2.visible = False
-      self.card_krok_3.visible = True
+    """Přepne na třetí krok formuláře pro přidání variant a provede kontrolu součtu vah"""
+    
+    # Kontrola, zda existují nějaká kritéria
+    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+    if not kriteria:
+      self.label_chyba_2.text = "Přidejte alespoň jedno kritérium před pokračováním."
+      self.label_chyba_2.visible = True
+      return
+    
+    # Kontrola součtu vah
+    je_validni, chybova_zprava = self.kontrola_souctu_vah()
+    
+    if not je_validni:
+      self.label_chyba_2.text = chybova_zprava
+      self.label_chyba_2.visible = True
+      return
+        
+    # Pokud jsou všechny kontroly v pořádku, skryjeme chybovou hlášku a přejdeme na další krok
+    self.label_chyba_2.visible = False
+    self.card_krok_2.visible = False
+    self.card_krok_3.visible = True
 
 
 
@@ -208,13 +208,13 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.nacti_varianty()
 
   def validace_pridej_variantu(self):
-      """Validace vstupů pro přidání varianty"""
-      if not self.text_box_nazev_varianty.text:
-          return "Zadejte název varianty."    
-      self.nazev_varianty = self.text_box_nazev_varianty.text
-      
-      self.popis_varianty = self.text_box_popis_varianty.text
-      return None
+    """Validace vstupů pro přidání varianty"""
+    if not self.text_box_nazev_varianty.text:
+      return "Zadejte název varianty."    
+    self.nazev_varianty = self.text_box_nazev_varianty.text
+    
+    self.popis_varianty = self.text_box_popis_varianty.text
+    return None
   
   def nacti_varianty(self, **event_args):
       """Načte uložené varianty a zobrazí je v repeating panelu"""
@@ -240,38 +240,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.card_krok_4_show()
 
   def card_krok_4_show(self, **event_args):
-    """Inicializace čtvrté karty - načtení variant a kritérií pro matici hodnot"""
-    # Načtení variant pro tuto analýzu
-    varianty = anvil.server.call('nacti_varianty', self.analyza_id)
-    kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-
-    print("Loaded variants:", len(varianty))  # Debug
-    print("Loaded criteria:", len(kriteria))  # Debug
-    
-    # Příprava dat pro matici
-    matice_data = []
-    for varianta in varianty:
-      # Pro každou variantu vytvoříme seznam kritérií
-      kriteria_pro_variantu = [
-        {
-            'nazev_kriteria': kriterium['nazev_kriteria'],
-            'id_varianty': varianta.get_id(),
-            'id_kriteria': kriterium.get_id(),
-            # Načtení existující hodnoty, pokud existuje
-            'hodnota': self.nacti_existujici_hodnotu(varianta.get_id(), kriterium.get_id())
-        }
-        for kriterium in kriteria
-      ]
-      
-      matice_data.append({
-        'nazev_varianty': varianta['nazev_varianty'],
-        'id_varianty': varianta.get_id(),
-        'kriteria': kriteria_pro_variantu
-      })
-    
-    # Nastavení dat do repeating panelu
-    print("Matrix data prepared:", len(matice_data))  # Debug
-    self.Matice_var.items = matice_data
+    data = anvil.server.call('nacti_matice_data', self.analyza_id)
+    self.Matice_var.items = data  
 
   def button_ulozit_4_click(self, **event_args):
     print("Starting save process...")
@@ -279,14 +249,24 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     chyby = []
     
     for varianta_row in self.Matice_var.get_components():
-        print(f"Processing variant: {varianta_row.item['id_varianty']}")
         id_varianty = varianta_row.item['id_varianty']
         
         for kriterium_row in varianta_row.Matice_krit.get_components():
-            print(f"Processing criterion: {kriterium_row.item['id_kriteria']}")
             id_kriteria = kriterium_row.item['id_kriteria']
             hodnota_text = kriterium_row.text_box_matice_hodnota.text
-            print(f"Value: {hodnota_text}")
+            
+          # Validace vstupu hodnota (TODO: zaměnitelnost pro float "." a "," ", ")
+            if isinstance(hodnota_text, (int, float)):
+                hodnota = float(hodnota_text)
+            elif not hodnota_text or (isinstance(hodnota_text, str) and not hodnota_text.strip()):
+                chyby.append(f"Chybí hodnota pro variantu {varianta_row.item['nazev_varianty']}")
+                continue
+            else:
+                try:
+                    hodnota = float(hodnota_text)
+                except ValueError:
+                    chyby.append(f"Neplatná hodnota pro variantu {varianta_row.item['nazev_varianty']}")
+                    continue
             
             try:
                 hodnota = float(hodnota_text) if isinstance(hodnota_text, str) else hodnota_text
@@ -302,15 +282,13 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
         self.label_chyba_4.text = "\n".join(chyby)
         self.label_chyba_4.visible = True
         return
-    
-    print(f"Prepared values: {ulozene_hodnoty}")    
+      
     try:
         anvil.server.call('uloz_hodnoty_matice', self.analyza_id, ulozene_hodnoty)
-        print("Server call completed")
         self.label_chyba_4.visible = False
         alert("Hodnoty byly úspěšně uloženy.")
+        Navigace.go_domu()
     except Exception as e:
-        print(f"Server error: {str(e)}")
         self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
         self.label_chyba_4.visible = True
 

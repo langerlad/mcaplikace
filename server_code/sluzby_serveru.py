@@ -126,13 +126,57 @@ def nacti_existujici_hodnotu(analyza_id, varianta_id, kriterium_id):
     # Vrátí první nalezená hodnota nebo None
     return existujici_hodnota['hodnota'] if existujici_hodnota else None
 
+# @anvil.server.callable
+# def uloz_hodnoty_matice(analyza_id, hodnoty):
+#     print(f"Server received {len(hodnoty)} values")
+#     analyza = app_tables.analyza.get_by_id(analyza_id)
+    
+#     for hodnota_item in hodnoty:
+#         print(f"Processing: {hodnota_item}")
+#         varianta = app_tables.varianta.get_by_id(hodnota_item['id_varianty'])
+#         kriterium = app_tables.kriterium.get_by_id(hodnota_item['id_kriteria'])
+        
+#         existujici = app_tables.hodnota.get(
+#             analyza=analyza, 
+#             varianta=varianta, 
+#             kriterium=kriterium
+#         )
+        
+#         if existujici:
+#             existujici['hodnota'] = hodnota_item['hodnota']
+#         else:
+#             app_tables.hodnota.add_row(
+#                 analyza=analyza,
+#                 varianta=varianta,
+#                 kriterium=kriterium,
+#                 hodnota=hodnota_item['hodnota']
+#             )
+
+@anvil.server.callable
+def nacti_matice_data(analyza_id):
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    varianty = list(app_tables.varianta.search(analyza=analyza))
+    kriteria = list(app_tables.kriterium.search(analyza=analyza))
+    hodnoty = {(h['varianta'].get_id(), h['kriterium'].get_id()): h['hodnota'] 
+               for h in app_tables.hodnota.search(analyza=analyza)}
+    
+    return [prepare_variant_data(v, kriteria, hodnoty) for v in varianty]
+
+def prepare_variant_data(varianta, kriteria, hodnoty):
+    return {
+        'nazev_varianty': varianta['nazev_varianty'],
+        'id_varianty': varianta.get_id(),
+        'kriteria': [{
+            'nazev_kriteria': k['nazev_kriteria'],
+            'id_kriteria': k.get_id(),
+            'hodnota': hodnoty.get((varianta.get_id(), k.get_id()), '')
+        } for k in kriteria]
+    }
+
 @anvil.server.callable
 def uloz_hodnoty_matice(analyza_id, hodnoty):
-    print(f"Server received {len(hodnoty)} values")
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    
     for hodnota_item in hodnoty:
-        print(f"Processing: {hodnota_item}")
         varianta = app_tables.varianta.get_by_id(hodnota_item['id_varianty'])
         kriterium = app_tables.kriterium.get_by_id(hodnota_item['id_kriteria'])
         
