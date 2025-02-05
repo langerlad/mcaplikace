@@ -255,6 +255,19 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
             id_kriteria = kriterium_row.item['id_kriteria']
             hodnota_text = kriterium_row.text_box_matice_hodnota.text
             
+          # Validace vstupu hodnota (TODO: zaměnitelnost pro float "." a "," ", ")
+            if isinstance(hodnota_text, (int, float)):
+                hodnota = float(hodnota_text)
+            elif not hodnota_text or (isinstance(hodnota_text, str) and not hodnota_text.strip()):
+                chyby.append(f"Chybí hodnota pro variantu {varianta_row.item['nazev_varianty']}")
+                continue
+            else:
+                try:
+                    hodnota = float(hodnota_text)
+                except ValueError:
+                    chyby.append(f"Neplatná hodnota pro variantu {varianta_row.item['nazev_varianty']}")
+                    continue
+            
             try:
                 hodnota = float(hodnota_text) if isinstance(hodnota_text, str) else hodnota_text
                 ulozene_hodnoty.append({
