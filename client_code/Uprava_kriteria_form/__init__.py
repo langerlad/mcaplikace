@@ -9,20 +9,14 @@ from anvil.tables import app_tables
 
 class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
   def __init__(self, item, **properties):
-    # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    
-    # Initialize form with the existing criterion data
     self.text_box_nazev_kriteria.text = item['nazev_kriteria']
     self.drop_down_typ.selected_value = item['typ']
     self.text_box_vaha.text = str(item['vaha'])
-    
-    # Store the original item for reference
     self._item = item
-
     self.label_chyba.visible = False
+
   def validate_weight(self):
-    """Validates the weight value"""
     try:
       vaha = float(self.text_box_vaha.text)
       if not (0 <= vaha <= 1):
@@ -31,12 +25,13 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
         return False
       return True
     except ValueError:
-      self.label_error.text = "Váha musí být platné číslo"
-      self.label_error.visible = True
+      self.label_chyba.text = "Váha musí být platné číslo"
+      self.label_chyba.visible = True
       return False
       
   def get_updated_data(self):
-    """Returns the updated criterion data"""
+    if not self.validate_weight():
+      return None
     return {
       'id': self._item['id'],
       'nazev_kriteria': self.text_box_nazev_kriteria.text,
@@ -45,7 +40,6 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
     }
 
   def text_box_vaha_lost_focus(self, **event_args):
-    """This method is called when the TextBox loses focus"""
     self.validate_weight()
     
     
