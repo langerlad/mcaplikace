@@ -306,7 +306,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
           buttons=[("Ano", True), ("Ne", False)]
           ):
     try:
-      anvil.server.call('smaz_analyzu', self.analyza_id)
+      if hasattr(self, 'analyza_id') and self.analyza_id:
+        anvil.server.call('smaz_analyzu', self.analyza_id)
       Navigace.go_domu()
     except Exception as e:
       alert(f"Chyba při mazání analýzy: {str(e)}")

@@ -31,12 +31,12 @@ components:
   - event_bindings: {click: button_zrusit_click}
     layout_properties: {grid_position: ',UVCAQV'}
     name: button_zrusit
-    properties: {align: left, role: primary-color, text: Zrušit}
+    properties: {align: left, icon: 'fa:close', role: primary-color, text: Zrušit}
     type: Button
   - event_bindings: {click: button_dalsi_click}
     layout_properties: {grid_position: ''}
     name: button_dalsi
-    properties: {align: right, role: primary-color, text: Další krok}
+    properties: {align: right, icon: 'fa:arrow-right', icon_align: right, role: primary-color, text: Další krok}
     type: Button
   - layout_properties: {grid_position: 'AGMPSX,QWXOJE'}
     name: label_chyba
@@ -98,16 +98,21 @@ components:
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
+  - event_bindings: {click: button_zrusit_click}
+    layout_properties: {grid_position: 'CTLUSJ,STPCFI'}
+    name: button_zrusit_2
+    properties: {align: left, icon: 'fa:close', role: primary-color, text: Zrušit}
+    type: Button
   - event_bindings: {click: button_dalsi_2_click}
     layout_properties: {grid_position: 'CTLUSJ,HKOARL'}
     name: button_dalsi_2
-    properties: {align: right, role: primary-color, text: Další krok}
+    properties: {align: right, icon: 'fa:arrow-right', icon_align: right, role: primary-color, text: Další krok}
     type: Button
   - layout_properties: {grid_position: 'ERHLYH,CWFYGX'}
     name: label_chyba_2
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
-  layout_properties: {grid_position: 'RTKXMX,BPMMQS'}
+  layout_properties: {grid_position: 'UOVTML,YGHHIB'}
   name: card_krok_2
   properties: {col_widths: '{"OHODQT":25,"CXZENQ":15,"RKVGDY":5,"YZYJRA":15}', role: card, visible: true}
   type: ColumnPanel
@@ -151,10 +156,15 @@ components:
       rows_per_page: 60
       show_page_controls: false
     type: DataGrid
+  - event_bindings: {click: button_zrusit_click}
+    layout_properties: {grid_position: 'RJXKOH,CHZRAY'}
+    name: button_zrusit_3
+    properties: {align: left, icon: 'fa:close', role: primary-color, text: Zrušit}
+    type: Button
   - event_bindings: {click: button_dalsi_3_click}
     layout_properties: {grid_position: 'RJXKOH,MSAZOD'}
     name: button_dalsi_3
-    properties: {align: right, role: primary-color, text: Další krok}
+    properties: {align: right, icon: 'fa:arrow-right', icon_align: right, role: primary-color, text: Další krok}
     type: Button
   - layout_properties: {grid_position: 'LUCKUB,KGGNKJ'}
     name: label_chyba_3
@@ -177,16 +187,21 @@ components:
     name: Matice_var
     properties: {item_template: Analyza_saw_komp.Matice_var}
     type: RepeatingPanel
+  - event_bindings: {click: button_zrusit_click}
+    layout_properties: {grid_position: 'FFXGJU,VYLTWK'}
+    name: button_zrusit_4
+    properties: {align: left, icon: 'fa:close', role: primary-color, text: Zrušit}
+    type: Button
   - event_bindings: {click: button_ulozit_4_click}
     layout_properties: {grid_position: 'FFXGJU,SHYKQC'}
     name: button_ulozit_4
-    properties: {align: right, role: primary-color, text: Uložit a provést výpočet}
+    properties: {align: right, icon: 'fa:save', role: primary-color, text: Uložit a provést výpočet}
     type: Button
   - layout_properties: {grid_position: 'OWYQOM,EJVRPW'}
     name: label_chyba_4
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
     type: Label
-  layout_properties: {grid_position: 'CNFWLP,OEJXHG'}
+  layout_properties: {grid_position: 'WCHZGS,XMCCVU'}
   name: card_krok_4
   properties: {role: card}
   type: ColumnPanel

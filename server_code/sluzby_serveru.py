@@ -126,32 +126,6 @@ def nacti_existujici_hodnotu(analyza_id, varianta_id, kriterium_id):
     # Vrátí první nalezená hodnota nebo None
     return existujici_hodnota['hodnota'] if existujici_hodnota else None
 
-# @anvil.server.callable
-# def uloz_hodnoty_matice(analyza_id, hodnoty):
-#     print(f"Server received {len(hodnoty)} values")
-#     analyza = app_tables.analyza.get_by_id(analyza_id)
-    
-#     for hodnota_item in hodnoty:
-#         print(f"Processing: {hodnota_item}")
-#         varianta = app_tables.varianta.get_by_id(hodnota_item['id_varianty'])
-#         kriterium = app_tables.kriterium.get_by_id(hodnota_item['id_kriteria'])
-        
-#         existujici = app_tables.hodnota.get(
-#             analyza=analyza, 
-#             varianta=varianta, 
-#             kriterium=kriterium
-#         )
-        
-#         if existujici:
-#             existujici['hodnota'] = hodnota_item['hodnota']
-#         else:
-#             app_tables.hodnota.add_row(
-#                 analyza=analyza,
-#                 varianta=varianta,
-#                 kriterium=kriterium,
-#                 hodnota=hodnota_item['hodnota']
-#             )
-
 @anvil.server.callable
 def nacti_matice_data(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
@@ -198,14 +172,17 @@ def uloz_hodnoty_matice(analyza_id, hodnoty):
 
 @anvil.server.callable
 def smaz_analyzu(analyza_id):
-   analyza = app_tables.analyza.get_by_id(analyza_id)
-   if not analyza:
-       return
-       
-   # Delete related rows first
-   app_tables.hodnota.delete_all(analyza=analyza)
-   app_tables.varianta.delete_all(analyza=analyza)
-   app_tables.kriterium.delete_all(analyza=analyza)
-   
-   # Delete the analysis itself
-   analyza.delete()
+  analyza = app_tables.analyza.get_by_id(analyza_id)
+  if not analyza:
+      return
+      
+  # Delete related rows first
+  for hodnota in app_tables.hodnota.search(analyza=analyza):
+    hodnota.delete()
+  for varianta in app_tables.varianta.search(analyza=analyza):
+    varianta.delete()
+  for kriterium in app_tables.kriterium.search(analyza=analyza):
+    kriterium.delete()
+  
+  # Delete the analysis itself
+  analyza.delete()
