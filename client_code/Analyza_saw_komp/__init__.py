@@ -296,3 +296,12 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     """Načte existující hodnotu pro danou variantu a kritérium"""
     hodnota = anvil.server.call('nacti_existujici_hodnotu', self.analyza_id, id_varianty, id_kriteria)
     return hodnota if hodnota is not None else ''
+
+  def button_zrusit_click(self, **event_args):
+   if confirm("Opravdu chcete zrušit tuto analýzu? Všechna data budou smazána."):
+    try:
+      anvil.server.call('smaz_analyzu', self.analyza_id)
+      from .. import Navigace
+      Navigace.go_domu()
+    except Exception as e:
+      alert(f"Chyba při mazání analýzy: {str(e)}")
