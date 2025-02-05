@@ -311,3 +311,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
       Navigace.go_domu()
     except Exception as e:
       alert(f"Chyba při mazání analýzy: {str(e)}")
+
+  def button_zpet_2_click(self, **event_args):
+    self.card_krok_1.visible = True
+    self.card_krok_2.visible = False
+
+  def button_zpet_3_click(self, **event_args):
+    self.card_krok_2.visible = True
+    self.card_krok_3.visible = False
+
+  def button_zpet_4_click(self, **event_args):
+    self.card_krok_3.visible = True
+    self.card_krok_4.visible = False
