@@ -125,3 +125,14 @@ def set_active_nav(stav):
   komp = get_komp()
   komp.set_active_nav(stav)
 
+def check_and_delete_unfinished(next_page):
+    komp = get_komp()
+    if hasattr(komp, 'pravy_panel'):
+        current_form = komp.pravy_panel.get_components()[0]
+        if isinstance(current_form, Analyza_saw_komp) and current_form.analyza_id:
+            if confirm("Opustíte rozpracovanou analýzu. Pokračovat?"):
+                anvil.server.call('smaz_analyzu', current_form.analyza_id)
+                return True
+            return False
+    return True
+
