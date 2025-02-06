@@ -31,12 +31,11 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
       
   def get_updated_data(self):
     if not self.validate_weight():
-      return None
+        return None
     return {
-      'id': self._item['id'],
-      'nazev_kriteria': self.text_box_nazev_kriteria.text,
-      'typ': self.drop_down_typ.selected_value,
-      'vaha': float(self.text_box_vaha.text)
+        'nazev_kriteria': self.text_box_nazev_kriteria.text,
+        'typ': self.drop_down_typ.selected_value,
+        'vaha': float(self.text_box_vaha.text)
     }
 
   def text_box_vaha_lost_focus(self, **event_args):

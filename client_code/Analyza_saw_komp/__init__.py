@@ -21,7 +21,8 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.cached_analyza = None
     self.cached_kriteria = []
     self.cached_varianty = []
-    self.cached_hodnoty = {}
+    #self.cached_hodnoty = {}
+    self.cached_hodnoty = {'matice_hodnoty': {}}
     
     # Event handlers
     self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
@@ -125,6 +126,15 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
       self.card_krok_2.visible = False
       self.card_krok_3.visible = True
 
+  def kontrola_souctu_vah(self):
+   """Kontroluje, zda součet všech vah kritérií je roven 1"""
+   soucet_vah = sum(float(k['vaha']) for k in self.cached_kriteria)
+   soucet_vah = round(soucet_vah, 3)
+   
+   if soucet_vah != 1:
+       return False, f"Součet vah musí být přesně 1. Aktuální součet je {soucet_vah}"
+   return True, None
+  
   def button_dalsi_3_click(self, **event_args):
       if not self.cached_varianty:
           self.label_chyba_3.text = "Přidejte alespoň jednu variantu."
@@ -135,6 +145,22 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
       self.card_krok_4.visible = True
       self.card_krok_4_show()
 
+  def card_krok_4_show(self, **event_args):
+    matice_data = []
+    for varianta in self.cached_varianty:
+        kriteria_pro_variantu = [{
+            'nazev_kriteria': k['nazev_kriteria'],
+            'id_kriteria': k['nazev_kriteria'],  
+            'hodnota': ''
+        } for k in self.cached_kriteria]
+        
+        matice_data.append({
+            'nazev_varianty': varianta['nazev_varianty'],
+            'id_varianty': varianta['nazev_varianty'],  
+            'kriteria': kriteria_pro_variantu
+        })
+    
+    self.Matice_var.items = matice_data
   
   def button_pridej_variantu_click(self, **event_args):
     self.label_chyba_3.visible = False
@@ -155,6 +181,11 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.text_box_popis_varianty.text = ""
 
     self.nacti_varianty()
+
+  def validace_pridej_variantu(self):
+   if not self.text_box_nazev_varianty.text:
+       return "Zadejte název varianty."
+   return None
 
   def nacti_varianty(self, **event_args):
     self.repeating_panel_varianty.items = [
@@ -211,8 +242,13 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
 
   # Navigation methods remain unchanged
   def button_zpet_2_click(self, **event_args):
-    self.card_krok_1.visible = True
-    self.card_krok_2.visible = False
+   # Delete cached analysis when going back to step 1
+   if hasattr(self, 'analyza_id') and self.analyza_id:
+       anvil.server.call('smaz_analyzu', self.analyza_id)
+       self.analyza_id = None
+   self.cached_analyza = None
+   self.card_krok_1.visible = True
+   self.card_krok_2.visible = False
 
   def button_zpet_3_click(self, **event_args):
     self.card_krok_2.visible = True

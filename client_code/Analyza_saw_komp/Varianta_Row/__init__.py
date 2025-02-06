@@ -5,6 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from .. import Analyza_saw_komp
 
 
 class Varianta_Row(Varianta_RowTemplate):
@@ -15,9 +16,17 @@ class Varianta_Row(Varianta_RowTemplate):
     # Any code you write here will run before the form opens.
 
   def link_smazat_variantu_click(self, **event_args):
-    """Smaže vybranou variantu z databáze a obnoví seznam"""
-    varianta = self.item
-    anvil.server.call('smazat_variantu', varianta["id"])
-    self.parent.raise_event('x-refresh')
+    if confirm("Opravdu chcete smazat tuto variantu?"):
+        main_form = self.get_main_form()
+        main_form.cached_varianty = [v for v in main_form.cached_varianty 
+                                   if v['nazev_varianty'] != self.item['nazev_varianty']]
+        self.parent.raise_event('x-refresh')
+
+  def get_main_form(self):
+      current = self
+      while current and not isinstance(current, Analyza_saw_komp):
+          current = current.parent
+      return current
+
 
    
