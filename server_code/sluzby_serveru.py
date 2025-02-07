@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# Modul: Sluzby_serveru
+# -------------------------------------------------------
 import datetime
 import anvil.users
 import anvil.tables as tables
@@ -11,7 +14,7 @@ def pridej_analyzu(nazev, popis, zvolena_metoda):
   uzivatel = anvil.users.get_user()
   if not uzivatel:
     raise Exception("Neznámý uživatel nemůže volat metodu pridej_analyzu.")
-    
+  
   analyza = app_tables.analyza.add_row(
     nazev=nazev,
     popis=popis,
@@ -29,7 +32,7 @@ def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
   if not analyza:
     raise Exception("Analýza neexistuje")
 
-  # Save kriteria
+  # Uložit kritéria
   kriteria_ids = {}
   for k in kriteria:
     kr = app_tables.kriterium.add_row(
@@ -40,7 +43,7 @@ def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
     )
     kriteria_ids[k['nazev_kriteria']] = kr.get_id()
 
-  # Save varianty
+  # Uložit varianty
   varianty_ids = {}
   for v in varianty:
     var = app_tables.varianta.add_row(
@@ -50,7 +53,7 @@ def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
     )
     varianty_ids[v['nazev_varianty']] = var.get_id()
 
-  # Save hodnoty
+  # Uložit hodnoty
   for h in hodnoty:
     app_tables.hodnota.add_row(
       analyza=analyza,
@@ -64,12 +67,11 @@ def smaz_analyzu(analyza_id):
   analyza = app_tables.analyza.get_by_id(analyza_id)
   if not analyza:
     return
-      
+    
   for hodnota in app_tables.hodnota.search(analyza=analyza):
     hodnota.delete()
   for varianta in app_tables.varianta.search(analyza=analyza):
     varianta.delete()
   for kriterium in app_tables.kriterium.search(analyza=analyza):
     kriterium.delete()
-  
   analyza.delete()

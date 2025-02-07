@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# Modul: Navigace
+# -------------------------------------------------------
 import anvil.server
 import anvil.tables as tables
 import anvil.tables.query as q
@@ -16,130 +19,115 @@ from .Ucet_komp import Ucet_komp
 from .Vyber_analyzy_komp import Vyber_analyzy_komp
 from . import Sprava_dat
 
-
 komponenta_hl_okna = None
 
-#funkce ověřuje vložení komponenty do hlavního okna
-def get_komp():
+def ziskej_komponentu():
   if komponenta_hl_okna is None:
     raise Exception("Není zvolena žádná komponenta hlavního okna")
-
   return komponenta_hl_okna
 
 def go_domu():
-  if check_and_delete_unfinished('domu'):
+  if over_a_smaz_rozpracovanou("domu"):
     set_active_nav("domu")
-    #set_title("")
-    komp = get_komp()
-    uzivatel = Sprava_dat.je_prihlasen() # ptáme se anvilu jestli máme přihlášeného uživatele
+    komp = ziskej_komponentu()
+    uzivatel = Sprava_dat.je_prihlasen()
     if uzivatel:
-      komp.nahraj_komponentu(Prihlas_uziv_komp()) # Dashboard
+      komp.nahraj_komponentu(Prihlas_uziv_komp())
     else:
-      komp.nahraj_komponentu(Neznam_uziv_komp()) # Landing page
+      komp.nahraj_komponentu(Neznam_uziv_komp())
 
 def go_pridat_analyzu():
-  if check_and_delete_unfinished("pridat"):
+  if over_a_smaz_rozpracovanou("pridat"):
     set_active_nav("pridat")
-    #set_title("")
-  
     uzivatel = kontrola_prihlaseni()
     if not uzivatel:
       go_domu()
       return
     
-    komp = get_komp()
+    komp = ziskej_komponentu()
     komp.nahraj_komponentu(Vyber_analyzy_komp())
 
 def go_nastaveni():
-  if check_and_delete_unfinished("nastaveni"):
+  if over_a_smaz_rozpracovanou("nastaveni"):
     set_active_nav("nastaveni")
-    #set_title("")
-  
     uzivatel = kontrola_prihlaseni()
     if not uzivatel:
       go_domu()
       return
     
-    komp = get_komp()
+    komp = ziskej_komponentu()
     komp.nahraj_komponentu(Nastaveni_komp())
 
 def go_info():
-  if check_and_delete_unfinished("info"):
+  if over_a_smaz_rozpracovanou("info"):
     set_active_nav("info")
-    #set_title("")
-    komp = get_komp()
+    komp = ziskej_komponentu()
     komp.nahraj_komponentu(Info_komp())
 
 def go_administrace():
-  if check_and_delete_unfinished("administrace"):
+  if over_a_smaz_rozpracovanou("administrace"):
     set_active_nav("administrace")
-    #set_title("")
-  
     uzivatel = kontrola_prihlaseni()
     if not uzivatel:
       go_domu()
       return
     
-    komp = get_komp()
+    komp = ziskej_komponentu()
     komp.nahraj_komponentu(Administrace_komp())
 
 def go_ucet():
-  if check_and_delete_unfinished("ucet"):
-    #set_title("")
-  
+  if over_a_smaz_rozpracovanou("ucet"):
     uzivatel = kontrola_prihlaseni()
     if not uzivatel:
       go_domu()
       return
     
-    komp = get_komp()
+    komp = ziskej_komponentu()
     komp.nahraj_komponentu(Ucet_komp())
 
-# link je na komponentě Výběr analýzy
 def go_ahp():
-
   uzivatel = kontrola_prihlaseni()
   if not uzivatel:
     go_domu()
     return
-  
-  komp = get_komp()
+  komp = ziskej_komponentu()
   komp.nahraj_komponentu(Analyza_ahp_komp())
 
 def go_saw():
-
   uzivatel = kontrola_prihlaseni()
   if not uzivatel:
     go_domu()
     return
-  
-  komp = get_komp()
+  komp = ziskej_komponentu()
   komp.nahraj_komponentu(Analyza_saw_komp())
 
-# řízení přístupu uživatelů
 def kontrola_prihlaseni():
   uzivatel = Sprava_dat.je_prihlasen()
   if uzivatel:
     return uzivatel
-
   uzivatel = anvil.users.login_with_form(allow_cancel=True)
-  komp = get_komp()
+  komp = ziskej_komponentu()
   komp.nastav_ucet(uzivatel)
   return uzivatel
 
-# aktivní položka v levém menu
 def set_active_nav(stav):
-  komp = get_komp()
+  komp = ziskej_komponentu()
   komp.set_active_nav(stav)
 
-def check_and_delete_unfinished(next_page):
-    komp = get_komp()
-    if hasattr(komp, 'pravy_panel'):
-        components = komp.pravy_panel.get_components()
-        if components and isinstance(components[0], Analyza_saw_komp) and components[0].analyza_id:
-            if confirm("Opustíte rozpracovanou analýzu. Pokračovat?"):
-                anvil.server.call('smaz_analyzu', components[0].analyza_id)
-                return True
-            return False
-    return True
-
+def over_a_smaz_rozpracovanou(cilova_stranka):
+  """
+  Zkontroluje, zda v pravém panelu není rozdělaná SAW analýza.
+  Pokud je, a uživatel potvrdí, smaže ji ze serveru a vrátí True.
+  Pokud uživatel odmítne, vrátí False a zůstane na stránce.
+  """
+  komp = ziskej_komponentu()
+  if hasattr(komp, 'pravy_panel'):
+    components = komp.pravy_panel.get_components()
+    if (components
+        and isinstance(components[0], Analyza_saw_komp)
+        and components[0].analyza_id):
+      if confirm("Opustíte rozpracovanou analýzu. Pokračovat?"):
+        anvil.server.call('smaz_analyzu', components[0].analyza_id)
+        return True
+      return False
+  return True

@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# RowTemplate: Matice_var (řádek pro variantu)
+# -------------------------------------------------------
 from ._anvil_designer import Matice_varTemplate
 from anvil import *
 import anvil.server
