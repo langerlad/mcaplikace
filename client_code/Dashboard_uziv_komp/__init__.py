@@ -1,4 +1,4 @@
-from ._anvil_designer import Neznam_uziv_kompTemplate
+from ._anvil_designer import Dashboard_uziv_kompTemplate
 from anvil import *
 import anvil.server
 import anvil.tables as tables
@@ -7,7 +7,7 @@ from anvil.tables import app_tables
 import anvil.users
 
 
-class Neznam_uziv_komp(Neznam_uziv_kompTemplate):
+class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)

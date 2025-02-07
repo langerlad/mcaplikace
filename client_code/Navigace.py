@@ -10,11 +10,11 @@ from anvil import *
 from .Administrace_komp import Administrace_komp
 from .Analyza_ahp_komp import Analyza_ahp_komp
 from .Analyza_vystup_komp import Analyza_vystup_komp
-from .Analyza_saw_komp import Analyza_saw_komp
+from .Wizard_komp import Wizard_komp
 from .Info_komp import Info_komp
 from .Nastaveni_komp import Nastaveni_komp
-from .Neznam_uziv_komp import Neznam_uziv_komp
-from .Prihlas_uziv_komp import Prihlas_uziv_komp
+from .HERO_komp import HERO_komp
+from .Dashboard_uziv_komp import Dashboard_uziv_komp
 from .Ucet_komp import Ucet_komp
 from .Vyber_analyzy_komp import Vyber_analyzy_komp
 from . import Sprava_dat
@@ -32,9 +32,9 @@ def go_domu():
     komp = ziskej_komponentu()
     uzivatel = Sprava_dat.je_prihlasen()
     if uzivatel:
-      komp.nahraj_komponentu(Prihlas_uziv_komp())
+      komp.nahraj_komponentu(Dashboard_uziv_komp())
     else:
-      komp.nahraj_komponentu(Neznam_uziv_komp())
+      komp.nahraj_komponentu(HERO_komp())
 
 def go_pridat_analyzu():
   if over_a_smaz_rozpracovanou("pridat"):
@@ -99,7 +99,7 @@ def go_saw():
     go_domu()
     return
   komp = ziskej_komponentu()
-  komp.nahraj_komponentu(Analyza_saw_komp())
+  komp.nahraj_komponentu(Wizard_komp())
 
 def kontrola_prihlaseni():
   uzivatel = Sprava_dat.je_prihlasen()
@@ -124,7 +124,7 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
   if hasattr(komp, 'pravy_panel'):
     components = komp.pravy_panel.get_components()
     if (components
-        and isinstance(components[0], Analyza_saw_komp)
+        and isinstance(components[0], Wizard_komp)
         and components[0].analyza_id):
       if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?", dismissible=True,
         buttons=[("Ano", True), ("Ne", False)]):

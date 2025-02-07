@@ -1,4 +1,4 @@
-from ._anvil_designer import Prihlas_uziv_kompTemplate
+from ._anvil_designer import HERO_kompTemplate
 from anvil import *
 import anvil.server
 import anvil.tables as tables
@@ -7,7 +7,7 @@ from anvil.tables import app_tables
 import anvil.users
 
 
-class Prihlas_uziv_komp(Prihlas_uziv_kompTemplate):
+class HERO_komp(HERO_kompTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
