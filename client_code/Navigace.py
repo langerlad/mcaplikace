@@ -126,7 +126,8 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
     if (components
         and isinstance(components[0], Analyza_saw_komp)
         and components[0].analyza_id):
-      if confirm("Opustíte rozpracovanou analýzu. Pokračovat?"):
+      if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?", dismissible=True,
+        buttons=[("Ano", True), ("Ne", False)]):
         anvil.server.call('smaz_analyzu', components[0].analyza_id)
         return True
       return False

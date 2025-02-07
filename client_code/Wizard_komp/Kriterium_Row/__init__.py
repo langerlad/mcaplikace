@@ -9,7 +9,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from ...Uprava_kriteria_form import Uprava_kriteria_form
-from .. import Analyza_saw_komp
+from .. import Wizard_komp
 
 
 class Kriterium_Row(Kriterium_RowTemplate):
@@ -18,15 +18,16 @@ class Kriterium_Row(Kriterium_RowTemplate):
 
   def get_main_form(self):
     """
-    Projde hierarchy parentů, dokud nenajde instanci Analyza_saw_komp
+    Projde hierarchy parentů, dokud nenajde instanci Wizard_komp
     """
     current = self
-    while current and not isinstance(current, Analyza_saw_komp):
+    while current and not isinstance(current, Wizard_komp):
       current = current.parent
     return current
 
   def link_smazat_kriterium_click(self, **event_args):
-    if confirm("Opravdu chcete smazat toto kritérium?"):
+    if confirm("Opravdu chcete smazat toto kritérium?", dismissible=True,
+        buttons=[("Ano", True), ("Ne", False)]):
       main_form = self.get_main_form()
       main_form.cached_kriteria = [
         k for k in main_form.cached_kriteria

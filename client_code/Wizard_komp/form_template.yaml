@@ -84,7 +84,7 @@ components:
     type: Spacer
   - components:
     - name: repeating_panel_kriteria
-      properties: {item_template: Analyza_saw_komp.Kriterium_Row}
+      properties: {item_template: Wizard_komp.Kriterium_Row}
       type: RepeatingPanel
     layout_properties: {grid_position: 'UEEROT,ERJJNR'}
     name: data_grid_kriteria
@@ -149,7 +149,7 @@ components:
     type: Spacer
   - components:
     - name: repeating_panel_varianty
-      properties: {item_template: Analyza_saw_komp.Varianta_Row}
+      properties: {item_template: Wizard_komp.Varianta_Row}
       type: RepeatingPanel
     layout_properties: {grid_position: 'XSWGMI,HDXQUX'}
     name: data_grid_varianty
@@ -195,7 +195,7 @@ components:
     type: Spacer
   - layout_properties: {grid_position: 'RGVCDG,MTHNVB'}
     name: Matice_var
-    properties: {item_template: Analyza_saw_komp.Matice_var}
+    properties: {item_template: Wizard_komp.Matice_var}
     type: RepeatingPanel
   - event_bindings: {click: button_zrusit_click}
     layout_properties: {grid_position: 'FFXGJU,VYLTWK'}

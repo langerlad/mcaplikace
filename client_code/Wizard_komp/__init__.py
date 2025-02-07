@@ -1,7 +1,7 @@
 # -------------------------------------------------------
-# Form: Analyza_saw_komp
+# Form: Wizard_komp
 # -------------------------------------------------------
-from ._anvil_designer import Analyza_saw_kompTemplate
+from ._anvil_designer import Wizard_kompTemplate
 from anvil import *
 import anvil.server
 import anvil.tables as tables
@@ -11,7 +11,7 @@ import anvil.users
 from .. import Navigace
 
 
-class Analyza_saw_komp(Analyza_saw_kompTemplate):
+class Wizard_komp(Wizard_kompTemplate):
   def __init__(self, **properties):
     self.init_components(**properties)
     
@@ -279,10 +279,12 @@ class Analyza_saw_komp(Analyza_saw_kompTemplate):
     self.card_krok_4.visible = False
 
   def button_zrusit_click(self, **event_args):
-    if confirm("Opravdu chcete odstranit tuto analýzu?"):
+    if confirm("Opravdu chcete odstranit tuto analýzu?", dismissible=True,
+        buttons=[("Ano", True), ("Ne", False)]):
       try:
         if self.analyza_id:
           anvil.server.call('smaz_analyzu', self.analyza_id)
+        self.analyza_id = None  # odstraňení ID zabrání zobrazení konfirmace opuštění stránky
         Navigace.go_domu()
       except Exception as e:
         alert(f"Chyba při mazání analýzy: {str(e)}")
