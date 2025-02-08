@@ -236,19 +236,11 @@ class Wizard_komp(Wizard_kompTemplate):
     """
     matice_data = []
     for varianta in self.cached_varianty:
-        print(f"Processing varianta: {varianta['nazev_varianty']}")
         kriteria_pro_variantu = []
         for k in self.cached_kriteria:
-            print(f"Processing kriterium: {k['nazev_kriteria']}")
-            hodnota = ''
-            if self.mode == 'edit':
-                hodnota = anvil.server.call(
-                    'nacti_hodnotu_pro_variantu_kriterium',
-                    self.analyza_id,
-                    varianta['nazev_varianty'],
-                    k['nazev_kriteria']
-                )
-                print(f"Got hodnota: {hodnota}")
+            # Create key in same format as when saving
+            key = f"{varianta['nazev_varianty']}_{k['nazev_kriteria']}"
+            hodnota = self.cached_hodnoty['matice_hodnoty'].get(key, '')
             
             kriteria_pro_variantu.append({
                 'nazev_kriteria': k['nazev_kriteria'],
@@ -262,7 +254,6 @@ class Wizard_komp(Wizard_kompTemplate):
             'kriteria': kriteria_pro_variantu
         })
 
-    print("Final matice_data:", matice_data)
     self.Matice_var.items = matice_data
 
   def button_ulozit_4_click(self, **event_args):
@@ -296,25 +287,27 @@ class Wizard_komp(Wizard_kompTemplate):
     errors = []
 
     for var_row in self.Matice_var.get_components():
-      for krit_row in var_row.Matice_krit.get_components():
-        val = krit_row.text_box_matice_hodnota.text
-        if not val:
-          errors.append("Všechny hodnoty musí být vyplněny")
-          continue
-        try:
-          val = float(val)
-          matrix_values.append({
-            'varianta_id': var_row.item['id_varianty'],
-            'kriterium_id': krit_row.item['id_kriteria'],
-            'hodnota': val
-          })
-        except ValueError:
-          errors.append(f"Neplatná hodnota pro {var_row.item['nazev_varianty']}")
+        print(f"Validating varianta: {var_row.item}")  # Debug
+        for krit_row in var_row.Matice_krit.get_components():
+            print(f"Validating kriterium: {krit_row.item}")  # Debug
+            val = krit_row.text_box_matice_hodnota.text
+            if not val:
+                errors.append("Všechny hodnoty musí být vyplněny")
+                continue
+            try:
+                val = float(val)
+                matrix_values.append({
+                    'varianta_id': var_row.item['id_varianty'],
+                    'kriterium_id': krit_row.item['id_kriteria'],
+                    'hodnota': val
+                })
+            except ValueError:
+                errors.append(f"Neplatná hodnota pro {var_row.item['nazev_varianty']}")
 
     if errors:
-      self.label_chyba_4.text = "\n".join(errors)
-      self.label_chyba_4.visible = True
-      return False
+        self.label_chyba_4.text = "\n".join(errors)
+        self.label_chyba_4.visible = True
+        return False
 
     self.cached_hodnoty = matrix_values
     return True

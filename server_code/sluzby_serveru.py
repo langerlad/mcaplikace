@@ -29,39 +29,52 @@ def pridej_analyzu(nazev, popis, zvolena_metoda):
 
 @anvil.server.callable
 def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
-  analyza = app_tables.analyza.get_by_id(analyza_id)
-  if not analyza:
-    raise Exception("Analýza neexistuje")
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if not analyza:
+        raise Exception("Analýza neexistuje")
+        
+    # Debug prints
+    print("Saving analysis:", analyza_id)
+    print("Kriteria:", kriteria)
+    print("Varianty:", varianty)
+    print("Hodnoty:", hodnoty)
 
-  # Uložit kritéria
-  kriteria_ids = {}
-  for k in kriteria:
-    kr = app_tables.kriterium.add_row(
-      analyza=analyza,
-      nazev_kriteria=k['nazev_kriteria'],
-      typ=k['typ'],
-      vaha=k['vaha']
-    )
-    kriteria_ids[k['nazev_kriteria']] = kr.get_id()
+    # First clear any existing data
+    for h in app_tables.hodnota.search(analyza=analyza):
+        h.delete()
+    for v in app_tables.varianta.search(analyza=analyza):
+        v.delete()
+    for k in app_tables.kriterium.search(analyza=analyza):
+        k.delete()
 
-  # Uložit varianty
-  varianty_ids = {}
-  for v in varianty:
-    var = app_tables.varianta.add_row(
-      analyza=analyza,
-      nazev_varianty=v['nazev_varianty'],
-      popis_varianty=v['popis_varianty']
-    )
-    varianty_ids[v['nazev_varianty']] = var.get_id()
+    # Save new data
+    kriteria_map = {}
+    for k in kriteria:
+        kr = app_tables.kriterium.add_row(
+            analyza=analyza,
+            nazev_kriteria=k['nazev_kriteria'],
+            typ=k['typ'],
+            vaha=k['vaha']
+        )
+        kriteria_map[k['nazev_kriteria']] = kr
 
-  # Uložit hodnoty
-  for h in hodnoty:
-    app_tables.hodnota.add_row(
-      analyza=analyza,
-      varianta=app_tables.varianta.get_by_id(h['varianta_id']),
-      kriterium=app_tables.kriterium.get_by_id(h['kriterium_id']),
-      hodnota=h['hodnota']
-    )
+    varianty_map = {}
+    for v in varianty:
+        var = app_tables.varianta.add_row(
+            analyza=analyza,
+            nazev_varianty=v['nazev_varianty'],
+            popis_varianty=v['popis_varianty']
+        )
+        varianty_map[v['nazev_varianty']] = var
+
+    # Save hodnoty with proper references
+    for h in hodnoty:
+        app_tables.hodnota.add_row(
+            analyza=analyza,
+            varianta=varianty_map[h['varianta_id']],  # Use name as key
+            kriterium=kriteria_map[h['kriterium_id']],  # Use name as key
+            hodnota=h['hodnota']
+        )
 
 @anvil.server.callable
 def smaz_analyzu(analyza_id):
@@ -142,20 +155,11 @@ def nacti_hodnoty(analyza_id):
         print("Found analyza:", analyza)
         for h in app_tables.hodnota.search(analyza=analyza):
             print("Checking hodnota:", h)
-            if not h['varianta'] or not h['kriterium']:  # Debug condition
-                print("Invalid hodnota record - missing varianta or kriterium")
-                continue
-                
-            try:
-                varianta = app_tables.varianta.get_by_id(h['varianta'].get_id())
-                kriterium = app_tables.kriterium.get_by_id(h['kriterium'].get_id())
-                
-                if varianta and kriterium:
-                    key = (varianta['nazev_varianty'], kriterium['nazev_kriteria'])
-                    hodnoty['matice_hodnoty'][key] = h['hodnota']
-                    print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
-            except Exception as e:
-                print(f"Error processing hodnota: {e}")
+            if h['varianta'] and h['kriterium']:
+                # Create string key instead of tuple
+                key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+                hodnoty['matice_hodnoty'][key] = h['hodnota']
+                print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
     
     return hodnoty
 
@@ -168,17 +172,23 @@ def nacti_hodnotu_pro_variantu_kriterium(analyza_id, nazev_varianty, nazev_krite
         print("Analyza not found")
         return None
         
+    # Debug print to see what's in the database
+    varianty = list(app_tables.varianta.search(analyza=analyza))
+    kriteria = list(app_tables.kriterium.search(analyza=analyza))
+    print("Available varianty:", [v['nazev_varianty'] for v in varianty])
+    print("Available kriteria:", [k['nazev_kriteria'] for k in kriteria])
+    
     varianta = app_tables.varianta.get(
         analyza=analyza,
         nazev_varianty=nazev_varianty
     )
-    print(f"Found varianta: {varianta}")
+    print(f"Looking for varianta: {nazev_varianty}, found: {varianta}")
     
     kriterium = app_tables.kriterium.get(
         analyza=analyza,
         nazev_kriteria=nazev_kriteria
     )
-    print(f"Found kriterium: {kriterium}")
+    print(f"Looking for kriterium: {nazev_kriteria}, found: {kriterium}")
     
     if varianta and kriterium:
         hodnota = app_tables.hodnota.get(
@@ -186,8 +196,9 @@ def nacti_hodnotu_pro_variantu_kriterium(analyza_id, nazev_varianty, nazev_krite
             varianta=varianta,
             kriterium=kriterium
         )
-        print(f"Found hodnota: {hodnota}")
+        print(f"Found hodnota record: {hodnota}")
         if hodnota:
+            print(f"Returning hodnota value: {hodnota['hodnota']}")
             return str(hodnota['hodnota'])
     
     return ''
