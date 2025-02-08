@@ -8,6 +8,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
 
+
 @anvil.server.callable
 def pridej_analyzu(nazev, popis, zvolena_metoda):
   datum_vytvoreni = datetime.datetime.now()
@@ -75,3 +76,13 @@ def smaz_analyzu(analyza_id):
   for kriterium in app_tables.kriterium.search(analyza=analyza):
     kriterium.delete()
   analyza.delete()
+
+@anvil.server.callable
+def nacti_analyzy_uzivatele():
+  uzivatel = anvil.users.get_user()
+  if not uzivatel:
+    return []
+  return list(app_tables.analyza.search(
+    tables.order_by("datum_vytvoreni", ascending=False),
+    uzivatel=uzivatel)
+             )

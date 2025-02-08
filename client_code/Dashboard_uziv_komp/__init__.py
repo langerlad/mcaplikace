@@ -9,7 +9,23 @@ import anvil.users
 
 class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
   def __init__(self, **properties):
-    # Set Form properties and Data Bindings.
     self.init_components(**properties)
-
-    # Any code you write here will run before the form opens.
+    self.repeating_panel_dashboard.set_event_handler('x-refresh', self.load_analyzy)
+    self.load_analyzy()
+    
+  def load_analyzy(self, **event_args):
+   analyzy = anvil.server.call('nacti_analyzy_uzivatele')
+   if not analyzy:
+       self.label_no_analyzy.visible = True
+       self.repeating_panel_dashboard.visible = False
+       return
+       
+   self.label_no_analyzy.visible = False
+   self.repeating_panel_dashboard.visible = True
+   self.repeating_panel_dashboard.items = [{
+       'id': a.get_id(), 
+       'nazev': a['nazev'],
+       'popis': a['popis'],
+       'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y"),
+       'zvolena_metoda': a['zvolena_metoda']
+   } for a in analyzy]
