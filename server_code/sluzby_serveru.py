@@ -32,69 +32,123 @@ def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
     analyza = app_tables.analyza.get_by_id(analyza_id)
     if not analyza:
         raise Exception("Analýza neexistuje")
-        
-    # Update existing kriteria or add new ones
+    
+    #
+    # 1) ULOŽIT/AKTUALIZOVAT K R I T E R I A
+    #
+    # - Každé kritérium v argumentu 'kriteria' může mít "id" (původní) nebo nemusí (nové).
+    # - Najdeme v DB row podle ID, pokud existuje => update, jinak => add_row
+    #
     for k in kriteria:
-        existing_kriterium = app_tables.kriterium.get(
-            analyza=analyza,
-            nazev_kriteria=k['nazev_kriteria']
-        )
-        if existing_kriterium:
-            existing_kriterium.update(
-                typ=k['typ'],
-                vaha=k['vaha']
-            )
+        row_id = k.get("id", None)
+        if row_id:
+            # zkus vyhledat existující row
+            db_krit = app_tables.kriterium.get_by_id(row_id)
+            if db_krit:
+                db_krit.update(
+                    nazev_kriteria=k["nazev_kriteria"],
+                    typ=k["typ"],
+                    vaha=k["vaha"]
+                )
+            else:
+                # Může nastat teoreticky, pokud ID není validní v DB:
+                novy = app_tables.kriterium.add_row(
+                    analyza=analyza,
+                    nazev_kriteria=k["nazev_kriteria"],
+                    typ=k["typ"],
+                    vaha=k["vaha"]
+                )
+                # Kdybychom chtěli, můžeme zapsat novy.get_id() zpět do k["id"]
         else:
-            app_tables.kriterium.add_row(
+            # Nový záznam (nemá id)
+            novy = app_tables.kriterium.add_row(
                 analyza=analyza,
-                nazev_kriteria=k['nazev_kriteria'],
-                typ=k['typ'],
-                vaha=k['vaha']
+                nazev_kriteria=k["nazev_kriteria"],
+                typ=k["typ"],
+                vaha=k["vaha"]
             )
-
-    # Update existing varianty or add new ones
+            # Kdybychom chtěli zpětně doplnit ID do listu kriteria:
+            # k["id"] = novy.get_id()
+    
+    # 1b) SMAZAT KRITÉRIA, KTERÉ UŽIVATEL V CLIENT KÓDU ODSTRANIL
+    # (Z DB vybereme všechna kritéria; ta, co nejsou v 'kriteria' seznamu => smazat)
+    client_kriterium_ids = {k["id"] for k in kriteria if k.get("id")}
+    for db_k in app_tables.kriterium.search(analyza=analyza):
+        if db_k.get_id() not in client_kriterium_ids:
+            # smazat navázané hodnoty
+            for h in app_tables.hodnota.search(analyza=analyza, kriterium=db_k):
+                h.delete()
+            # pak smazat samo kritérium
+            db_k.delete()
+    
+    #
+    # 2) ULOŽIT/AKTUALIZOVAT V A R I A N T Y
+    #
     for v in varianty:
-        existing_varianta = app_tables.varianta.get(
-            analyza=analyza,
-            nazev_varianty=v['nazev_varianty']
-        )
-        if existing_varianta:
-            existing_varianta.update(
-                popis_varianty=v['popis_varianty']
-            )
+        var_id = v.get("id", None)
+        if var_id:
+            db_var = app_tables.varianta.get_by_id(var_id)
+            if db_var:
+                db_var.update(
+                    nazev_varianty=v["nazev_varianty"],
+                    popis_varianty=v["popis_varianty"]
+                )
+            else:
+                novy_var = app_tables.varianta.add_row(
+                    analyza=analyza,
+                    nazev_varianty=v["nazev_varianty"],
+                    popis_varianty=v["popis_varianty"]
+                )
         else:
-            app_tables.varianta.add_row(
+            novy_var = app_tables.varianta.add_row(
                 analyza=analyza,
-                nazev_varianty=v['nazev_varianty'],
-                popis_varianty=v['popis_varianty']
+                nazev_varianty=v["nazev_varianty"],
+                popis_varianty=v["popis_varianty"]
             )
-
-    # Update hodnoty
-    # First, get all current records for reference
+            # v["id"] = novy_var.get_id()  # Volitelně
+    
+    # 2b) SMAZAT VARIANTY, KTERÉ NEJSOU UŽ V CLIENT KÓDU
+    client_varianta_ids = {v["id"] for v in varianty if v.get("id")}
+    for db_v in app_tables.varianta.search(analyza=analyza):
+        if db_v.get_id() not in client_varianta_ids:
+            # smazat navázané hodnoty
+            for h in app_tables.hodnota.search(analyza=analyza, varianta=db_v):
+                h.delete()
+            # smazat samotnou variantu
+            db_v.delete()
+    
+    #
+    # 3) ULOŽIT/AKTUALIZOVAT H O D N O T Y
+    #
+    # Tady obvykle dohledáváme kritérium a variantu buď
+    #   a) přes row_id z frontendu
+    #   b) nebo old style: get_by nazev_varianty/nazev_kriteria
+    # Lepší je a) (posílat i do "hodnoty" row_id), abychom přejmenování
+    # nevyhodnotili jako úplně novou variantu.
+    #
+    # Zde ponechávám starší styl klíče (varianta_id => nazev_varianty),
+    # kritterium_id => nazev_kriteria).
+    # Ale ideálně i v 'hodnoty' mějte "var_id" a "krit_id" = row_id.
+    
     existing_hodnoty = {
-        (h['varianta']['nazev_varianty'], h['kriterium']['nazev_kriteria']): h 
+        (h['varianta']['nazev_varianty'], h['kriterium']['nazev_kriteria']): h
         for h in app_tables.hodnota.search(analyza=analyza)
     }
-
-    # Update or add new hodnoty
+    
     for h in hodnoty:
-        varianta = app_tables.varianta.get(
-            analyza=analyza,
-            nazev_varianty=h['varianta_id']
-        )
-        kriterium = app_tables.kriterium.get(
-            analyza=analyza,
-            nazev_kriteria=h['kriterium_id']
-        )
-        
+        # Tady dohledáváme variantu/kriterium spíš podle row_id => if you store them
+        # Zde ale děláme starý styl s 'nazev_varianty', 'nazev_kriteria'
+        var_db = app_tables.varianta.get(analyza=analyza, nazev_varianty=h['varianta_id'])
+        krit_db = app_tables.kriterium.get(analyza=analyza, nazev_kriteria=h['kriterium_id'])
         key = (h['varianta_id'], h['kriterium_id'])
+        
         if key in existing_hodnoty:
             existing_hodnoty[key].update(hodnota=h['hodnota'])
         else:
             app_tables.hodnota.add_row(
                 analyza=analyza,
-                varianta=varianta,
-                kriterium=kriterium,
+                varianta=var_db,
+                kriterium=krit_db,
                 hodnota=h['hodnota']
             )
 
@@ -148,40 +202,47 @@ def get_edit_analyza_id():
 @anvil.server.callable
 def nacti_kriteria(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if analyza:
-        kriteria = list(app_tables.kriterium.search(analyza=analyza))
-        return [{
-            'nazev_kriteria': k['nazev_kriteria'],
-            'typ': k['typ'],
-            'vaha': k['vaha']
-        } for k in kriteria]
-    return []
+    if not analyza:
+        return []
+    
+    vysledek = []
+    for k in app_tables.kriterium.search(analyza=analyza):
+        vysledek.append({
+            "id": k.get_id(),                 # Unikátní ID z tabulky
+            "nazev_kriteria": k["nazev_kriteria"],
+            "typ": k["typ"],
+            "vaha": k["vaha"]
+        })
+    return vysledek
 
 @anvil.server.callable
 def nacti_varianty(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if analyza:
-        varianty = list(app_tables.varianta.search(analyza=analyza))
-        return [{
-            'nazev_varianty': v['nazev_varianty'],
-            'popis_varianty': v['popis_varianty']
-        } for v in varianty]
-    return []
+    if not analyza:
+        return []
+    
+    vysledek = []
+    for v in app_tables.varianta.search(analyza=analyza):
+        vysledek.append({
+            "id": v.get_id(),                 # row_id
+            "nazev_varianty": v["nazev_varianty"],
+            "popis_varianty": v["popis_varianty"]
+        })
+    return vysledek
 
 @anvil.server.callable
 def nacti_hodnoty(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    hodnoty = {'matice_hodnoty': {}}
+    if not analyza:
+        return {"matice_hodnoty": {}}
     
-    if analyza:
-        print("Found analyza:", analyza)
-        for h in app_tables.hodnota.search(analyza=analyza):
-            print("Checking hodnota:", h)
-            if h['varianta'] and h['kriterium']:
-                # Create string key instead of tuple
-                key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
-                hodnoty['matice_hodnoty'][key] = h['hodnota']
-                print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
+    hodnoty = {"matice_hodnoty": {}}
+    for h in app_tables.hodnota.search(analyza=analyza):
+        # tady row_id nepotřebujeme, pokud identifikujeme podle varianty + kritéria
+        variant_name = h['varianta']['nazev_varianty']
+        kriterium_name = h['kriterium']['nazev_kriteria']
+        key = f"{variant_name}_{kriterium_name}"
+        hodnoty["matice_hodnoty"][key] = h['hodnota']
     
     return hodnoty
 
