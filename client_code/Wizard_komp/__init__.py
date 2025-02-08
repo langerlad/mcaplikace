@@ -92,13 +92,23 @@ class Wizard_komp(Wizard_kompTemplate):
       'zvolena_metoda': "SAW"
     }
 
-    # Uložíme analýzu na server, získáme ID
-    self.analyza_id = anvil.server.call(
-      "pridej_analyzu", 
-      self.cached_analyza['nazev'],
-      self.cached_analyza['popis'], 
-      self.cached_analyza['zvolena_metoda']
-    )
+    if self.mode == 'new':
+      # Uložíme analýzu na server, získáme ID
+      self.analyza_id = anvil.server.call(
+        "pridej_analyzu", 
+        self.cached_analyza['nazev'],
+        self.cached_analyza['popis'], 
+        self.cached_analyza['zvolena_metoda']
+      )
+    else:
+      # Režim "edit" – upravit stávající analýzu
+      anvil.server.call(
+        'uprav_analyzu',
+        self.analyza_id,
+        self.cached_analyza['nazev'],
+        self.cached_analyza['popis'],
+        self.cached_analyza['zvolena_metoda']
+      )
 
     self.card_krok_1.visible = False
     self.card_krok_2.visible = True

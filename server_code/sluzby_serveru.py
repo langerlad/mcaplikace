@@ -224,3 +224,15 @@ def nacti_hodnotu_pro_variantu_kriterium(analyza_id, nazev_varianty, nazev_krite
             return str(hodnota['hodnota'])
     
     return ''
+
+@anvil.server.callable
+def uprav_analyzu(analyza_id, nazev, popis, zvolena_metoda):
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if not analyza:
+        raise Exception(f"Analýza s ID {analyza_id} neexistuje.")
+    analyza.update(
+        nazev=nazev,
+        popis=popis,
+        zvolena_metoda=zvolena_metoda,
+        datum_upravy=datetime.datetime.now()
+    )
