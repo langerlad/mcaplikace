@@ -87,3 +87,54 @@ def nacti_analyzy_uzivatele():
     uzivatel=uzivatel)
              )
 
+@anvil.server.callable
+def nacti_analyzu(analyza_id):
+    if not analyza_id:
+        raise Exception("ID analýzy není nastaveno")
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if not analyza:
+        raise Exception(f"Analýza s ID {analyza_id} nebyla nalezena")
+    return analyza
+
+@anvil.server.callable
+def set_edit_analyza_id(analyza_id):
+    print(f"Setting edit_analyza_id: {analyza_id}")
+    anvil.server.session['edit_analyza_id'] = analyza_id
+
+@anvil.server.callable
+def get_edit_analyza_id():
+    edit_id = anvil.server.session.get('edit_analyza_id')
+    print(f"Getting edit_analyza_id: {edit_id}")
+    return edit_id
+
+@anvil.server.callable
+def nacti_kriteria(analyza_id):
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if analyza:
+        kriteria = list(app_tables.kriterium.search(analyza=analyza))
+        return [{
+            'nazev_kriteria': k['nazev_kriteria'],
+            'typ': k['typ'],
+            'vaha': k['vaha']
+        } for k in kriteria]
+    return []
+
+@anvil.server.callable
+def nacti_varianty(analyza_id):
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if analyza:
+        varianty = list(app_tables.varianta.search(analyza=analyza))
+        return [{
+            'nazev_varianty': v['nazev_varianty'],
+            'popis_varianty': v['popis_varianty']
+        } for v in varianty]
+    return []
+
+@anvil.server.callable
+def nacti_hodnoty(analyza_id):
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    hodnoty = {'matice_hodnoty': {}}
+    for h in app_tables.hodnota.search(analyza=analyza):
+        key = (h['varianta']['nazev_varianty'], h['kriterium']['nazev_kriteria'])
+        hodnoty['matice_hodnoty'][key] = h['hodnota']
+    return hodnoty

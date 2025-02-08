@@ -133,3 +133,11 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
       return False
   return True
 
+def go_upravit_analyzu():
+    set_active_nav("pridat")  # Or create new nav state for edit
+    uzivatel = kontrola_prihlaseni()
+    if not uzivatel:
+        go_domu()
+        return
+    komp = ziskej_komponentu()
+    komp.nahraj_komponentu(Wizard_komp(mode='edit'))

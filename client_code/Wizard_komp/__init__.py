@@ -12,8 +12,11 @@ from .. import Navigace
 
 
 class Wizard_komp(Wizard_kompTemplate):
-  def __init__(self, **properties):
+  def __init__(self, mode='new', **properties):
     self.init_components(**properties)
+    
+    # Mode 'new' pro novou analýzu, 'edit' pro úpravu existující
+    self.mode = mode
     
     # Skrýváme karty (kroky) na začátku
     self.card_krok_2.visible = False
@@ -31,6 +34,47 @@ class Wizard_komp(Wizard_kompTemplate):
     self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
     self.repeating_panel_varianty.set_event_handler('x-refresh', self.nacti_varianty)
 
+    if self.mode == 'edit': 
+        self.load_existing_analyza()
+
+  def load_existing_analyza(self):
+    try:
+        self.analyza_id = anvil.server.call('get_edit_analyza_id')
+        print("Loaded analyza_id:", self.analyza_id)
+        
+        analyza_data = anvil.server.call('nacti_analyzu', self.analyza_id)
+        print("Loaded analyza_data:", analyza_data)
+        
+        kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+        print("Loaded kriteria:", kriteria)
+        
+        varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+        print("Loaded varianty:", varianty)
+        
+        hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
+        print("Loaded hodnoty:", hodnoty)
+      
+        self.cached_kriteria = [{
+            'nazev_kriteria': k['nazev_kriteria'],
+            'typ': k['typ'],
+            'vaha': k['vaha']
+        } for k in kriteria]
+        
+        varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+        self.cached_varianty = [{
+            'nazev_varianty': v['nazev_varianty'],
+            'popis_varianty': v['popis_varianty']
+        } for v in varianty]
+        
+        hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
+        self.cached_hodnoty = hodnoty
+
+        self.nacti_kriteria()
+        self.nacti_varianty()
+    except Exception as e:
+        alert("Chyba při načítání analýzy: " + str(e))
+        Navigace.go_domu()
+      
   def button_dalsi_click(self, **event_args):
     self.label_chyba.visible = False
     chyba = self.validace_vstupu()
