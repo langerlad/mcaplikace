@@ -5,21 +5,27 @@ components:
   type: Label
 - layout_properties: {grid_position: 'BSDKUL,VNOMTB'}
   name: headline_1
-  properties: {bold: true, role: headline, text: Výběr metody multikriteriální analýzy}
+  properties: {bold: true, role: headline, text: 'Výběr metody multikriteriální analýzy:'}
   type: Label
-- layout_properties: {grid_position: 'MYZPYJ,YIOKKH'}
-  name: rich_text_1
-  properties:
-    content: |-
-      Existuje celá řada metod a přístupů, které spadají pod multikriteriální analýzu. Každá z nich umožňuje hodnotit a porovnávat varianty (alternativy) podle více kritérií současně.
-
-      Zvolte metodu MC analýzy:
-  type: RichText
+- components:
+  - event_bindings: {click: link_SAW_click}
+    layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
+    name: link_SAW
+    properties: {align: left, bold: true, font_size: 28, text: Simple additive weighting (SAW)}
+    type: Link
+  - layout_properties: {grid_position: 'XOWXZP,RPSZXA'}
+    name: label_3
+    properties: {align: left, text: 'Varianta váženého součtu je Jedna z nejjednodušších metod, kdy se hodnoty kritérií po normalizaci násobí vahami a následně sčítají. Představuje základní jednoduchý přístup.'}
+    type: Label
+  layout_properties: {grid_position: 'XMPJUQ,TNMMPE'}
+  name: card_3
+  properties: {role: card}
+  type: ColumnPanel
 - components:
   - event_bindings: {click: link_ahp_click}
     layout_properties: {grid_position: 'KDFYSQ,VLSJSL'}
     name: link_ahp
-    properties: {align: left, bold: true, font_size: 28, role: null, text: AHP}
+    properties: {align: left, bold: true, font_size: 28, role: null, text: AHP, visible: true}
     type: Link
   - layout_properties: {grid_position: 'LFDSGU,ICAPWR'}
     name: label_1
@@ -27,7 +33,7 @@ components:
     type: Label
   layout_properties: {grid_position: 'FTWRWG,YOIAGD'}
   name: card_1
-  properties: {role: card}
+  properties: {role: card, visible: true}
   type: ColumnPanel
 - components:
   - layout_properties: {grid_position: 'TUPIKY,BQLZRR'}
@@ -40,21 +46,7 @@ components:
     type: Label
   layout_properties: {grid_position: 'KBCOPA,ZNHHWN'}
   name: card_2
-  properties: {role: card}
-  type: ColumnPanel
-- components:
-  - event_bindings: {click: link_SAW_click}
-    layout_properties: {grid_position: 'QVMNOW,UYFUFF'}
-    name: link_SAW
-    properties: {align: left, bold: true, font_size: 28, text: SAW}
-    type: Link
-  - layout_properties: {grid_position: 'XOWXZP,RPSZXA'}
-    name: label_3
-    properties: {align: left, text: Jedna z nejjednodušších metod; každé kritérium má určitou váhu a hodnocení se provádí formou normalizovaného součtu těchto vah.}
-    type: Label
-  layout_properties: {grid_position: 'WPVLEZ,HNLVGS'}
-  name: card_3
-  properties: {role: card}
+  properties: {role: card, visible: true}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

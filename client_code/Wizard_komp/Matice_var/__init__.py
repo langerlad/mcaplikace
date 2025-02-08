@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# RowTemplate: Matice_var (řádek pro variantu)
+# -------------------------------------------------------
 from ._anvil_designer import Matice_varTemplate
 from anvil import *
 import anvil.server
@@ -9,9 +12,6 @@ from anvil.tables import app_tables
 
 class Matice_var(Matice_varTemplate):
   def __init__(self, **properties):
-    # Set Form properties and Data Bindings.
     self.init_components(**properties)
-
-    # Any code you write here will run before the form opens.
     self.label_matice_nazev_varianty.text = self.item['nazev_varianty']
     self.Matice_krit.items = self.item['kriteria']
