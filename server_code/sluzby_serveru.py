@@ -33,48 +33,70 @@ def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
     if not analyza:
         raise Exception("Analýza neexistuje")
         
-    # Debug prints
-    print("Saving analysis:", analyza_id)
-    print("Kriteria:", kriteria)
-    print("Varianty:", varianty)
-    print("Hodnoty:", hodnoty)
-
-    # First clear any existing data
-    for h in app_tables.hodnota.search(analyza=analyza):
-        h.delete()
-    for v in app_tables.varianta.search(analyza=analyza):
-        v.delete()
-    for k in app_tables.kriterium.search(analyza=analyza):
-        k.delete()
-
-    # Save new data
-    kriteria_map = {}
+    # Update existing kriteria or add new ones
     for k in kriteria:
-        kr = app_tables.kriterium.add_row(
+        existing_kriterium = app_tables.kriterium.get(
             analyza=analyza,
-            nazev_kriteria=k['nazev_kriteria'],
-            typ=k['typ'],
-            vaha=k['vaha']
+            nazev_kriteria=k['nazev_kriteria']
         )
-        kriteria_map[k['nazev_kriteria']] = kr
+        if existing_kriterium:
+            existing_kriterium.update(
+                typ=k['typ'],
+                vaha=k['vaha']
+            )
+        else:
+            app_tables.kriterium.add_row(
+                analyza=analyza,
+                nazev_kriteria=k['nazev_kriteria'],
+                typ=k['typ'],
+                vaha=k['vaha']
+            )
 
-    varianty_map = {}
+    # Update existing varianty or add new ones
     for v in varianty:
-        var = app_tables.varianta.add_row(
+        existing_varianta = app_tables.varianta.get(
             analyza=analyza,
-            nazev_varianty=v['nazev_varianty'],
-            popis_varianty=v['popis_varianty']
+            nazev_varianty=v['nazev_varianty']
         )
-        varianty_map[v['nazev_varianty']] = var
+        if existing_varianta:
+            existing_varianta.update(
+                popis_varianty=v['popis_varianty']
+            )
+        else:
+            app_tables.varianta.add_row(
+                analyza=analyza,
+                nazev_varianty=v['nazev_varianty'],
+                popis_varianty=v['popis_varianty']
+            )
 
-    # Save hodnoty with proper references
+    # Update hodnoty
+    # First, get all current records for reference
+    existing_hodnoty = {
+        (h['varianta']['nazev_varianty'], h['kriterium']['nazev_kriteria']): h 
+        for h in app_tables.hodnota.search(analyza=analyza)
+    }
+
+    # Update or add new hodnoty
     for h in hodnoty:
-        app_tables.hodnota.add_row(
+        varianta = app_tables.varianta.get(
             analyza=analyza,
-            varianta=varianty_map[h['varianta_id']],  # Use name as key
-            kriterium=kriteria_map[h['kriterium_id']],  # Use name as key
-            hodnota=h['hodnota']
+            nazev_varianty=h['varianta_id']
         )
+        kriterium = app_tables.kriterium.get(
+            analyza=analyza,
+            nazev_kriteria=h['kriterium_id']
+        )
+        
+        key = (h['varianta_id'], h['kriterium_id'])
+        if key in existing_hodnoty:
+            existing_hodnoty[key].update(hodnota=h['hodnota'])
+        else:
+            app_tables.hodnota.add_row(
+                analyza=analyza,
+                varianta=varianta,
+                kriterium=kriterium,
+                hodnota=h['hodnota']
+            )
 
 @anvil.server.callable
 def smaz_analyzu(analyza_id):
