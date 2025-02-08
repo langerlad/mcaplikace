@@ -161,47 +161,40 @@ def get_edit_analyza_id():
 @anvil.server.callable
 def nacti_kriteria(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        return []
-    
-    vysledek = []
-    for k in app_tables.kriterium.search(analyza=analyza):
-        vysledek.append({
-            "id": k.get_id(),                 # Unikátní ID z tabulky
-            "nazev_kriteria": k["nazev_kriteria"],
-            "typ": k["typ"],
-            "vaha": k["vaha"]
-        })
-    return vysledek
+    if analyza:
+        kriteria = list(app_tables.kriterium.search(analyza=analyza))
+        return [{
+            'nazev_kriteria': k['nazev_kriteria'],
+            'typ': k['typ'],
+            'vaha': k['vaha']
+        } for k in kriteria]
+    return []
 
 @anvil.server.callable
 def nacti_varianty(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        return []
-    
-    vysledek = []
-    for v in app_tables.varianta.search(analyza=analyza):
-        vysledek.append({
-            "id": v.get_id(),                 # row_id
-            "nazev_varianty": v["nazev_varianty"],
-            "popis_varianty": v["popis_varianty"]
-        })
-    return vysledek
+    if analyza:
+        varianty = list(app_tables.varianta.search(analyza=analyza))
+        return [{
+            'nazev_varianty': v['nazev_varianty'],
+            'popis_varianty': v['popis_varianty']
+        } for v in varianty]
+    return []
 
 @anvil.server.callable
 def nacti_hodnoty(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        return {"matice_hodnoty": {}}
+    hodnoty = {'matice_hodnoty': {}}
     
-    hodnoty = {"matice_hodnoty": {}}
-    for h in app_tables.hodnota.search(analyza=analyza):
-        # tady row_id nepotřebujeme, pokud identifikujeme podle varianty + kritéria
-        variant_name = h['varianta']['nazev_varianty']
-        kriterium_name = h['kriterium']['nazev_kriteria']
-        key = f"{variant_name}_{kriterium_name}"
-        hodnoty["matice_hodnoty"][key] = h['hodnota']
+    if analyza:
+        print("Found analyza:", analyza)
+        for h in app_tables.hodnota.search(analyza=analyza):
+            print("Checking hodnota:", h)
+            if h['varianta'] and h['kriterium']:
+                # Create string key instead of tuple
+                key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+                hodnoty['matice_hodnoty'][key] = h['hodnota']
+                print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
     
     return hodnoty
 

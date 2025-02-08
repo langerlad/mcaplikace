@@ -40,40 +40,29 @@ class Wizard_komp(Wizard_kompTemplate):
   def load_existing_analyza(self):
     try:
         self.analyza_id = anvil.server.call('get_edit_analyza_id')
-        print("Step 1 - analyza_id:", self.analyza_id)
+        print("Loading analyza with ID:", self.analyza_id)  # Debug print
         
+        if not self.analyza_id:
+            raise Exception("ID analýzy není nastaveno")
+            
         analyza_data = anvil.server.call('nacti_analyzu', self.analyza_id)
-        print("Step 2 - analyza_data:", analyza_data)
         
+        # Set form fields
         self.text_box_nazev.text = analyza_data.get('nazev', '')
-        print("Step 3 - set nazev:", self.text_box_nazev.text)
         self.text_area_popis.text = analyza_data.get('popis', '')
-        print("Step 4 - set popis:", self.text_area_popis.text)
         
+        # Cache data
         self.cached_analyza = analyza_data
-        print("Step 5 - cached analyza:", self.cached_analyza)
-        
         self.cached_kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-        print("Step 6 - cached kriteria:", self.cached_kriteria)
-        
         self.cached_varianty = anvil.server.call('nacti_varianty', self.analyza_id)
-        print("Step 7 - cached varianty:", self.cached_varianty)
-        
-        try:
-            self.cached_hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
-            print("Step 8 - cached hodnoty:", self.cached_hodnoty)
-        except Exception as e:
-            print("Warning: Failed to load hodnoty:", str(e))
-            self.cached_hodnoty = {'matice_hodnoty': {}}
+        self.cached_hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
 
         # Update displays
         self.nacti_kriteria()
-        print("Step 9 - nacti_kriteria done")
         self.nacti_varianty()
-        print("Step 10 - nacti_varianty done")
         
     except Exception as e:
-        print("Error occurred:", str(e))
+        print("Error in load_existing_analyza:", str(e))
         alert("Chyba při načítání analýzy: " + str(e))
         Navigace.go_domu()
       
@@ -326,11 +315,14 @@ class Wizard_komp(Wizard_kompTemplate):
   # Tlačítka Zpět a Zrušit
   # ----------------------------
   def button_zpet_2_click(self, **event_args):
-    # Pokud vracíme uživatele na Krok 1, a existuje analyza_id, můžeme ji smazat ze serveru
-    if hasattr(self, 'analyza_id') and self.analyza_id:
-      anvil.server.call('smaz_analyzu', self.analyza_id)
-      self.analyza_id = None
-    self.cached_analyza = None
+    if self.mode == 'new':
+        # Only delete analysis if it's a new one
+        if hasattr(self, 'analyza_id') and self.analyza_id:
+            anvil.server.call('smaz_analyzu', self.analyza_id)
+            self.analyza_id = None
+        self.cached_analyza = None
+    # Don't clear analyza_id in edit mode
+    
     self.card_krok_1.visible = True
     self.card_krok_2.visible = False
 
