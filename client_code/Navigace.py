@@ -132,3 +132,4 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
         return True
       return False
   return True
+

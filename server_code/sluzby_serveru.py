@@ -86,3 +86,4 @@ def nacti_analyzy_uzivatele():
     tables.order_by("datum_vytvoreni", ascending=False),
     uzivatel=uzivatel)
              )
+

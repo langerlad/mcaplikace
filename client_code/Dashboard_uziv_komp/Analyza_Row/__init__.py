@@ -5,6 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from ... import Navigace
 
 
 class Analyza_Row(Analyza_RowTemplate):
@@ -19,4 +20,10 @@ class Analyza_Row(Analyza_RowTemplate):
         buttons=[("Ano", True), ("Ne", False)]):
             anvil.server.call('smaz_analyzu', self.item['id'])
             self.parent.raise_event('x-refresh')
+
+  def button_upravit_click(self, **event_args):
+    analyza_id = self.item['id']
+    # Set global ID to load in wizard
+    anvil.server.call('set_edit_analyza_id', analyza_id)
+    Navigace.go_upravit_analyzu()
            
