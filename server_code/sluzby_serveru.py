@@ -89,12 +89,15 @@ def nacti_analyzy_uzivatele():
 
 @anvil.server.callable
 def nacti_analyzu(analyza_id):
-    if not analyza_id:
-        raise Exception("ID analýzy není nastaveno")
     analyza = app_tables.analyza.get_by_id(analyza_id)
     if not analyza:
         raise Exception(f"Analýza s ID {analyza_id} nebyla nalezena")
-    return analyza
+    return {
+        'nazev': analyza['nazev'],
+        'popis': analyza['popis'],
+        'zvolena_metoda': analyza['zvolena_metoda'],
+        'datum_vytvoreni': analyza['datum_vytvoreni']
+    }
 
 @anvil.server.callable
 def set_edit_analyza_id(analyza_id):
@@ -134,7 +137,57 @@ def nacti_varianty(analyza_id):
 def nacti_hodnoty(analyza_id):
     analyza = app_tables.analyza.get_by_id(analyza_id)
     hodnoty = {'matice_hodnoty': {}}
-    for h in app_tables.hodnota.search(analyza=analyza):
-        key = (h['varianta']['nazev_varianty'], h['kriterium']['nazev_kriteria'])
-        hodnoty['matice_hodnoty'][key] = h['hodnota']
+    
+    if analyza:
+        print("Found analyza:", analyza)
+        for h in app_tables.hodnota.search(analyza=analyza):
+            print("Checking hodnota:", h)
+            if not h['varianta'] or not h['kriterium']:  # Debug condition
+                print("Invalid hodnota record - missing varianta or kriterium")
+                continue
+                
+            try:
+                varianta = app_tables.varianta.get_by_id(h['varianta'].get_id())
+                kriterium = app_tables.kriterium.get_by_id(h['kriterium'].get_id())
+                
+                if varianta and kriterium:
+                    key = (varianta['nazev_varianty'], kriterium['nazev_kriteria'])
+                    hodnoty['matice_hodnoty'][key] = h['hodnota']
+                    print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
+            except Exception as e:
+                print(f"Error processing hodnota: {e}")
+    
     return hodnoty
+
+@anvil.server.callable
+def nacti_hodnotu_pro_variantu_kriterium(analyza_id, nazev_varianty, nazev_kriteria):
+    print(f"Loading hodnota for analyza:{analyza_id}, varianta:{nazev_varianty}, kriterium:{nazev_kriteria}")
+    
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if not analyza:
+        print("Analyza not found")
+        return None
+        
+    varianta = app_tables.varianta.get(
+        analyza=analyza,
+        nazev_varianty=nazev_varianty
+    )
+    print(f"Found varianta: {varianta}")
+    
+    kriterium = app_tables.kriterium.get(
+        analyza=analyza,
+        nazev_kriteria=nazev_kriteria
+    )
+    print(f"Found kriterium: {kriterium}")
+    
+    if varianta and kriterium:
+        hodnota = app_tables.hodnota.get(
+            analyza=analyza,
+            varianta=varianta,
+            kriterium=kriterium
+        )
+        print(f"Found hodnota: {hodnota}")
+        if hodnota:
+            return str(hodnota['hodnota'])
+    
+    return ''

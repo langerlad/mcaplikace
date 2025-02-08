@@ -40,38 +40,40 @@ class Wizard_komp(Wizard_kompTemplate):
   def load_existing_analyza(self):
     try:
         self.analyza_id = anvil.server.call('get_edit_analyza_id')
-        print("Loaded analyza_id:", self.analyza_id)
+        print("Step 1 - analyza_id:", self.analyza_id)
         
         analyza_data = anvil.server.call('nacti_analyzu', self.analyza_id)
-        print("Loaded analyza_data:", analyza_data)
+        print("Step 2 - analyza_data:", analyza_data)
         
-        kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
-        print("Loaded kriteria:", kriteria)
+        self.text_box_nazev.text = analyza_data.get('nazev', '')
+        print("Step 3 - set nazev:", self.text_box_nazev.text)
+        self.text_area_popis.text = analyza_data.get('popis', '')
+        print("Step 4 - set popis:", self.text_area_popis.text)
         
-        varianty = anvil.server.call('nacti_varianty', self.analyza_id)
-        print("Loaded varianty:", varianty)
+        self.cached_analyza = analyza_data
+        print("Step 5 - cached analyza:", self.cached_analyza)
         
-        hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
-        print("Loaded hodnoty:", hodnoty)
-      
-        self.cached_kriteria = [{
-            'nazev_kriteria': k['nazev_kriteria'],
-            'typ': k['typ'],
-            'vaha': k['vaha']
-        } for k in kriteria]
+        self.cached_kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+        print("Step 6 - cached kriteria:", self.cached_kriteria)
         
-        varianty = anvil.server.call('nacti_varianty', self.analyza_id)
-        self.cached_varianty = [{
-            'nazev_varianty': v['nazev_varianty'],
-            'popis_varianty': v['popis_varianty']
-        } for v in varianty]
+        self.cached_varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+        print("Step 7 - cached varianty:", self.cached_varianty)
         
-        hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
-        self.cached_hodnoty = hodnoty
+        try:
+            self.cached_hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
+            print("Step 8 - cached hodnoty:", self.cached_hodnoty)
+        except Exception as e:
+            print("Warning: Failed to load hodnoty:", str(e))
+            self.cached_hodnoty = {'matice_hodnoty': {}}
 
+        # Update displays
         self.nacti_kriteria()
+        print("Step 9 - nacti_kriteria done")
         self.nacti_varianty()
+        print("Step 10 - nacti_varianty done")
+        
     except Exception as e:
+        print("Error occurred:", str(e))
         alert("Chyba při načítání analýzy: " + str(e))
         Navigace.go_domu()
       
@@ -234,18 +236,33 @@ class Wizard_komp(Wizard_kompTemplate):
     """
     matice_data = []
     for varianta in self.cached_varianty:
-      kriteria_pro_variantu = [{
-        'nazev_kriteria': k['nazev_kriteria'],
-        'id_kriteria': k['nazev_kriteria'],
-        'hodnota': ''
-      } for k in self.cached_kriteria]
+        print(f"Processing varianta: {varianta['nazev_varianty']}")
+        kriteria_pro_variantu = []
+        for k in self.cached_kriteria:
+            print(f"Processing kriterium: {k['nazev_kriteria']}")
+            hodnota = ''
+            if self.mode == 'edit':
+                hodnota = anvil.server.call(
+                    'nacti_hodnotu_pro_variantu_kriterium',
+                    self.analyza_id,
+                    varianta['nazev_varianty'],
+                    k['nazev_kriteria']
+                )
+                print(f"Got hodnota: {hodnota}")
+            
+            kriteria_pro_variantu.append({
+                'nazev_kriteria': k['nazev_kriteria'],
+                'id_kriteria': k['nazev_kriteria'],
+                'hodnota': hodnota
+            })
 
-      matice_data.append({
-        'nazev_varianty': varianta['nazev_varianty'],
-        'id_varianty': varianta['nazev_varianty'],
-        'kriteria': kriteria_pro_variantu
-      })
+        matice_data.append({
+            'nazev_varianty': varianta['nazev_varianty'],
+            'id_varianty': varianta['nazev_varianty'],
+            'kriteria': kriteria_pro_variantu
+        })
 
+    print("Final matice_data:", matice_data)
     self.Matice_var.items = matice_data
 
   def button_ulozit_4_click(self, **event_args):
