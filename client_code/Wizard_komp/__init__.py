@@ -260,22 +260,22 @@ class Wizard_komp(Wizard_kompTemplate):
     Uloží kompletní analýzu na server, pokud je matice validní.
     """
     if not self.validuj_matici():
-      return
-
+        return
+        
     try:
-      anvil.server.call(
-        'uloz_kompletni_analyzu', 
-        self.analyza_id,
-        self.cached_kriteria,
-        self.cached_varianty,
-        self.cached_hodnoty
-      )
-      self.analyza_id = None  # odstraňení ID zabrání zobrazení konfirmace opuštění stránky
-      alert("Analýza byla úspěšně uložena.")
-      Navigace.go_domu()
+        anvil.server.call(
+            'uloz_kompletni_analyzu', 
+            self.analyza_id,
+            self.cached_kriteria,
+            self.cached_varianty,
+            self.cached_hodnoty
+        )
+        self.mode = 'saved'  # Add this instead of setting analyza_id to None
+        alert("Analýza byla úspěšně uložena.")
+        Navigace.go_domu()
     except Exception as e:
-      self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
-      self.label_chyba_4.visible = True
+        self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
+        self.label_chyba_4.visible = True
 
   def validuj_matici(self):
     """

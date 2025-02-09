@@ -132,7 +132,7 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
                    anvil.server.call('smaz_analyzu', wizard.analyza_id)
                    return True
                return False
-           elif wizard.mode == 'edit':
+           elif wizard.mode == 'edit' and wizard.mode != 'saved':
                if confirm("Opustíte upravovanou analýzu. Změny nebudou uloženy. Pokračovat?",
                          dismissible=True,
                          buttons=[("Ano", True), ("Ne", False)]):
