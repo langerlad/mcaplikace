@@ -18,31 +18,46 @@ class Uprava_kriteria_form(Uprava_kriteria_formTemplate):
     self.text_box_vaha.text = str(item['vaha'])
     self._item = item
     self.label_chyba.visible = False
+    self.vaha = None  # Store validated weight
 
   def validuj_vahu(self):
-    try:
-      vaha = float(self.text_box_vaha.text)
-      if not (0 <= vaha <= 1):
-        self.label_chyba.text = "Váha musí být číslo mezi 0 a 1"
-        self.label_chyba.visible = True
-        return False
-      return True
-    except ValueError:
-      self.label_chyba.text = "Váha musí být platné číslo"
-      self.label_chyba.visible = True
-      return False
+        """Validuje váhu a ukládá ji do self.vaha pro další použití"""
+        if not self.text_box_vaha.text:
+            self.label_chyba.text = "Zadejte hodnotu váhy kritéria"
+            self.label_chyba.visible = True
+            return False
+            
+        try:
+            # Replace comma with decimal point
+            vaha_text = self.text_box_vaha.text.replace(',', '.')
+            self.vaha = float(vaha_text)
+            
+            if not (0 <= self.vaha <= 1):
+                self.label_chyba.text = "Váha musí být číslo mezi 0 a 1"
+                self.label_chyba.visible = True
+                return False
+                
+            # Normalize display to use decimal point
+            self.text_box_vaha.text = str(self.vaha)
+            self.label_chyba.visible = False
+            return True
+            
+        except ValueError:
+            self.label_chyba.text = "Váha musí být platné číslo"
+            self.label_chyba.visible = True
+            return False
 
   def ziskej_upravena_data(self):
-    """
-    Z validovaných polí vrátí dict s aktualizovanými daty kritéria
-    """
-    if not self.validuj_vahu():
-      return None
-    return {
-      'nazev_kriteria': self.text_box_nazev_kriteria.text,
-      'typ': self.drop_down_typ.selected_value,
-      'vaha': float(self.text_box_vaha.text)
-    }
+      """Z validovaných polí vrátí dict s aktualizovanými daty kritéria"""
+      if not self.validuj_vahu():
+          return None
+          
+      return {
+          'nazev_kriteria': self.text_box_nazev_kriteria.text,
+          'typ': self.drop_down_typ.selected_value,
+          'vaha': self.vaha  # Use stored validated weight
+      }
 
   def text_box_vaha_lost_focus(self, **event_args):
-    self.validuj_vahu()
+      """Validuje váhu při ztrátě fokusu"""
+      self.validuj_vahu()

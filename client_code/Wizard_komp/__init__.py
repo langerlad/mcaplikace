@@ -115,24 +115,19 @@ class Wizard_komp(Wizard_kompTemplate):
       self.label_chyba_2.visible = True
       return
 
-    try:
-      vaha = float(self.text_box_vaha.text)
-      # Přidání do lokální cache
-      self.cached_kriteria.append({
-        'nazev_kriteria': self.text_box_nazev_kriteria.text,
-        'typ': self.drop_down_typ.selected_value,
-        'vaha': vaha
-      })
+    # Přidání do lokální cache validované z validace_pridej_kriterium()
+    self.cached_kriteria.append({
+      'nazev_kriteria': self.text_box_nazev_kriteria.text,
+      'typ': self.drop_down_typ.selected_value,
+      'vaha': self.vaha
+    })
 
-      # Reset vstupních polí
-      self.text_box_nazev_kriteria.text = ""
-      self.drop_down_typ.selected_value = None
-      self.text_box_vaha.text = ""
+    # Reset vstupních polí
+    self.text_box_nazev_kriteria.text = ""
+    self.drop_down_typ.selected_value = None
+    self.text_box_vaha.text = ""
 
-      self.nacti_kriteria()
-      
-    except ValueError:
-      alert("Zadejte platné číslo pro váhu kritéria.")
+    self.nacti_kriteria()
 
   def validace_pridej_kriterium(self):
     if not self.text_box_nazev_kriteria.text:
@@ -141,9 +136,10 @@ class Wizard_komp(Wizard_kompTemplate):
       return "Vyberte typ kritéria."
     if not self.text_box_vaha.text:
       return "Zadejte hodnotu váhy kritéria."
-    try:
-      vaha = float(self.text_box_vaha.text)
-      if not (0 <= vaha <= 1):
+    try:    
+      vaha_text = self.text_box_vaha.text.replace(',', '.') # Replace comma with decimal point
+      self.vaha = float(vaha_text) # store in class variable
+      if not (0 <= self.vaha <= 1):
         return "Váha musí být číslo mezi 0 a 1."
     except ValueError:
       return "Váha musí být platné číslo."
@@ -278,38 +274,47 @@ class Wizard_komp(Wizard_kompTemplate):
         self.label_chyba_4.visible = True
 
   def validuj_matici(self):
-    """
-    Prochází zadané hodnoty v text boxech matice
-    a ukládá je do self.cached_hodnoty, pokud jsou validní.
-    """
-    matrix_values = []
-    errors = []
+   """
+   Prochází zadané hodnoty v text boxech matice
+   a ukládá je do self.cached_hodnoty, pokud jsou validní.
+   """
+   matrix_values = []
+   errors = []
+   for var_row in self.Matice_var.get_components():
+       for krit_row in var_row.Matice_krit.get_components():
+           hodnota_text = krit_row.text_box_matice_hodnota.text
+           
+           if not hodnota_text:
+               errors.append("Všechny hodnoty musí být vyplněny")
+               continue
+               
+           try:
+               # Replace comma with decimal point
+               hodnota_text = hodnota_text.replace(',', '.')
+               hodnota = float(hodnota_text)
+               
+               # Normalize display to use decimal point
+               krit_row.text_box_matice_hodnota.text = str(hodnota)
+               
+               matrix_values.append({
+                   'varianta_id': var_row.item['id_varianty'],
+                   'kriterium_id': krit_row.item['id_kriteria'],
+                   'hodnota': hodnota
+               })
+           except ValueError:
+               errors.append(
+                   f"Neplatná hodnota pro variantu {var_row.item['nazev_varianty']}, "
+                   f"kritérium {krit_row.item['nazev_kriteria']}"
+               )
 
-    for var_row in self.Matice_var.get_components():
-        print(f"Validating varianta: {var_row.item}")  # Debug
-        for krit_row in var_row.Matice_krit.get_components():
-            print(f"Validating kriterium: {krit_row.item}")  # Debug
-            val = krit_row.text_box_matice_hodnota.text
-            if not val:
-                errors.append("Všechny hodnoty musí být vyplněny")
-                continue
-            try:
-                val = float(val)
-                matrix_values.append({
-                    'varianta_id': var_row.item['id_varianty'],
-                    'kriterium_id': krit_row.item['id_kriteria'],
-                    'hodnota': val
-                })
-            except ValueError:
-                errors.append(f"Neplatná hodnota pro {var_row.item['nazev_varianty']}")
+   if errors:
+       self.label_chyba_4.text = "\n".join(list(set(errors)))  # Remove duplicates
+       self.label_chyba_4.visible = True
+       return False
 
-    if errors:
-        self.label_chyba_4.text = "\n".join(errors)
-        self.label_chyba_4.visible = True
-        return False
-
-    self.cached_hodnoty = matrix_values
-    return True
+   self.cached_hodnoty = matrix_values
+   self.label_chyba_4.visible = False
+   return True
 
   # ----------------------------
   # Tlačítka Zpět a Zrušit

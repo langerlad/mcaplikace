@@ -71,7 +71,7 @@ components:
   - data_bindings: []
     layout_properties: {grid_position: 'LHFDTW,RKVGDY'}
     name: text_box_vaha
-    properties: {placeholder: váha, type: number}
+    properties: {placeholder: váha, type: text}
     type: TextBox
   - event_bindings: {click: button_pridej_kriterium_click}
     layout_properties: {grid_position: 'LHFDTW,YZYJRA'}
