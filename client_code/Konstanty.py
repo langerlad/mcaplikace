@@ -1,13 +1,12 @@
+# -------------------------------------------------------
+# Modul: konstanty
+# Obsahuje sdílené konstanty používané napříč aplikací
+# -------------------------------------------------------
 # import anvil.server
 # import anvil.users
 # import anvil.tables as tables
 # import anvil.tables.query as q
 # from anvil.tables import app_tables
-
-# -------------------------------------------------------
-# Modul: konstanty
-# Obsahuje sdílené konstanty používané napříč aplikací
-# -------------------------------------------------------
 
 # Stavy analýzy
 STAV_ANALYZY = {

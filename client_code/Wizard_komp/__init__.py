@@ -259,6 +259,11 @@ class Wizard_komp(Wizard_kompTemplate):
         return
         
     try:
+        logging.info(f"Ukládám analýzu {self.analyza_id}")
+        logging.info(f"Počet kritérií: {len(self.cached_kriteria)}")
+        logging.info(f"Počet variant: {len(self.cached_varianty)}")
+        logging.info(f"Počet hodnot: {len(self.cached_hodnoty.get('matice_hodnoty', {}))}")
+        
         anvil.server.call(
             'uloz_kompletni_analyzu', 
             self.analyza_id,
@@ -270,7 +275,9 @@ class Wizard_komp(Wizard_kompTemplate):
         alert(Konstanty.ZPRAVY_CHYB['ANALYZA_ULOZENA'])
         Navigace.go_domu()
     except Exception as e:
-        self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
+        error_msg = f"Chyba při ukládání: {str(e)}"
+        logging.error(error_msg)
+        self.label_chyba_4.text = error_msg
         self.label_chyba_4.visible = True
 
   def validuj_matici(self):
