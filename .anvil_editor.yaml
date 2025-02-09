@@ -21,6 +21,7 @@ unique_ids:
     Wizard_komp.Matice_var.Matice_krit: '1738608437627606899265588.1332'
     Wizard_komp.Varianta_Row: '1738514501347367568955601.8764'
   modules:
+    Konstanty: '1739109450197783727593472.4305'
     Navigace: '1737316009237347898474774.64453'
     Sprava_dat: '1737887942729599817824959.9304'
   scripts: {}

@@ -205,6 +205,109 @@ def _uloz_hodnoty(analyza: Any, hodnoty: Dict) -> None:
             raise ValueError(f"Chyba při ukládání hodnoty: {str(e)}")
 
 @anvil.server.callable
+def nacti_kriteria(analyza_id: str) -> List[Dict]:
+    """
+    Načte kritéria pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        List[Dict]: Seznam kritérií a jejich vlastností
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if analyza:
+            kriteria = list(app_tables.kriterium.search(analyza=analyza))
+            return [{
+                'nazev_kriteria': k['nazev_kriteria'],
+                'typ': k['typ'],
+                'vaha': float(k['vaha'])  # Ensure numeric type
+            } for k in kriteria]
+        return []
+    except Exception as e:
+        logging.error(f"Chyba při načítání kritérií pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def nacti_varianty(analyza_id: str) -> List[Dict]:
+    """
+    Načte varianty pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        List[Dict]: Seznam variant a jejich vlastností
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if analyza:
+            varianty = list(app_tables.varianta.search(analyza=analyza))
+            return [{
+                'nazev_varianty': v['nazev_varianty'],
+                'popis_varianty': v['popis_varianty']
+            } for v in varianty]
+        return []
+    except Exception as e:
+        logging.error(f"Chyba při načítání variant pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def nacti_hodnoty(analyza_id: str) -> Dict:
+    """
+    Načte matici hodnot pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        Dict: Dictionary obsahující matici hodnot
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        hodnoty = {'matice_hodnoty': {}}
+        
+        if analyza:
+            for h in app_tables.hodnota.search(analyza=analyza):
+                if h['varianta'] and h['kriterium']:
+                    key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+                    hodnoty['matice_hodnoty'][key] = float(h['hodnota'])  # Ensure numeric type
+        
+        return hodnoty
+    except Exception as e:
+        logging.error(f"Chyba při načítání hodnot pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) -> None:
+    """
+    Upraví základní údaje analýzy.
+    
+    Args:
+        analyza_id: ID analýzy
+        nazev: Nový název
+        popis: Nový popis
+        zvolena_metoda: Nová zvolená metoda
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if not analyza:
+            raise AnalyzaNotFoundError(f"Analýza s ID {analyza_id} neexistuje")
+            
+        validuj_nazev_analyzy(nazev)
+        
+        analyza.update(
+            nazev=nazev,
+            popis=popis,
+            zvolena_metoda=zvolena_metoda,
+            datum_upravy=datetime.datetime.now()
+        )
+    except Exception as e:
+        logging.error(f"Chyba při úpravě analýzy {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
 def smaz_analyzu(analyza_id: str) -> None:
     """
     Smaže analýzu a všechna související data.
