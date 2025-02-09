@@ -1,6 +1,7 @@
 # -------------------------------------------------------
 # Modul: Navigace
 # -------------------------------------------------------
+import logging
 import anvil.server
 import anvil.tables as tables
 import anvil.tables.query as q
@@ -115,30 +116,41 @@ def set_active_nav(stav):
   komp.set_active_nav(stav)
 
 def over_a_smaz_rozpracovanou(cilova_stranka):
-   """
-   Zkontroluje, zda v pravém panelu není rozdělaná SAW analýza.
-   Pokud je, a uživatel potvrdí, smaže ji ze serveru a vrátí True.
-   Pokud uživatel odmítne, vrátí False a zůstane na stránce.
-   """
-   komp = ziskej_komponentu()
-   if hasattr(komp, 'pravy_panel'):
-       components = komp.pravy_panel.get_components()
-       if components and isinstance(components[0], Wizard_komp):
-           wizard = components[0]
-           if wizard.mode == 'new' and wizard.analyza_id:
-               if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?", 
-                         dismissible=True,
-                         buttons=[("Ano", True), ("Ne", False)]):
-                   anvil.server.call('smaz_analyzu', wizard.analyza_id)
-                   return True
-               return False
-           elif wizard.mode == 'edit' and wizard.mode != 'saved':
-               if confirm("Opustíte upravovanou analýzu. Změny nebudou uloženy. Pokračovat?",
-                         dismissible=True,
-                         buttons=[("Ano", True), ("Ne", False)]):
-                   return True
-               return False
-   return True
+    """
+    Zkontroluje, zda v pravém panelu není rozdělaná analýza.
+    Pokud je, a uživatel potvrdí, smaže ji ze serveru a vrátí True.
+    Pokud uživatel odmítne, vrátí False a zůstane na stránce.
+    """
+    try:
+        komp = ziskej_komponentu()
+        if hasattr(komp, 'pravy_panel'):
+            components = komp.pravy_panel.get_components()
+            if components and isinstance(components[0], Wizard_komp):
+                wizard = components[0]
+                
+                # Handle new analysis
+                if wizard.mode == 'new' and wizard.analyza_id:
+                    if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?",
+                             dismissible=True,
+                             buttons=[("Ano", True), ("Ne", False)]):
+                        try:
+                            anvil.server.call('smaz_analyzu', wizard.analyza_id)
+                        except Exception:
+                            # If deletion fails, still allow navigation but log the error
+                            logging.error(f"Nepodařilo se smazat analýzu {wizard.analyza_id}")
+                        return True
+                    return False
+                    
+                # Handle edited analysis
+                elif wizard.mode == 'edit' and wizard.mode != 'saved':
+                    return confirm("Opustíte upravovanou analýzu. Změny nebudou uloženy. Pokračovat?",
+                                 dismissible=True,
+                                 buttons=[("Ano", True), ("Ne", False)])
+        return True
+        
+    except Exception as e:
+        logging.error(f"Chyba při kontrole rozpracované analýzy: {str(e)}")
+        return True  # In case of error, allow navigation
 
 def go_upravit_analyzu():
     set_active_nav("pridat")  # Or create new nav state for edit

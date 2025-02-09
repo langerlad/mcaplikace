@@ -214,13 +214,23 @@ def smaz_analyzu(analyza_id: str) -> None:
     """
     try:
         analyza = app_tables.analyza.get_by_id(analyza_id)
-        if analyza:
-            with tables.batch_update():
-                _smaz_stara_data(analyza)
-                analyza.delete()
+        if not analyza:
+            return  # If analysis doesn't exist, silently return
+            
+        # Delete related data first
+        for hodnota in app_tables.hodnota.search(analyza=analyza):
+            hodnota.delete()
+        for varianta in app_tables.varianta.search(analyza=analyza):
+            varianta.delete()
+        for kriterium in app_tables.kriterium.search(analyza=analyza):
+            kriterium.delete()
+            
+        # Finally delete the analysis itself
+        analyza.delete()
+        
     except Exception as e:
         logging.error(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
-        raise
+        raise ValueError("Nepodařilo se smazat analýzu")
 
 @anvil.server.callable
 def nacti_analyzy_uzivatele() -> List[Any]:

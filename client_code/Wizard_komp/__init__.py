@@ -1,6 +1,7 @@
 # -------------------------------------------------------
 # Form: Wizard_komp
 # -------------------------------------------------------
+import logging
 from ._anvil_designer import Wizard_kompTemplate
 from anvil import *
 import anvil.server
@@ -340,12 +341,28 @@ class Wizard_komp(Wizard_kompTemplate):
     self.card_krok_4.visible = False
 
   def button_zrusit_click(self, **event_args):
-    if confirm("Opravdu chcete odstranit tuto analýzu?", dismissible=True,
-        buttons=[("Ano", True), ("Ne", False)]):
-      try:
-        if self.analyza_id:
-          anvil.server.call('smaz_analyzu', self.analyza_id)
-        self.analyza_id = None  # odstraňení ID zabrání zobrazení konfirmace opuštění stránky
+    """Handles the cancel button click."""
+    try:
+        if self.mode == 'new':
+            if confirm("Opravdu chcete zrušit vytváření této analýzy?", 
+                      dismissible=True,
+                      buttons=[("Ano", True), ("Ne", False)]):
+                if self.analyza_id:
+                    try:
+                        anvil.server.call('smaz_analyzu', self.analyza_id)
+                    except Exception as e:
+                        logging.error(f"Chyba při mazání analýzy: {str(e)}")
+                    finally:
+                        self.analyza_id = None
+                Navigace.go_domu()
+                
+        elif self.mode == 'edit':
+            if confirm("Opravdu chcete zrušit úpravy? Změny nebudou uloženy.", 
+                      dismissible=True,
+                      buttons=[("Ano", True), ("Ne", False)]):
+                self.mode = 'saved'  # Prevent deletion prompt
+                Navigace.go_domu()
+                
+    except Exception as e:
+        alert(f"Nastala chyba: {str(e)}")
         Navigace.go_domu()
-      except Exception as e:
-        alert(f"Chyba při mazání analýzy: {str(e)}")
