@@ -115,23 +115,30 @@ def set_active_nav(stav):
   komp.set_active_nav(stav)
 
 def over_a_smaz_rozpracovanou(cilova_stranka):
-  """
-  Zkontroluje, zda v pravém panelu není rozdělaná SAW analýza.
-  Pokud je, a uživatel potvrdí, smaže ji ze serveru a vrátí True.
-  Pokud uživatel odmítne, vrátí False a zůstane na stránce.
-  """
-  komp = ziskej_komponentu()
-  if hasattr(komp, 'pravy_panel'):
-    components = komp.pravy_panel.get_components()
-    if (components
-        and isinstance(components[0], Wizard_komp)
-        and components[0].analyza_id):
-      if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?", dismissible=True,
-        buttons=[("Ano", True), ("Ne", False)]):
-        anvil.server.call('smaz_analyzu', components[0].analyza_id)
-        return True
-      return False
-  return True
+   """
+   Zkontroluje, zda v pravém panelu není rozdělaná SAW analýza.
+   Pokud je, a uživatel potvrdí, smaže ji ze serveru a vrátí True.
+   Pokud uživatel odmítne, vrátí False a zůstane na stránce.
+   """
+   komp = ziskej_komponentu()
+   if hasattr(komp, 'pravy_panel'):
+       components = komp.pravy_panel.get_components()
+       if components and isinstance(components[0], Wizard_komp):
+           wizard = components[0]
+           if wizard.mode == 'new' and wizard.analyza_id:
+               if confirm("Opustíte rozpracovanou analýzu a data budou smazána. Pokračovat?", 
+                         dismissible=True,
+                         buttons=[("Ano", True), ("Ne", False)]):
+                   anvil.server.call('smaz_analyzu', wizard.analyza_id)
+                   return True
+               return False
+           elif wizard.mode == 'edit':
+               if confirm("Opustíte upravovanou analýzu. Změny nebudou uloženy. Pokračovat?",
+                         dismissible=True,
+                         buttons=[("Ano", True), ("Ne", False)]):
+                   return True
+               return False
+   return True
 
 def go_upravit_analyzu():
     set_active_nav("pridat")  # Or create new nav state for edit
