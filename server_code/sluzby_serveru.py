@@ -31,13 +31,24 @@ def validuj_nazev_analyzy(nazev: str) -> None:
         raise ValueError("Název analýzy je příliš dlouhý (max 100 znaků).")
 
 def validuj_kriteria(kriteria: List[Dict]) -> None:
-    """Validuje seznam kritérií."""
+    """
+    Validuje seznam kritérií.
+    
+    Args:
+        kriteria: Seznam kritérií k validaci
+        
+    Raises:
+        ValueError: Pokud kritéria nejsou validní
+    """
     if not kriteria:
         raise ValueError("Je vyžadováno alespoň jedno kritérium.")
     
-    vahy_suma = sum(float(k['vaha']) for k in kriteria)
-    if abs(vahy_suma - 1.0) > 0.001:  # Tolerance pro desetinná čísla
-        raise ValueError(f"Součet vah musí být 1.0 (aktuálně: {vahy_suma})")
+    try:
+        vahy_suma = sum(float(k['vaha']) for k in kriteria)
+        if abs(vahy_suma - 1.0) > 0.001:  # Tolerance pro desetinná čísla
+            raise ValueError(f"Součet vah musí být 1.0 (aktuálně: {vahy_suma})")
+    except (ValueError, TypeError):
+        raise ValueError("Váha musí být číslo")
 
 @anvil.server.callable
 def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
@@ -80,7 +91,7 @@ def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
 
 @anvil.server.callable
 def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict], 
-                          varianty: List[Dict], hodnoty: List[Dict]) -> None:
+                          varianty: List[Dict], hodnoty: Dict) -> None:
     """
     Uloží kompletní analýzu včetně kritérií, variant a hodnot.
     
@@ -88,7 +99,7 @@ def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict],
         analyza_id: ID analýzy
         kriteria: Seznam kritérií
         varianty: Seznam variant
-        hodnoty: Seznam hodnot pro kombinace variant a kritérií
+        hodnoty: Dictionary s maticí hodnot
         
     Raises:
         AnalyzaNotFoundError: Pokud analýza neexistuje
@@ -101,14 +112,13 @@ def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict],
 
         validuj_kriteria(kriteria)
         
-        with tables.batch_update():
-            # Smazání starých dat
-            _smaz_stara_data(analyza)
-            
-            # Uložení nových dat
-            _uloz_kriteria(analyza, kriteria)
-            _uloz_varianty(analyza, varianty)
-            _uloz_hodnoty(analyza, hodnoty)
+        # Smazání starých dat
+        _smaz_stara_data(analyza)
+        
+        # Uložení nových dat
+        _uloz_kriteria(analyza, kriteria)
+        _uloz_varianty(analyza, varianty)
+        _uloz_hodnoty(analyza, hodnoty)
             
     except Exception as e:
         logging.error(f"Chyba při ukládání analýzy {analyza_id}: {str(e)}")
@@ -124,14 +134,24 @@ def _smaz_stara_data(analyza: Any) -> None:
         kriterium.delete()
 
 def _uloz_kriteria(analyza: Any, kriteria: List[Dict]) -> None:
-    """Uloží kritéria analýzy."""
+    """
+    Uloží kritéria analýzy.
+    
+    Args:
+        analyza: Objekt analýzy
+        kriteria: Seznam kritérií k uložení
+    """
     for k in kriteria:
-        app_tables.kriterium.add_row(
-            analyza=analyza,
-            nazev_kriteria=k['nazev_kriteria'],
-            typ=k['typ'],
-            vaha=k['vaha']
-        )
+        try:
+            vaha = float(k['vaha'])
+            app_tables.kriterium.add_row(
+                analyza=analyza,
+                nazev_kriteria=k['nazev_kriteria'],
+                typ=k['typ'],
+                vaha=vaha
+            )
+        except (ValueError, TypeError):
+            raise ValueError(f"Neplatná hodnota váhy pro kritérium {k['nazev_kriteria']}")
 
 def _uloz_varianty(analyza: Any, varianty: List[Dict]) -> None:
     """Uloží varianty analýzy."""
@@ -142,25 +162,47 @@ def _uloz_varianty(analyza: Any, varianty: List[Dict]) -> None:
             popis_varianty=v['popis_varianty']
         )
 
-def _uloz_hodnoty(analyza: Any, hodnoty: List[Dict]) -> None:
-    """Uloží hodnoty pro kombinace variant a kritérií."""
-    for h in hodnoty:
-        varianta = app_tables.varianta.get(
-            analyza=analyza,
-            nazev_varianty=h['varianta_id']
-        )
-        kriterium = app_tables.kriterium.get(
-            analyza=analyza,
-            nazev_kriteria=h['kriterium_id']
-        )
+def _uloz_hodnoty(analyza: Any, hodnoty: Dict) -> None:
+    """
+    Uloží hodnoty pro kombinace variant a kritérií.
+    
+    Args:
+        analyza: Objekt analýzy
+        hodnoty: Dictionary obsahující matici hodnot
+    """
+    if not isinstance(hodnoty, dict) or 'matice_hodnoty' not in hodnoty:
+        raise ValueError("Neplatný formát dat pro hodnoty")
         
-        if varianta and kriterium:
-            app_tables.hodnota.add_row(
+    for key, hodnota in hodnoty['matice_hodnoty'].items():
+        try:
+            varianta_id, kriterium_id = key.split('_')
+            
+            varianta = app_tables.varianta.get(
                 analyza=analyza,
-                varianta=varianta,
-                kriterium=kriterium,
-                hodnota=h['hodnota']
+                nazev_varianty=varianta_id
             )
+            kriterium = app_tables.kriterium.get(
+                analyza=analyza,
+                nazev_kriteria=kriterium_id
+            )
+            
+            if varianta and kriterium:
+                # Convert hodnota to float and handle potential errors
+                try:
+                    if isinstance(hodnota, str):
+                        hodnota = hodnota.replace(',', '.')
+                    hodnota_float = float(hodnota)
+                    app_tables.hodnota.add_row(
+                        analyza=analyza,
+                        varianta=varianta,
+                        kriterium=kriterium,
+                        hodnota=hodnota_float
+                    )
+                except (ValueError, TypeError):
+                    raise ValueError(f"Neplatná hodnota pro variantu {varianta_id} a kritérium {kriterium_id}")
+                    
+        except Exception as e:
+            raise ValueError(f"Chyba při ukládání hodnoty: {str(e)}")
 
 @anvil.server.callable
 def smaz_analyzu(analyza_id: str) -> None:
@@ -181,30 +223,22 @@ def smaz_analyzu(analyza_id: str) -> None:
         raise
 
 @anvil.server.callable
-def nacti_analyzy_uzivatele() -> List[Dict]:
+def nacti_analyzy_uzivatele() -> List[Any]:
     """
     Načte seznam analýz přihlášeného uživatele.
     
     Returns:
-        List[Dict]: Seznam analýz s jejich základními údaji
+        List[Any]: Seznam analýz s jejich základními údaji
     """
     uzivatel = anvil.users.get_user()
     if not uzivatel:
         return []
         
     try:
-        analyzy = list(app_tables.analyza.search(
+        return list(app_tables.analyza.search(
             tables.order_by("datum_vytvoreni", ascending=False),
             uzivatel=uzivatel
         ))
-        
-        return [{
-            'id': a.get_id(),
-            'nazev': a['nazev'],
-            'popis': a['popis'],
-            'datum_vytvoreni': a['datum_vytvoreni'],
-            'zvolena_metoda': a['zvolena_metoda']
-        } for a in analyzy]
     except Exception as e:
         logging.error(f"Chyba při načítání analýz uživatele: {str(e)}")
         return []

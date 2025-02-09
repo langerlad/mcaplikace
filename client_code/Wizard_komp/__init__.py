@@ -274,47 +274,47 @@ class Wizard_komp(Wizard_kompTemplate):
         self.label_chyba_4.visible = True
 
   def validuj_matici(self):
-   """
-   Prochází zadané hodnoty v text boxech matice
-   a ukládá je do self.cached_hodnoty, pokud jsou validní.
-   """
-   matrix_values = []
-   errors = []
-   for var_row in self.Matice_var.get_components():
-       for krit_row in var_row.Matice_krit.get_components():
-           hodnota_text = krit_row.text_box_matice_hodnota.text
-           
-           if not hodnota_text:
-               errors.append("Všechny hodnoty musí být vyplněny")
-               continue
-               
-           try:
-               # Replace comma with decimal point
-               hodnota_text = hodnota_text.replace(',', '.')
-               hodnota = float(hodnota_text)
-               
-               # Normalize display to use decimal point
-               krit_row.text_box_matice_hodnota.text = str(hodnota)
-               
-               matrix_values.append({
-                   'varianta_id': var_row.item['id_varianty'],
-                   'kriterium_id': krit_row.item['id_kriteria'],
-                   'hodnota': hodnota
-               })
-           except ValueError:
-               errors.append(
-                   f"Neplatná hodnota pro variantu {var_row.item['nazev_varianty']}, "
-                   f"kritérium {krit_row.item['nazev_kriteria']}"
-               )
+    """
+    Prochází zadané hodnoty v text boxech matice
+    a ukládá je do self.cached_hodnoty, pokud jsou validní.
+    """
+    matrix_values = {'matice_hodnoty': {}}
+    errors = []
+    
+    for var_row in self.Matice_var.get_components():
+        for krit_row in var_row.Matice_krit.get_components():
+            hodnota_text = krit_row.text_box_matice_hodnota.text
+            
+            if not hodnota_text:
+                errors.append("Všechny hodnoty musí být vyplněny")
+                continue
+                
+            try:
+                # Replace comma with decimal point and convert to float
+                hodnota_text = hodnota_text.replace(',', '.')
+                hodnota = float(hodnota_text)
+                
+                # Normalize display to use decimal point
+                krit_row.text_box_matice_hodnota.text = str(hodnota)
+                
+                # Create the key in the format expected by the server
+                key = f"{var_row.item['id_varianty']}_{krit_row.item['id_kriteria']}"
+                matrix_values['matice_hodnoty'][key] = hodnota
+                
+            except ValueError:
+                errors.append(
+                    f"Neplatná hodnota pro variantu {var_row.item['nazev_varianty']}, "
+                    f"kritérium {krit_row.item['nazev_kriteria']}"
+                )
 
-   if errors:
-       self.label_chyba_4.text = "\n".join(list(set(errors)))  # Remove duplicates
-       self.label_chyba_4.visible = True
-       return False
+    if errors:
+        self.label_chyba_4.text = "\n".join(list(set(errors)))  # Remove duplicates
+        self.label_chyba_4.visible = True
+        return False
 
-   self.cached_hodnoty = matrix_values
-   self.label_chyba_4.visible = False
-   return True
+    self.cached_hodnoty = matrix_values
+    self.label_chyba_4.visible = False
+    return True
 
   # ----------------------------
   # Tlačítka Zpět a Zrušit
