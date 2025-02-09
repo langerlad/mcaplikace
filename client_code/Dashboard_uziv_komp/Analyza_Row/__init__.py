@@ -22,8 +22,7 @@ class Analyza_Row(Analyza_RowTemplate):
             self.parent.raise_event('x-refresh')
 
   def button_upravit_click(self, **event_args):
-    analyza_id = self.item['id']
-    # Set global ID to load in wizard
-    anvil.server.call('set_edit_analyza_id', analyza_id)
+    print(f"Editing analysis with ID: {self.item['id']}")
+    anvil.server.call('set_edit_analyza_id', self.item['id'])
     Navigace.go_upravit_analyzu()
            

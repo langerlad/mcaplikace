@@ -12,8 +12,11 @@ from .. import Navigace
 
 
 class Wizard_komp(Wizard_kompTemplate):
-  def __init__(self, **properties):
+  def __init__(self, mode='new', **properties):
     self.init_components(**properties)
+    
+    # Mode 'new' pro novou analýzu, 'edit' pro úpravu existující
+    self.mode = mode
     
     # Skrýváme karty (kroky) na začátku
     self.card_krok_2.visible = False
@@ -31,6 +34,38 @@ class Wizard_komp(Wizard_kompTemplate):
     self.repeating_panel_kriteria.set_event_handler('x-refresh', self.nacti_kriteria)
     self.repeating_panel_varianty.set_event_handler('x-refresh', self.nacti_varianty)
 
+    if self.mode == 'edit': 
+        self.load_existing_analyza()
+
+  def load_existing_analyza(self):
+    try:
+        self.analyza_id = anvil.server.call('get_edit_analyza_id')
+        print("Loading analyza with ID:", self.analyza_id)  # Debug print
+        
+        if not self.analyza_id:
+            raise Exception("ID analýzy není nastaveno")
+            
+        analyza_data = anvil.server.call('nacti_analyzu', self.analyza_id)
+        
+        # Set form fields
+        self.text_box_nazev.text = analyza_data.get('nazev', '')
+        self.text_area_popis.text = analyza_data.get('popis', '')
+        
+        # Cache data
+        self.cached_analyza = analyza_data
+        self.cached_kriteria = anvil.server.call('nacti_kriteria', self.analyza_id)
+        self.cached_varianty = anvil.server.call('nacti_varianty', self.analyza_id)
+        self.cached_hodnoty = anvil.server.call('nacti_hodnoty', self.analyza_id)
+
+        # Update displays
+        self.nacti_kriteria()
+        self.nacti_varianty()
+        
+    except Exception as e:
+        print("Error in load_existing_analyza:", str(e))
+        alert("Chyba při načítání analýzy: " + str(e))
+        Navigace.go_domu()
+      
   def button_dalsi_click(self, **event_args):
     self.label_chyba.visible = False
     chyba = self.validace_vstupu()
@@ -46,13 +81,23 @@ class Wizard_komp(Wizard_kompTemplate):
       'zvolena_metoda': "SAW"
     }
 
-    # Uložíme analýzu na server, získáme ID
-    self.analyza_id = anvil.server.call(
-      "pridej_analyzu", 
-      self.cached_analyza['nazev'],
-      self.cached_analyza['popis'], 
-      self.cached_analyza['zvolena_metoda']
-    )
+    if self.mode == 'new':
+      # Uložíme analýzu na server, získáme ID
+      self.analyza_id = anvil.server.call(
+        "pridej_analyzu", 
+        self.cached_analyza['nazev'],
+        self.cached_analyza['popis'], 
+        self.cached_analyza['zvolena_metoda']
+      )
+    else:
+      # Režim "edit" – upravit stávající analýzu
+      anvil.server.call(
+        'uprav_analyzu',
+        self.analyza_id,
+        self.cached_analyza['nazev'],
+        self.cached_analyza['popis'],
+        self.cached_analyza['zvolena_metoda']
+      )
 
     self.card_krok_1.visible = False
     self.card_krok_2.visible = True
@@ -190,17 +235,23 @@ class Wizard_komp(Wizard_kompTemplate):
     """
     matice_data = []
     for varianta in self.cached_varianty:
-      kriteria_pro_variantu = [{
-        'nazev_kriteria': k['nazev_kriteria'],
-        'id_kriteria': k['nazev_kriteria'],
-        'hodnota': ''
-      } for k in self.cached_kriteria]
+        kriteria_pro_variantu = []
+        for k in self.cached_kriteria:
+            # Create key in same format as when saving
+            key = f"{varianta['nazev_varianty']}_{k['nazev_kriteria']}"
+            hodnota = self.cached_hodnoty['matice_hodnoty'].get(key, '')
+            
+            kriteria_pro_variantu.append({
+                'nazev_kriteria': k['nazev_kriteria'],
+                'id_kriteria': k['nazev_kriteria'],
+                'hodnota': hodnota
+            })
 
-      matice_data.append({
-        'nazev_varianty': varianta['nazev_varianty'],
-        'id_varianty': varianta['nazev_varianty'],
-        'kriteria': kriteria_pro_variantu
-      })
+        matice_data.append({
+            'nazev_varianty': varianta['nazev_varianty'],
+            'id_varianty': varianta['nazev_varianty'],
+            'kriteria': kriteria_pro_variantu
+        })
 
     self.Matice_var.items = matice_data
 
@@ -209,22 +260,22 @@ class Wizard_komp(Wizard_kompTemplate):
     Uloží kompletní analýzu na server, pokud je matice validní.
     """
     if not self.validuj_matici():
-      return
-
+        return
+        
     try:
-      anvil.server.call(
-        'uloz_kompletni_analyzu', 
-        self.analyza_id,
-        self.cached_kriteria,
-        self.cached_varianty,
-        self.cached_hodnoty
-      )
-      self.analyza_id = None  # odstraňení ID zabrání zobrazení konfirmace opuštění stránky
-      alert("Analýza byla úspěšně uložena.")
-      Navigace.go_domu()
+        anvil.server.call(
+            'uloz_kompletni_analyzu', 
+            self.analyza_id,
+            self.cached_kriteria,
+            self.cached_varianty,
+            self.cached_hodnoty
+        )
+        self.mode = 'saved'  # Add this instead of setting analyza_id to None
+        alert("Analýza byla úspěšně uložena.")
+        Navigace.go_domu()
     except Exception as e:
-      self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
-      self.label_chyba_4.visible = True
+        self.label_chyba_4.text = f"Chyba při ukládání: {str(e)}"
+        self.label_chyba_4.visible = True
 
   def validuj_matici(self):
     """
@@ -235,25 +286,27 @@ class Wizard_komp(Wizard_kompTemplate):
     errors = []
 
     for var_row in self.Matice_var.get_components():
-      for krit_row in var_row.Matice_krit.get_components():
-        val = krit_row.text_box_matice_hodnota.text
-        if not val:
-          errors.append("Všechny hodnoty musí být vyplněny")
-          continue
-        try:
-          val = float(val)
-          matrix_values.append({
-            'varianta_id': var_row.item['id_varianty'],
-            'kriterium_id': krit_row.item['id_kriteria'],
-            'hodnota': val
-          })
-        except ValueError:
-          errors.append(f"Neplatná hodnota pro {var_row.item['nazev_varianty']}")
+        print(f"Validating varianta: {var_row.item}")  # Debug
+        for krit_row in var_row.Matice_krit.get_components():
+            print(f"Validating kriterium: {krit_row.item}")  # Debug
+            val = krit_row.text_box_matice_hodnota.text
+            if not val:
+                errors.append("Všechny hodnoty musí být vyplněny")
+                continue
+            try:
+                val = float(val)
+                matrix_values.append({
+                    'varianta_id': var_row.item['id_varianty'],
+                    'kriterium_id': krit_row.item['id_kriteria'],
+                    'hodnota': val
+                })
+            except ValueError:
+                errors.append(f"Neplatná hodnota pro {var_row.item['nazev_varianty']}")
 
     if errors:
-      self.label_chyba_4.text = "\n".join(errors)
-      self.label_chyba_4.visible = True
-      return False
+        self.label_chyba_4.text = "\n".join(errors)
+        self.label_chyba_4.visible = True
+        return False
 
     self.cached_hodnoty = matrix_values
     return True
@@ -262,11 +315,14 @@ class Wizard_komp(Wizard_kompTemplate):
   # Tlačítka Zpět a Zrušit
   # ----------------------------
   def button_zpet_2_click(self, **event_args):
-    # Pokud vracíme uživatele na Krok 1, a existuje analyza_id, můžeme ji smazat ze serveru
-    if hasattr(self, 'analyza_id') and self.analyza_id:
-      anvil.server.call('smaz_analyzu', self.analyza_id)
-      self.analyza_id = None
-    self.cached_analyza = None
+    if self.mode == 'new':
+        # Only delete analysis if it's a new one
+        if hasattr(self, 'analyza_id') and self.analyza_id:
+            anvil.server.call('smaz_analyzu', self.analyza_id)
+            self.analyza_id = None
+        self.cached_analyza = None
+    # Don't clear analyza_id in edit mode
+    
     self.card_krok_1.visible = True
     self.card_krok_2.visible = False
 
