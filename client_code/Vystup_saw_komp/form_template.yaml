@@ -4,9 +4,11 @@ components:
   properties: {bold: true, text: 'Načtená data:'}
   type: Label
 - components:
-  - layout_properties: {grid_position: 'RXVZRV,VHJFDK'}
+  - data_bindings:
+    - {code: 'self.item[''vstupni_data'']', property: content, writeback: false}
+    layout_properties: {grid_position: 'RXVZRV,VHJFDK'}
     name: rich_text_vstupni_data
-    properties: {}
+    properties: {content: ''}
     type: RichText
   layout_properties: {grid_position: 'TSUEFT,MUVHNP'}
   name: card_1

@@ -74,7 +74,7 @@ class Wizard_komp(Wizard_kompTemplate):
         
     except Exception as e:
         alert(f"Chyba při načítání analýzy: {str(e)}")
-        Navigace.go_domu()
+        Navigace.go('domu')
       
   def button_dalsi_click(self, **event_args):
     self.label_chyba.visible = False
@@ -273,7 +273,7 @@ class Wizard_komp(Wizard_kompTemplate):
         )
         self.mode = Konstanty.STAV_ANALYZY['ULOZENY']
         alert(Konstanty.ZPRAVY_CHYB['ANALYZA_ULOZENA'])
-        Navigace.go_domu()
+        Navigace.go('domu')
     except Exception as e:
         error_msg = f"Chyba při ukládání: {str(e)}"
         logging.error(error_msg)
@@ -350,15 +350,15 @@ class Wizard_komp(Wizard_kompTemplate):
                         logging.error(f"Chyba při mazání analýzy: {str(e)}")
                     finally:
                         self.analyza_id = None
-                Navigace.go_domu()
+                Navigace.go('domu')
                 
         elif self.mode == Konstanty.STAV_ANALYZY['UPRAVA']:
             if confirm(Konstanty.ZPRAVY_CHYB['POTVRZENI_ZRUSENI_UPRAVY'], 
                       dismissible=True,
                       buttons=[("Ano", True), ("Ne", False)]):
                 self.mode = Konstanty.STAV_ANALYZY['ULOZENY']  # Prevent deletion prompt
-                Navigace.go_domu()
+                Navigace.go('domu')
                 
     except Exception as e:
         alert(f"Nastala chyba: {str(e)}")
-        Navigace.go_domu()
+        Navigace.go('domu')

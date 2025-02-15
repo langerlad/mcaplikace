@@ -16,8 +16,8 @@ class Vyber_analyzy_komp(Vyber_analyzy_kompTemplate):
     # Any code you write here will run before the form opens.
 
   def link_ahp_click(self, **event_args):
-    Navigace.go_ahp()
+    Navigace.go('ahp')
 
   def link_SAW_click(self, **event_args):
-    Navigace.go_saw_vstup()
+    Navigace.go('saw_vstup')
 
