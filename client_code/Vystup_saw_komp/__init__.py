@@ -1,4 +1,4 @@
-from ._anvil_designer import Analyza_vystup_kompTemplate
+from ._anvil_designer import Vystup_saw_kompTemplate
 from anvil import *
 import anvil.server
 import anvil.tables as tables
@@ -7,7 +7,7 @@ from anvil.tables import app_tables
 import anvil.users
 
 
-class Analyza_vystup_komp(Analyza_vystup_kompTemplate):
+class Vystup_saw_komp(Vystup_saw_kompTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
