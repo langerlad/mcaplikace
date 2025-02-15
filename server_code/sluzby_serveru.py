@@ -410,3 +410,70 @@ def get_edit_analyza_id() -> Optional[str]:
         Optional[str]: ID analýzy nebo None
     """
     return anvil.server.session.get('edit_analyza_id')
+
+@anvil.server.callable
+def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
+    """
+    Načte kompletní data analýzy podle zadaného ID.
+    Vrací slovník obsahující údaje o samotné analýze a k ní patřící kritéria,
+    varianty a hodnoty.
+
+    Args:
+        analyza_id: ID analýzy k načtení
+
+    Returns:
+        Dict obsahující klíče:
+            'analyza': dict s klíči 'id', 'nazev', 'popis', 'zvolena_metoda', 'datum_vytvoreni', 'datum_upravy', 'stav'
+            'kriteria': list slovníků s klíči 'nazev_kriteria', 'typ', 'vaha'
+            'varianty': list slovníků s klíči 'nazev_varianty', 'popis_varianty'
+            'hodnoty': dict, kde 'matice_hodnoty' je dict klíč = "{nazev_varianty}_{nazev_kriteria}", hodnota = float
+    """
+    analyza = app_tables.analyza.get_by_id(analyza_id)
+    if not analyza:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
+
+    analyza_data = {
+        'id': analyza.get_id(),
+        'nazev': analyza['nazev'],
+        'popis': analyza['popis'],
+        'zvolena_metoda': analyza['zvolena_metoda'],
+        'datum_vytvoreni': analyza['datum_vytvoreni'],
+        'datum_upravy': analyza['datum_upravy'],
+        'stav': analyza['stav']
+    }
+
+    # Načtení kritérií
+    zaznamy_kriterii = app_tables.kriterium.search(analyza=analyza)
+    kriteria = [
+        {
+            'nazev_kriteria': k['nazev_kriteria'],
+            'typ': k['typ'],
+            'vaha': float(k['vaha'])
+        }
+        for k in zaznamy_kriterii
+    ]
+
+    # Načtení variant
+    zaznamy_variant = app_tables.varianta.search(analyza=analyza)
+    varianty = [
+        {
+            'nazev_varianty': v['nazev_varianty'],
+            'popis_varianty': v['popis_varianty']
+        }
+        for v in zaznamy_variant
+    ]
+
+    # Načtení hodnot
+    zaznamy_hodnot = app_tables.hodnota.search(analyza=analyza)
+    hodnoty = {'matice_hodnoty': {}}
+    for h in zaznamy_hodnot:
+        if h['varianta'] and h['kriterium']:
+            klic = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+            hodnoty['matice_hodnoty'][klic] = float(h['hodnota'])
+
+    return {
+        'analyza': analyza_data,
+        'kriteria': kriteria,
+        'varianty': varianty,
+        'hodnoty': hodnoty
+    }
