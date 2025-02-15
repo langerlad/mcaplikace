@@ -25,4 +25,10 @@ class Analyza_Row(Analyza_RowTemplate):
     print(f"Editing analysis with ID: {self.item['id']}")
     anvil.server.call('set_edit_analyza_id', self.item['id'])
     Navigace.go_upravit_analyzu()
+
+  def button_vypocet_click(self, **event_args):
+    # Načtení dat ze serveru
+    analyza_data = anvil.server.call('nacti_kompletni_analyzu', self.item['id'])    
+    # Formulář Vystup_saw_komp očekává argument analyza_data v konstruktoru.
+    Navigace.go_saw_vystup()
            

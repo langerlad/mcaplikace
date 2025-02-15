@@ -16,6 +16,7 @@ from .HERO_komp import HERO_komp
 from .Dashboard_uziv_komp import Dashboard_uziv_komp
 from .Ucet_komp import Ucet_komp
 from .Vyber_analyzy_komp import Vyber_analyzy_komp
+from .Vystup_saw_komp import Vystup_saw_komp
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
@@ -72,8 +73,14 @@ KONFIGURACE_NAVIGACE = {
         'oznaceni_nav': None,
         'kontrola_rozpracovane': False
     },
-    'saw': {
+    'saw_vstup': {
         'komponenta': Wizard_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'saw_vystup': {
+        'komponenta': Vystup_saw_komp,
         'vyzaduje_prihlaseni': True,
         'oznaceni_nav': None,
         'kontrola_rozpracovane': False
@@ -110,12 +117,16 @@ def go_ucet():
     naviguj('ucet')
 
 def go_ahp():
-    """Přejde na stránku AHP analýzy."""
+    """Přejde na wizard AHP analýzy."""
     naviguj('ahp')
 
-def go_saw():
-    """Přejde na stránku SAW analýzy."""
-    naviguj('saw')
+def go_saw_vstup():
+    """Přejde na wizard SAW analýzy."""
+    naviguj('saw_vstup')
+
+def go_saw_vystup():
+    """Přejde na stránku zpracované SAW analýzy."""
+    naviguj('saw_vystup')
 
 def naviguj(stranka, **parametry):
     """

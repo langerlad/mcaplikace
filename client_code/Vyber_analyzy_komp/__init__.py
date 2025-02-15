@@ -19,5 +19,5 @@ class Vyber_analyzy_komp(Vyber_analyzy_kompTemplate):
     Navigace.go_ahp()
 
   def link_SAW_click(self, **event_args):
-    Navigace.go_saw()
+    Navigace.go_saw_vstup()
 

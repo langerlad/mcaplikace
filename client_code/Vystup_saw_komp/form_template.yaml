@@ -1,7 +1,29 @@
 components:
 - layout_properties: {grid_position: 'MHJOUD,PJDMDK'}
-  name: label_analyza_vystup
-  properties: {text: Stránka s výpočty a vyhodnocením analýzy.}
+  name: label_analyza_vystup_1
+  properties: {bold: true, text: 'Načtená data:'}
   type: Label
+- components:
+  - layout_properties: {grid_position: 'RXVZRV,VHJFDK'}
+    name: rich_text_vstupni_data
+    properties: {}
+    type: RichText
+  layout_properties: {grid_position: 'TSUEFT,MUVHNP'}
+  name: card_1
+  properties: {role: card}
+  type: ColumnPanel
+- layout_properties: {grid_position: 'CJIYPS,ETPZQH'}
+  name: label_analyza_vystup_2
+  properties: {bold: true, text: 'Výstup:'}
+  type: Label
+- components:
+  - layout_properties: {grid_position: 'WBFTSB,JGDBJJ'}
+    name: rich_text_vystupni_data
+    properties: {}
+    type: RichText
+  layout_properties: {grid_position: 'RSXEPT,VZLMKC'}
+  name: card_2
+  properties: {role: card}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
