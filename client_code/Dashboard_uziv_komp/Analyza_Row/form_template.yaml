@@ -6,7 +6,8 @@ components:
     name: label_nazev
     properties: {bold: true, role: null}
     type: Label
-  - event_bindings: {click: button_vypocet_click}
+  - data_bindings: []
+    event_bindings: {click: button_vypocet_click}
     layout_properties: {grid_position: 'WUIAWA,CUIMWE'}
     name: button_vypocet
     properties: {role: secondary-color, text: Analyzovat data}
