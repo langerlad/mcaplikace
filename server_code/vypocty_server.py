@@ -84,3 +84,4 @@ def vypocet_normalizace(analyza_data):
         'normalizovana_matice': normalizovana,
         'zprava': "OK - Normalizace hotová"
     }
+

@@ -1,7 +1,7 @@
 components:
 - layout_properties: {grid_position: 'OUGSHE,UVMLIB'}
   name: label_4
-  properties: {background: 'theme:Secondary 500', text: 'POZNÁMKA: předběžný "surový" výstup dat JSON+markdowd'}
+  properties: {background: 'theme:Secondary 500', text: 'POZNÁMKA: předběžný "surový" výstup dat v markdown formátu'}
   type: Label
 - layout_properties: {grid_position: 'MHJOUD,PJDMDK'}
   name: label_analyza_vystup_1
@@ -11,7 +11,7 @@ components:
   - data_bindings: []
     layout_properties: {grid_position: 'RXVZRV,VHJFDK'}
     name: rich_text_vstupni_data
-    properties: {content: ''}
+    properties: {content: '', format: markdown}
     type: RichText
   layout_properties: {grid_position: 'TSUEFT,MUVHNP'}
   name: card_1
@@ -19,20 +19,29 @@ components:
   type: ColumnPanel
 - layout_properties: {grid_position: 'CJIYPS,ETPZQH'}
   name: label_analyza_vystup_2
-  properties: {bold: true, text: 'Výstup:'}
+  properties: {bold: true, text: 'Postup zpracování dat:'}
   type: Label
 - components:
   - layout_properties: {grid_position: 'MEJNRR,JYKCAC'}
     name: rich_text_normalizace
     properties: {}
     type: RichText
+  layout_properties: {grid_position: 'RSXEPT,VZLMKC'}
+  name: card_2
+  properties: {role: card}
+  type: ColumnPanel
+- layout_properties: {grid_position: 'TESDIU,LPTLMM'}
+  name: label_analyza_vystup_3
+  properties: {bold: true, text: 'Výsledek:'}
+  type: Label
+- components:
   - data_bindings: []
-    layout_properties: {grid_position: 'WBFTSB,JGDBJJ'}
+    layout_properties: {grid_position: 'GKGQKH,UEPYOY'}
     name: rich_text_vystupni_data
     properties: {}
     type: RichText
-  layout_properties: {grid_position: 'RSXEPT,VZLMKC'}
-  name: card_2
+  layout_properties: {grid_position: 'LXUORE,NYUVMQ'}
+  name: card_3
   properties: {role: card}
   type: ColumnPanel
 container:

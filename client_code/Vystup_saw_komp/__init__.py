@@ -46,37 +46,38 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
     zakladni_info = f"""
 # {analyza_data['analyza']['nazev']}
 
-## Základní informace
+### Základní informace
 - **Metoda**: {analyza_data['analyza']['zvolena_metoda']}
 - **Popis**: {analyza_data['analyza']['popis'] or 'Bez popisu'}
 
-## Kritéria
+### Kritéria
 | Název kritéria | Typ | Váha |
 |----------------|-----|------|
 """
     
     # Přidání kritérií do tabulky
     for k in analyza_data['kriteria']:
-        zakladni_info += f"| {k['nazev_kriteria']} | {k['typ']} | {k['vaha']} |\n"
+        vaha = float(k['vaha'])  # Převod na číslo pro formátování
+        zakladni_info += f"| {k['nazev_kriteria']} | {k['typ'].upper()} | {vaha:.3f} |\n"
 
     # Seznam variant
-    zakladni_info += "\n## Varianty\n"
+    zakladni_info += "\n### Varianty\n"
     for v in analyza_data['varianty']:
-        zakladni_info += f"- **{v['nazev_varianty']}**"
         if v['popis_varianty']:
-            zakladni_info += f": {v['popis_varianty']}"
-        zakladni_info += "\n"
+            zakladni_info += f"- **{v['nazev_varianty']}** - {v['popis_varianty']}\n"
+        else:
+            zakladni_info += f"- **{v['nazev_varianty']}**\n"
 
     # Vytvoření hodnotící matice
-    zakladni_info += "\n## Hodnotící matice\n"
+    zakladni_info += "\n### Hodnotící matice\n"
     
     # Získání unikátních názvů variant a kritérií
     varianty = [v['nazev_varianty'] for v in analyza_data['varianty']]
     kriteria = [k['nazev_kriteria'] for k in analyza_data['kriteria']]
     
     # Hlavička tabulky
-    zakladni_info += "| Kritérium | " + " | ".join(varianty) + " |\n"
-    zakladni_info += "|" + "-|"*(len(varianty) + 1) + "\n"
+    zakladni_info += f"| Kritérium | {' | '.join(varianty)} |\n"
+    zakladni_info += f"|{'-' * 10}|{('|'.join('-' * 12 for _ in varianty))}|\n"
     
     # Naplnění tabulky hodnotami
     matice = analyza_data['hodnoty']['matice_hodnoty']
@@ -85,24 +86,26 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
         for var in varianty:
             klic = f"{var}_{krit}"
             hodnota = matice.get(klic, "N/A")
-            radek += f" {hodnota} |"
+            if isinstance(hodnota, (int, float)):
+                radek += f" {hodnota:.2f} |"
+            else:
+                radek += f" {hodnota} |"
         zakladni_info += radek + "\n"
 
     self.rich_text_vstupni_data.content = zakladni_info
 
   def zobraz_normalizaci(self, analyza_data):
     """
-    Zavolá serverový modul 'vypocet_normalizace' a zobrazí normalizovanou matici v nějaké UI komponentě.
+    Zobrazí normalizovanou matici a vážené hodnoty v UI komponentě.
     """
     vysledky = anvil.server.call('vypocet_normalizace', analyza_data)
-    # vysledky by měl obsahovat klíče: 'nazvy_variant', 'nazvy_kriterii', 'normalizovana_matice', 'zprava'
-
+    
     nazvy_var = vysledky['nazvy_variant']
     nazvy_krit = vysledky['nazvy_kriterii']
     nmtx = vysledky['normalizovana_matice']
 
-    # Tady si v UI vygenerujte např. tabulku v RichText
-    md_text = "# Výsledek normalizace\n\n"
+    # 1. Zobrazení normalizované matice
+    md_text = "## Normalizace hodnot\n\n"
     md_text += "| Varianta / Krit. | " + " | ".join(nazvy_krit) + " |\n"
     md_text += "|" + "-|"*(len(nazvy_krit)+1) + "\n"
 
@@ -113,72 +116,87 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
             radek += f" {round(val,3)} |"
         md_text += radek + "\n"
 
-    # Nyní třeba:
-    print(md_text)  # pro ladění v konzoli
-    # Nebo to zobrazit v RichText komponentě:
+    # Přidání vysvětlujícího textu
+    md_text += """
+
+Normalizační matice (někdy též znormalizovaná matice) je výsledek úpravy původních hodnot (např. z různých kritérií) na jednotné měřítko tak, aby se spravedlivě porovnávaly. Jinými slovy, v původních datech může být jedno kritérium „cena v Kč" (velká čísla, kde menší hodnota je lepší – cost) a druhé „kvalita v bodech 1–10" (menší čísla, kde větší hodnota je lepší – benefit). Normalizací převedeme všechny sloupce do podobného intervalu (často [0,1]), abychom je mohli sčítat, násobit nebo jinak kombinovat.
+
+#### Vysvětlení procesu:
+1. Pro každé kritérium je určen směr optimalizace (MAX/MIN)
+2. Aplikuje se Min-Max normalizace:
+   - Pro každý sloupec (kritérium) se najde minimum a maximum
+   - Hodnoty jsou transformovány podle vzorce: (x - min) / (max - min)
+   - Pro MIN kritéria je výsledek odečten od 1
+3. Výsledná normalizovaná matice obsahuje hodnoty v intervalu [0,1]
+   - 1 reprezentuje nejlepší hodnotu
+   - 0 reprezentuje nejhorší hodnotu
+
+"""
+
+    # 2. Vytvoření slovníku pro vážené hodnoty
+    vysledky_soucinu = {}
+    for i, varianta in enumerate(nazvy_var):
+        vysledky_soucinu[varianta] = {}
+        for j, kriterium in enumerate(nazvy_krit):
+            norm_hodnota = nmtx[i][j]
+            vaha = float(analyza_data['kriteria'][j]['vaha'])
+            vysledky_soucinu[varianta][kriterium] = norm_hodnota * vaha
+
+    # 3. Přidání tabulky vážených hodnot
+    md_text += "## Vážené hodnoty\n\n"
+    
+    # Získat seznam všech variant a kritérií
+    varianty = list(vysledky_soucinu.keys())
+    prvni_variant = varianty[0] if varianty else None
+    kriteria = list(vysledky_soucinu[prvni_variant].keys()) if prvni_variant else []
+    
+    # Vytvoření tabulky
+    md_text += "| Varianta | " + " | ".join(kriteria) + " | **Součet** |\n"
+    md_text += "|" + "----|"*(len(kriteria)+2) + "\n"
+    
+    # Naplnění řádků
+    for var in varianty:
+        radek = f"| **{var}** |"
+        soucet = 0.0
+        for krit in kriteria:
+            hodnota = vysledky_soucinu[var].get(krit, 0)
+            soucet += hodnota
+            radek += f" {round(hodnota, 3)} |"
+        radek += f" **{round(soucet, 3)}** |"
+        md_text += radek + "\n"
+
+    # After the weighted values table, add:
+    md_text += """
+
+**Tabulka vážených hodnot (normalizovaná hodnota × váha)**
+
+Podobně jako u normalizační matice je i tabulka vážených hodnot klíčovým krokem v procesu **vícekriteriální analýzy** (např. metodou SAW).
+
+Zatímco normalizační matice zachycuje převedené hodnoty na interval [0,1], v **tabulce vážených hodnot** každou tuto normalizovanou hodnotu ještě **násobíme** váhou daného kritéria.
+
+### Postup výpočtu:
+
+1. **Normalizace hodnot**
+   - Po určení, zda je kritérium typu „max" (benefit) či „min" (cost), se aplikuje např. **min-max** normalizace (viz předchozí text)
+   - Výsledkem je tzv. **normalizovaná matice**: každé kritérium se převede do intervalu [0,1]
+
+2. **Váhy kritérií**
+   - Každému kritériu je přiřazena **váha** odrážející jeho důležitost vůči ostatním (součet vah bývá 1)
+   - Vyšší váha znamená, že se dané kritérium podílí na výsledku **významněji**
+
+3. **Výpočet vážených hodnot**
+   - Pro každou buňku normalizované matice (tj. pro každou variantu a kritérium) se spočítá **součin**:
+     (normalizovaná hodnota) × (váha kritéria)
+   - Tím vznikne **tabulka vážených hodnot**, kde se už zároveň zohledňuje důležitost kritéria
+
+4. **Interpretace**
+   - Výsledek v každé buňce vyjadřuje, **jak dobře** daná varianta splňuje kritérium, **s přihlédnutím** k jeho významnosti
+   - Nulové či velmi nízké hodnoty znamenají, že varianta v daném kritériu **silně zaostává**, i po zohlednění váhy
+   - Hodnoty blížící se 1 (resp. vyššího součtu přes všechna kritéria) znamenají, že varianta je **výhodná** z pohledu tohoto kritéria či celého souboru kritérií
+
+> **Tabulka vážených hodnot** tak představuje **mezikrok** před finálním vyčíslením *celkového skóre* každé varianty (např. v metodě SAW se tyto vážené hodnoty ještě **sečtou** do jednoho čísla).
+"""
+
     self.rich_text_normalizace.content = md_text
 
-#   def zobraz_normalizaci_scikit(self, analyza_data):
-#     """
-#     Zobrazí postup normalizace pomocí scikit-criteria včetně mezivýpočtů.
-#     Výsledek zobrazí v self.rich_text_normalizace.
-#     """
-#     try:
-#         print("Starting zobraz_normalizaci_scikit")  # Debug print
-        
-#         # Získání výsledků ze serveru
-#         vysledky = anvil.server.call('vypocet_normalizace', analyza_data)
-#         print("Got results from server:", vysledky)  # Debug print
-
-#         # Vytvoření výstupu s vysvětlením
-#         txt = """# Postup normalizace metodou SAW
-
-# ## 1. Vstupní matice hodnot
-# Původní hodnoty před normalizací:
-        
-# | Varianta / Kritérium | """ + " | ".join(vysledky['nazvy_kriterii']) + " |\n"
-#         txt += "|" + "-|"*(len(vysledky['nazvy_kriterii'])+1) + "\n"
-        
-#         for i, var_name in enumerate(vysledky['nazvy_variant']):
-#             radek = f"| {var_name} |"
-#             for val in vysledky['puvodni_matice'][i]:
-#                 radek += f" {val} |"
-#             txt += radek + "\n"
-
-#         txt += "\n## 2. Parametry normalizace\n"
-#         txt += "### Váhy kritérií:\n"
-#         for krit, vaha in zip(vysledky['nazvy_kriterii'], vysledky['vahy']):
-#             txt += f"- {krit}: {vaha}\n"
-        
-#         txt += "\n### Směry optimalizace:\n"
-#         for krit, smer in zip(vysledky['nazvy_kriterii'], vysledky['smery']):
-#             txt += f"- {krit}: {smer}\n"
-
-#         txt += """
-# ## 3. Normalizovaná matice
-# Normalizace metodou sum - hodnoty jsou vyděleny součtem sloupce:
-        
-# | Varianta / Kritérium | """ + " | ".join(vysledky['nazvy_kriterii']) + " |\n"
-#         txt += "|" + "-|"*(len(vysledky['nazvy_kriterii'])+1) + "\n"
-        
-#         for i, var_name in enumerate(vysledky['nazvy_variant']):
-#             radek = f"| {var_name} |"
-#             for val in vysledky['normalizovana_matice'][i]:
-#                 radek += f" {val:.3f} |"
-#             txt += radek + "\n"
-
-#         txt += """
-# ## Vysvětlení procesu
-# 1. Nejprve se určí směr optimalizace pro každé kritérium (MAX/MIN)
-# 2. Aplikuje se normalizace sum:
-#    - Pro MAX kritéria: hodnota / součet všech hodnot ve sloupci
-#    - Pro MIN kritéria: (1/hodnota) / součet (1/hodnota) všech variant
-# 3. Výsledná normalizovaná matice obsahuje hodnoty v intervalu [0,1]
-# """
-#         print("Generated text:", txt)  # Debug print
-#         self.rich_text_normalizace.content = txt
-#         print("Text set to rich_text_normalizace")  # Debug print
-
-#     except Exception as e:
-#         print(f"Error in zobraz_normalizaci_scikit: {str(e)}")  # Debug print
-#         alert(f"Chyba při zobrazení normalizace: {str(e)}")
+  
