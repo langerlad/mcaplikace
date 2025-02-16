@@ -22,13 +22,13 @@ components:
   properties: {bold: true, text: 'Výstup:'}
   type: Label
 - components:
+  - layout_properties: {grid_position: 'MEJNRR,JYKCAC'}
+    name: rich_text_normalizace
+    properties: {}
+    type: RichText
   - data_bindings: []
     layout_properties: {grid_position: 'WBFTSB,JGDBJJ'}
     name: rich_text_vystupni_data
-    properties: {}
-    type: RichText
-  - layout_properties: {grid_position: 'TWRLYF,STZSAI'}
-    name: rich_text_normalizace
     properties: {}
     type: RichText
   layout_properties: {grid_position: 'RSXEPT,VZLMKC'}

@@ -1,3 +1,4 @@
+import anvil.server
 # -------------------------------------------------------
 # Modul: konstanty
 # Obsahuje sdílené konstanty používané napříč aplikací
