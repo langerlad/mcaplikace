@@ -26,7 +26,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
         try:
             analyza_data = anvil.server.call('nacti_kompletni_analyzu', self.analyza_id)
             self.zobraz_vstup(analyza_data)
-            self.zobraz_normalizaci_scikit(analyza_data)
+            self.zobraz_normalizaci(analyza_data)
             self.rich_text_vystupni_data.content = "Výpočet SAW bude doplněn."
         except Exception as e:
             alert(f"Chyba při načítání analýzy: {str(e)}")
@@ -116,7 +116,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
     # Nyní třeba:
     print(md_text)  # pro ladění v konzoli
     # Nebo to zobrazit v RichText komponentě:
-    # self.rich_text_normalizace.content = md_text
+    self.rich_text_normalizace.content = md_text
 
 #   def zobraz_normalizaci_scikit(self, analyza_data):
 #     """
