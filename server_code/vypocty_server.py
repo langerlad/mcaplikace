@@ -1,9 +1,7 @@
 import anvil.server
 import numpy as np
 from skcriteria import DecisionMatrix
-from skcriteria.preprocessing import invert_objectives
 from skcriteria.preprocessing import scalers
-from skcriteria.madm import simple
 
 @anvil.server.callable
 def vypocet_normalizace(analyza_data):
@@ -11,59 +9,58 @@ def vypocet_normalizace(analyza_data):
     Provede normalizaci dat pomocí scikit-criteria.
     
     Args:
-        analyza_data: Slovník obsahující data analýzy
-        
+        analyza_data: Slovník obsahující data analýzy s klíči:
+            - varianty: list slovníků s 'nazev_varianty' a 'popis_varianty'
+            - kriteria: list slovníků s 'nazev_kriteria', 'typ' (max/min) a 'vaha'
+            - hodnoty: slovník obsahující 'matice_hodnoty' s klíči ve formátu "varianta_kriterium"
+    
     Returns:
-        Dict obsahující normalizovanou matici a metadata
+        Dict obsahující původní a normalizovanou matici plus metadata
     """
     try:
-        varianty = analyza_data['varianty']
-        kriteria = analyza_data['kriteria']
-        matice_hodnot = analyza_data['hodnoty']['matice_hodnoty']
-
-        # Příprava jmen a parametrů
-        anames = [v['nazev_varianty'] for v in varianty]
-        cnames = [k['nazev_kriteria'] for k in kriteria]
+        # Získání názvů variant a kritérií
+        varianty = [v['nazev_varianty'] for v in analyza_data['varianty']]
+        kriteria = [k['nazev_kriteria'] for k in analyza_data['kriteria']]
         
-        # Určení směru optimalizace
-        objectives = np.array(['max' if k['typ'] == 'max' else 'min' for k in kriteria])
-        
-        # Váhy kritérií
-        weights = np.array([float(k['vaha']) for k in kriteria])
+        # Směry optimalizace a váhy
+        smery = ['max' if k['typ'] == 'max' else 'min' for k in analyza_data['kriteria']]
+        vahy = [float(k['vaha']) for k in analyza_data['kriteria']]
         
         # Sestavení matice hodnot
-        mtx = []
-        for var in varianty:
-            row = []
-            for krit in kriteria:
+        matice = []
+        for var in analyza_data['varianty']:
+            radek = []
+            for krit in analyza_data['kriteria']:
                 klic = f"{var['nazev_varianty']}_{krit['nazev_kriteria']}"
-                hod = float(matice_hodnot.get(klic, 0))
-                row.append(hod)
-            mtx.append(row)
+                hodnota = float(analyza_data['hodnoty']['matice_hodnoty'].get(klic, 0))
+                radek.append(hodnota)
+            matice.append(radek)
+        
+        # Převod na numpy array
+        matice = np.array(matice)
+        smery = np.array(smery)
+        vahy = np.array(vahy)
         
         # Vytvoření rozhodovací matice
-        mtx = np.array(mtx)
         dm = DecisionMatrix(
-            mtx,  # První parametr je přímo matice
-            objectives=objectives,
-            weights=weights,
-            dtypes=None,
-            criteria_names=cnames,
-            alternative_names=anames
+            matice,
+            smery,
+            weights=vahy,
+            alternatives=varianty,
+            criteria=kriteria
         )
-
-        # Normalizace pomocí sum scaler
-        scaler = scalers.SumScaler()
-        normalized_dm = scaler.transform(dm)
         
-        # Převod výsledků do formátu pro klienta
+        # Normalizace
+        scaler = scalers.SumScaler()
+        normalized = scaler.transform(dm)
+        
         return {
-            'puvodni_matice': mtx.tolist(),
-            'normalizovana_matice': normalized_dm.values.tolist(),
-            'nazvy_variant': anames,
-            'nazvy_kriterii': cnames,
-            'vahy': weights.tolist(),
-            'smery': objectives.tolist()
+            'puvodni_matice': matice.tolist(),
+            'normalizovana_matice': normalized.values.tolist(),
+            'nazvy_variant': varianty,
+            'nazvy_kriterii': kriteria,
+            'vahy': vahy.tolist(),
+            'smery': smery.tolist()
         }
         
     except Exception as e:
