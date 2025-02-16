@@ -16,6 +16,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
     
     # Instanční proměnné
     self.analyza_id = analyza_id
+    print(analyza_id)
 
   def form_show(self, **event_args):
         if self.analyza_id:
