@@ -1,67 +1,96 @@
 import anvil.server
-import numpy as np
-from skcriteria import DecisionMatrix
-from skcriteria.preprocessing import scalers
+
+# Důležité importy ze scikit-criteria
+from skcriteria.core.objectives import Objective
+from skcriteria.core.data import mkdm
+from skcriteria.madm.simple import WeightedSum
+
+MIN = Objective.MIN
+MAX = Objective.MAX
 
 @anvil.server.callable
 def vypocet_normalizace(analyza_data):
     """
-    Provede normalizaci dat pomocí scikit-criteria.
-    
+    Provede normalizaci analýzy pomocí scikit-criteria (WeightedSum s nastavenou normalizací).
+    V tomto příkladu zatím ignorujeme celkové skóre a pořadí, 
+    soustředíme se jen na normalizovanou matici.
+
     Args:
-        analyza_data: Slovník obsahující data analýzy s klíči:
-            - varianty: list slovníků s 'nazev_varianty' a 'popis_varianty'
-            - kriteria: list slovníků s 'nazev_kriteria', 'typ' (max/min) a 'vaha'
-            - hodnoty: slovník obsahující 'matice_hodnoty' s klíči ve formátu "varianta_kriterium"
-    
+        analyza_data (dict): Data analýzy se strukturou:
+            {
+              'varianty': [{'nazev_varianty':..., ...}, ...],
+              'kriteria': [{'nazev_kriteria':..., 'typ':..., 'vaha':...}, ...],
+              'hodnoty': {
+                'matice_hodnoty': { 'DodavatelA_Cena': 123, ... }
+              }
+            }
+
     Returns:
-        Dict obsahující původní a normalizovanou matici plus metadata
-    """
-    try:
-        # Získání názvů variant a kritérií
-        varianty = [v['nazev_varianty'] for v in analyza_data['varianty']]
-        kriteria = [k['nazev_kriteria'] for k in analyza_data['kriteria']]
-        
-        # Směry optimalizace a váhy
-        smery = ['max' if k['typ'] == 'max' else 'min' for k in analyza_data['kriteria']]
-        vahy = [float(k['vaha']) for k in analyza_data['kriteria']]
-        
-        # Sestavení matice hodnot
-        matice = []
-        for var in analyza_data['varianty']:
-            radek = []
-            for krit in analyza_data['kriteria']:
-                klic = f"{var['nazev_varianty']}_{krit['nazev_kriteria']}"
-                hodnota = float(analyza_data['hodnoty']['matice_hodnoty'].get(klic, 0))
-                radek.append(hodnota)
-            matice.append(radek)
-        
-        # Převod na numpy array
-        matice = np.array(matice)
-        smery = np.array(smery)
-        vahy = np.array(vahy)
-        
-        # Vytvoření rozhodovací matice
-        dm = DecisionMatrix(
-            matice,
-            smery,
-            weights=vahy,
-            alternatives=varianty,
-            criteria=kriteria
-        )
-        
-        # Normalizace
-        scaler = scalers.SumScaler()
-        normalized = scaler.transform(dm)
-        
-        return {
-            'puvodni_matice': matice.tolist(),
-            'normalizovana_matice': normalized.values.tolist(),
-            'nazvy_variant': varianty,
-            'nazvy_kriterii': kriteria,
-            'vahy': vahy.tolist(),
-            'smery': smery.tolist()
+        dict: Slovník s normalizovanou maticí a dalším infem. Příklad:
+        {
+            'nazvy_variant': [...],
+            'nazvy_kriterii': [...],
+            'normalizovana_matice': [[...], [...], ...],  # 2D list
+            'zprava': "OK"
         }
-        
-    except Exception as e:
-        raise Exception(f"Chyba při normalizaci: {str(e)}")
+    """
+    # 1) Načtení a příprava vstupů
+    varianty = analyza_data['varianty']   # [{ 'nazev_varianty': 'DodavatelA', ...}, ...]
+    kriteria = analyza_data['kriteria']   # [{ 'nazev_kriteria': 'Cena', 'typ': 'min', 'vaha': ...}, ...]
+    matice_hodnot = analyza_data['hodnoty']['matice_hodnoty']
+
+    # Názvy pro scikit-criteria
+    anames = [v['nazev_varianty'] for v in varianty]
+    cnames = [k['nazev_kriteria'] for k in kriteria]
+
+    # Definice cílů (benefit/cost) – v scikit-criteria: 'max' => MAX, 'min' => MIN
+    objectives = []
+    for k in kriteria:
+        if k['typ'].lower() in ("max", "benefit"):
+            objectives.append(MAX)
+        else:
+            objectives.append(MIN)
+
+    # Váhy (pokud je budete chtít i pro finální skóre)
+    weights = [float(k['vaha']) for k in kriteria]
+
+    # 2) Sestavení matice (list of lists)
+    mtx = []
+    for var in varianty:
+        row = []
+        for krit in kriteria:
+            # klíč ve tvaru "DodavatelA_Cena"
+            kl = f"{var['nazev_varianty']}_{krit['nazev_kriteria']}"
+            hod = matice_hodnot.get(kl, 0)
+            row.append(float(hod))
+        mtx.append(row)
+
+    # 3) Vytvoření DataMatrix (mkdm)
+    data_matrix = mkdm(
+        matrix=mtx,
+        objectives=objectives,
+        weights=weights,
+        alternatives=anames,
+        criteria=cnames,
+    )
+
+    # 4) WeightedSum s určitým typem normalizace
+    #    "normalization='minmax'" => min-max normalizace,
+    #    "normalization='vector'" => vektorová normalizace atd.
+    #    "wnorm='sum'" => normalizace vah. Záleží na vašem záměru.
+    decisor = WeightedSum(normalization='minmax', wnorm='sum')
+
+    # 5) Rozhodnutí (proběhne i normalizace)
+    result = decisor.decide(data_matrix)
+
+    # 6) Normalizovaná matice se uloží do result.e_.nmtx (numpy array)
+    #    Převedeme ji na list of lists, aby se dala poslat klientovi
+    normalizovana = result.e_.nmtx.tolist()
+
+    # 7) Vrácení dat klientovi
+    return {
+        'nazvy_variant': anames,
+        'nazvy_kriterii': cnames,
+        'normalizovana_matice': normalizovana,
+        'zprava': "OK - Normalizace hotová"
+    }
