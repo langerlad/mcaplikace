@@ -27,7 +27,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
             analyza_data = anvil.server.call('nacti_kompletni_analyzu', self.analyza_id)
             self.zobraz_vstup(analyza_data)
             self.zobraz_normalizaci(analyza_data)
-            self.rich_text_vystupni_data.content = "Výpočet SAW bude doplněn."
+            #self.rich_text_vysledek.content
         except Exception as e:
             alert(f"Chyba při načítání analýzy: {str(e)}")
     else:
@@ -198,5 +198,59 @@ Zatímco normalizační matice zachycuje převedené hodnoty na interval [0,1], 
 """
 
     self.rich_text_normalizace.content = md_text
+    self.zobraz_vysledek(analyza_data, vysledky_soucinu)
 
-  
+  def zobraz_vysledek(self, analyza_data, vysledky_soucinu):
+    """
+    Zobrazí finální výsledky SAW analýzy včetně seřazení variant a komentáře.
+    """
+    try:
+        # 1) Vypočítat celkové skóre pro každou variantu (suma vážených hodnot)
+        final_scores = {}
+        for varianta, hodnoty in vysledky_soucinu.items():
+            final_scores[varianta] = sum(hodnoty.values())
+
+        # 2) Seřadit varianty podle skóre
+        setridene = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+
+        # 3) Vytvořit markdown text s výsledky
+        md = "# Finální výsledky SAW analýzy\n\n"
+        
+        # Tabulka výsledků
+        md += "| Pořadí | Varianta | Celkové skóre |\n"
+        md += "|---------|-----------|---------------|\n"
+        
+        for i, (var, score) in enumerate(setridene, start=1):
+            md += f"| {i}. | **{var}** | {round(score, 3)} |\n"
+
+        # Přidat interpretaci výsledků
+        best_variant = setridene[0][0]
+        best_score = setridene[0][1]
+        worst_variant = setridene[-1][0]
+        worst_score = setridene[-1][1]
+        score_diff = best_score - worst_score
+
+        md += f"""
+
+### Interpretace výsledků
+
+- **Nejlepší varianta**: **{best_variant}** (skóre: {round(best_score, 3)})
+- **Nejhorší varianta**: {worst_variant} (skóre: {round(worst_score, 3)})
+- **Rozdíl nejlepší-nejhorší**: {round(score_diff, 3)}
+
+### Vysvětlení hodnocení
+
+1. **Celkové skóre** každé varianty je součtem všech jejích vážených hodnot
+2. **Vyšší skóre** znamená lepší variantu v kontextu:
+   - zadaných vah kritérií
+   - směrů optimalizace (MIN/MAX)
+   - původních hodnot kritérií
+
+> Toto hodnocení zohledňuje všechna kritéria současně a bere v úvahu jejich relativní důležitost definovanou vahami.
+
+"""
+
+        self.rich_text_vysledek.content = md
+
+    except Exception as e:
+        alert(f"Chyba při zobrazení výsledků: {str(e)}")
