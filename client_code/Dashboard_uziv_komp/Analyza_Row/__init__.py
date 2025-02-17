@@ -24,5 +24,8 @@ class Analyza_Row(Analyza_RowTemplate):
   def button_upravit_click(self, **event_args):
     print(f"Editing analysis with ID: {self.item['id']}")
     anvil.server.call('set_edit_analyza_id', self.item['id'])
-    Navigace.go_upravit_analyzu()
+    Navigace.go('uprava_analyzy')
+
+  def button_vypocet_click(self, **event_args):
+    Navigace.go('saw_vystup', analyza_id=self.item['id'])
            

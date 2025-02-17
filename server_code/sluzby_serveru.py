@@ -1,251 +1,479 @@
 # -------------------------------------------------------
 # Modul: Sluzby_serveru
+# Serverové funkce pro práci s analýzami
 # -------------------------------------------------------
 import datetime
+import logging
+from typing import Dict, List, Optional, Any
+import anvil.server
 import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-import anvil.server
+import Konstanty
 
+# =============== Validační funkce ===============
 
-@anvil.server.callable
-def pridej_analyzu(nazev, popis, zvolena_metoda):
-  datum_vytvoreni = datetime.datetime.now()
-  uzivatel = anvil.users.get_user()
-  if not uzivatel:
-    raise Exception("Neznámý uživatel nemůže volat metodu pridej_analyzu.")
-  
-  analyza = app_tables.analyza.add_row(
-    nazev=nazev,
-    popis=popis,
-    datum_vytvoreni=datum_vytvoreni,
-    zvolena_metoda=zvolena_metoda,
-    uzivatel=uzivatel,
-    datum_upravy=None,
-    stav=None
-  )
-  return analyza.get_id()
-
-@anvil.server.callable
-def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
-    analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        raise Exception("Analýza neexistuje")
-
-    # Keep track of what we want to keep
-    new_kriteria_names = {k['nazev_kriteria'] for k in kriteria}
-    new_varianty_names = {v['nazev_varianty'] for v in varianty}
+def validuj_nazev_analyzy(nazev: str) -> None:
+    """
+    Validuje název analýzy.
     
-    # Remove kriteria that are no longer present
-    for k in app_tables.kriterium.search(analyza=analyza):
-        if k['nazev_kriteria'] not in new_kriteria_names:
-            # First remove related hodnoty
-            for h in app_tables.hodnota.search(analyza=analyza, kriterium=k):
-                h.delete()
-            k.delete()
+    Args:
+        nazev: Název analýzy k validaci
+        
+    Raises:
+        ValueError: Pokud název není validní
+    """
+    if not nazev:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['NAZEV_PRAZDNY'])
+    if len(nazev) > Konstanty.VALIDACE['MAX_DELKA_NAZEV']:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['NAZEV_DLOUHY'])
 
-    # Remove varianty that are no longer present
-    for v in app_tables.varianta.search(analyza=analyza):
-        if v['nazev_varianty'] not in new_varianty_names:
-            # First remove related hodnoty
-            for h in app_tables.hodnota.search(analyza=analyza, varianta=v):
-                h.delete()
-            v.delete()
+def validuj_kriteria(kriteria: List[Dict]) -> None:
+    """
+    Validuje seznam kritérií včetně kontroly součtu vah.
+    
+    Args:
+        kriteria: Seznam kritérií k validaci
+        
+    Raises:
+        ValueError: Pokud kritéria nejsou validní
+    """
+    if not kriteria:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['MIN_KRITERIA'])
+    
+    try:
+        vahy_suma = sum(float(k['vaha']) for k in kriteria)
+        if abs(vahy_suma - 1.0) > Konstanty.VALIDACE['TOLERANCE_SOUCTU_VAH']:
+            raise ValueError(Konstanty.ZPRAVY_CHYB['SUMA_VAH'].format(vahy_suma))
+    except (ValueError, TypeError):
+        raise ValueError(Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA'])
 
-    # Update or add kriteria
-    for k in kriteria:
-        existing_kriterium = app_tables.kriterium.get(
-            analyza=analyza,
-            nazev_kriteria=k['nazev_kriteria']
-        )
-        if existing_kriterium:
-            existing_kriterium.update(
-                typ=k['typ'],
-                vaha=k['vaha']
-            )
-        else:
+# =============== Pomocné funkce pro práci s daty ===============
+
+def _uloz_kriteria(analyza: Any, kriteria: List[Dict]) -> None:
+    """
+    Uloží kritéria k dané analýze.
+    
+    Args:
+        analyza: Instance analýzy
+        kriteria: Seznam kritérií k uložení
+    """
+    for krit in kriteria:
+        try:
+            vaha = float(krit['vaha'])
             app_tables.kriterium.add_row(
                 analyza=analyza,
-                nazev_kriteria=k['nazev_kriteria'],
-                typ=k['typ'],
-                vaha=k['vaha']
+                nazev_kriteria=krit['nazev_kriteria'],
+                typ=krit['typ'],
+                vaha=vaha
+            )
+        except (ValueError, TypeError):
+            raise ValueError(
+                Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA_KRITERIA'].format(krit['nazev_kriteria'])
             )
 
-    # Update or add varianty
-    for v in varianty:
-        existing_varianta = app_tables.varianta.get(
-            analyza=analyza,
-            nazev_varianty=v['nazev_varianty']
-        )
-        if existing_varianta:
-            existing_varianta.update(
-                popis_varianty=v['popis_varianty']
-            )
-        else:
-            app_tables.varianta.add_row(
-                analyza=analyza,
-                nazev_varianty=v['nazev_varianty'],
-                popis_varianty=v['popis_varianty']
-            )
-
-    # Remove all existing hodnoty and add new ones
-    for h in app_tables.hodnota.search(analyza=analyza):
-        h.delete()
-
-    # Add new hodnoty
-    for h in hodnoty:
-        varianta = app_tables.varianta.get(
-            analyza=analyza,
-            nazev_varianty=h['varianta_id']
-        )
-        kriterium = app_tables.kriterium.get(
-            analyza=analyza,
-            nazev_kriteria=h['kriterium_id']
-        )
-        
-        app_tables.hodnota.add_row(
-            analyza=analyza,
-            varianta=varianta,
-            kriterium=kriterium,
-            hodnota=h['hodnota']
-        )
-
-@anvil.server.callable
-def smaz_analyzu(analyza_id):
-  analyza = app_tables.analyza.get_by_id(analyza_id)
-  if not analyza:
-    return
+def _uloz_varianty(analyza: Any, varianty: List[Dict]) -> None:
+    """
+    Uloží varianty k dané analýze.
     
-  for hodnota in app_tables.hodnota.search(analyza=analyza):
-    hodnota.delete()
-  for varianta in app_tables.varianta.search(analyza=analyza):
-    varianta.delete()
-  for kriterium in app_tables.kriterium.search(analyza=analyza):
-    kriterium.delete()
-  analyza.delete()
+    Args:
+        analyza: Instance analýzy
+        varianty: Seznam variant k uložení
+    """
+    for var in varianty:
+        app_tables.varianta.add_row(
+            analyza=analyza,
+            nazev_varianty=var['nazev_varianty'],
+            popis_varianty=var['popis_varianty']
+        )
+
+def _uloz_hodnoty(analyza: Any, hodnoty: Dict) -> None:
+    """
+    Uloží hodnoty pro kombinace variant a kritérií.
+    
+    Args:
+        analyza: Instance analýzy
+        hodnoty: Dictionary obsahující matici hodnot
+    """
+    if not isinstance(hodnoty, dict) or 'matice_hodnoty' not in hodnoty:
+        raise ValueError("Neplatný formát dat pro hodnoty")
+        
+    for klic, hodnota in hodnoty['matice_hodnoty'].items():
+        try:
+            id_varianty, id_kriteria = klic.split('_')
+            
+            varianta = app_tables.varianta.get(
+                analyza=analyza,
+                nazev_varianty=id_varianty
+            )
+            kriterium = app_tables.kriterium.get(
+                analyza=analyza,
+                nazev_kriteria=id_kriteria
+            )
+            
+            if varianta and kriterium:
+                try:
+                    if isinstance(hodnota, str):
+                        hodnota = hodnota.replace(',', '.')
+                    hodnota_float = float(hodnota)
+                    app_tables.hodnota.add_row(
+                        analyza=analyza,
+                        varianta=varianta,
+                        kriterium=kriterium,
+                        hodnota=hodnota_float
+                    )
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        Konstanty.ZPRAVY_CHYB['NEPLATNA_HODNOTA'].format(id_varianty, id_kriteria)
+                    )
+        except Exception as e:
+            raise ValueError(f"Chyba při ukládání hodnoty: {str(e)}")
+
+# =============== Veřejné serverové funkce ===============
 
 @anvil.server.callable
-def nacti_analyzy_uzivatele():
-  uzivatel = anvil.users.get_user()
-  if not uzivatel:
-    return []
-  return list(app_tables.analyza.search(
-    tables.order_by("datum_vytvoreni", ascending=False),
-    uzivatel=uzivatel)
-             )
+def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
+    """
+    Vytvoří novou analýzu.
+    
+    Args:
+        nazev: Název nové analýzy
+        popis: Popis analýzy
+        zvolena_metoda: Typ zvolené metody pro analýzu
+        
+    Returns:
+        str: ID nově vytvořené analýzy
+        
+    Raises:
+        ValueError: Pokud vytvoření selže nebo data nejsou validní
+    """
+    uzivatel = anvil.users.get_user()
+    if not uzivatel:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['NEZNAMY_UZIVATEL'])
+
+    validuj_nazev_analyzy(nazev)
+    
+    try:
+        analyza = app_tables.analyza.add_row(
+            nazev=nazev,
+            popis=popis,
+            datum_vytvoreni=datetime.datetime.now(),
+            zvolena_metoda=zvolena_metoda,
+            uzivatel=uzivatel,
+            datum_upravy=None,
+            stav=None
+        )
+        return analyza.get_id()
+    except Exception as e:
+        logging.error(f"Chyba při vytváření analýzy: {str(e)}")
+        raise
 
 @anvil.server.callable
-def nacti_analyzu(analyza_id):
-    analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        raise Exception(f"Analýza s ID {analyza_id} nebyla nalezena")
-    return {
-        'nazev': analyza['nazev'],
-        'popis': analyza['popis'],
-        'zvolena_metoda': analyza['zvolena_metoda'],
-        'datum_vytvoreni': analyza['datum_vytvoreni']
-    }
+def nacti_analyzu(analyza_id: str) -> Dict:
+    """
+    Načte detaily konkrétní analýzy.
+    
+    Args:
+        analyza_id: ID požadované analýzy
+        
+    Returns:
+        Dict: Základní údaje o analýze
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if not analyza:
+            raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
+            
+        return {
+            'nazev': analyza['nazev'],
+            'popis': analyza['popis'],
+            'zvolena_metoda': analyza['zvolena_metoda'],
+            'datum_vytvoreni': analyza['datum_vytvoreni']
+        }
+    except Exception as e:
+        logging.error(f"Chyba při načítání analýzy {analyza_id}: {str(e)}")
+        raise
 
 @anvil.server.callable
-def set_edit_analyza_id(analyza_id):
-    print(f"Setting edit_analyza_id: {analyza_id}")
+def nacti_analyzy_uzivatele() -> List[Any]:
+    """
+    Načte seznam analýz přihlášeného uživatele.
+    
+    Returns:
+        List[Any]: Seznam analýz s jejich základními údaji
+    """
+    uzivatel = anvil.users.get_user()
+    if not uzivatel:
+        return []
+        
+    try:
+        return list(app_tables.analyza.search(
+            tables.order_by("datum_vytvoreni", ascending=False),
+            uzivatel=uzivatel
+        ))
+    except Exception as e:
+        logging.error(f"Chyba při načítání analýz uživatele: {str(e)}")
+        return []
+
+
+@anvil.server.callable
+def nacti_kriteria(analyza_id: str) -> List[Dict]:
+    """
+    Načte kritéria pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        List[Dict]: Seznam kritérií a jejich vlastností
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if analyza:
+            kriteria = list(app_tables.kriterium.search(analyza=analyza))
+            return [{
+                'nazev_kriteria': k['nazev_kriteria'],
+                'typ': k['typ'],
+                'vaha': float(k['vaha'])
+            } for k in kriteria]
+        return []
+    except Exception as e:
+        logging.error(f"Chyba při načítání kritérií pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def nacti_varianty(analyza_id: str) -> List[Dict]:
+    """
+    Načte varianty pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        List[Dict]: Seznam variant a jejich vlastností
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if analyza:
+            varianty = list(app_tables.varianta.search(analyza=analyza))
+            return [{
+                'nazev_varianty': v['nazev_varianty'],
+                'popis_varianty': v['popis_varianty']
+            } for v in varianty]
+        return []
+    except Exception as e:
+        logging.error(f"Chyba při načítání variant pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def nacti_hodnoty(analyza_id: str) -> Dict:
+    """
+    Načte matici hodnot pro danou analýzu.
+    
+    Args:
+        analyza_id: ID analýzy
+        
+    Returns:
+        Dict: Dictionary obsahující matici hodnot
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        hodnoty = {'matice_hodnoty': {}}
+        
+        if analyza:
+            for h in app_tables.hodnota.search(analyza=analyza):
+                if h['varianta'] and h['kriterium']:
+                    klic = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+                    hodnoty['matice_hodnoty'][klic] = float(h['hodnota'])
+        
+        return hodnoty
+    except Exception as e:
+        logging.error(f"Chyba při načítání hodnot pro analýzu {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) -> None:
+    """
+    Upraví základní údaje analýzy.
+    
+    Args:
+        analyza_id: ID analýzy
+        nazev: Nový název
+        popis: Nový popis
+        zvolena_metoda: Nová zvolená metoda
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if not analyza:
+            raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
+            
+        validuj_nazev_analyzy(nazev)
+        
+        analyza.update(
+            nazev=nazev,
+            popis=popis,
+            zvolena_metoda=zvolena_metoda,
+            datum_upravy=datetime.datetime.now()
+        )
+    except Exception as e:
+        logging.error(f"Chyba při úpravě analýzy {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict], 
+                          varianty: List[Dict], hodnoty: Dict) -> None:
+    """
+    Uloží kompletní analýzu včetně všech souvisejících dat.
+    
+    Args:
+        analyza_id: ID analýzy
+        kriteria: Seznam kritérií
+        varianty: Seznam variant
+        hodnoty: Matice hodnot pro varianty a kritéria
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if not analyza:
+            raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
+
+        validuj_kriteria(kriteria)
+        
+        # Smaže existující data
+        #smaz_analyzu(analyza_id) <- Asi logický BUG
+        # Smaže pouze související data, ne samotnou analýzu
+        try:
+            # Delete related data first
+            for hodnota in app_tables.hodnota.search(analyza=analyza):
+                hodnota.delete()
+            for varianta in app_tables.varianta.search(analyza=analyza):
+                varianta.delete()
+            for kriterium in app_tables.kriterium.search(analyza=analyza):
+                kriterium.delete()
+        except Exception as e:
+            logging.error(f"Chyba při mazání souvisejících dat: {str(e)}")
+            raise
+        
+        # Uloží nová data
+        _uloz_kriteria(analyza, kriteria)
+        _uloz_varianty(analyza, varianty)
+        _uloz_hodnoty(analyza, hodnoty)
+            
+    except Exception as e:
+        logging.error(f"Chyba při ukládání analýzy {analyza_id}: {str(e)}")
+        raise
+
+@anvil.server.callable
+def smaz_analyzu(analyza_id: str) -> None:
+    """
+    Smaže analýzu a všechna související data.
+    
+    Args:
+        analyza_id: ID analýzy ke smazání
+    """
+    try:
+        analyza = app_tables.analyza.get_by_id(analyza_id)
+        if not analyza:
+            return
+            
+        # Nejdřív smaže související data
+        for hodnota in app_tables.hodnota.search(analyza=analyza):
+            hodnota.delete()
+        for varianta in app_tables.varianta.search(analyza=analyza):
+            varianta.delete()
+        for kriterium in app_tables.kriterium.search(analyza=analyza):
+            kriterium.delete()
+            
+        # Nakonec smaže samotnou analýzu
+        analyza.delete()
+        
+    except Exception as e:
+        logging.error(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
+        raise ValueError(Konstanty.ZPRAVY_CHYB['SMAZANI_SELHALO'])
+
+@anvil.server.callable
+def set_edit_analyza_id(analyza_id: str) -> None:
+    """
+    Nastaví ID editované analýzy do session.
+    
+    Args:
+        analyza_id: ID analýzy k editaci
+    """
     anvil.server.session['edit_analyza_id'] = analyza_id
 
 @anvil.server.callable
-def get_edit_analyza_id():
-    edit_id = anvil.server.session.get('edit_analyza_id')
-    print(f"Getting edit_analyza_id: {edit_id}")
-    return edit_id
+def get_edit_analyza_id() -> Optional[str]:
+    """
+    Získá ID editované analýzy ze session.
+    
+    Returns:
+        Optional[str]: ID analýzy nebo None
+    """
+    return anvil.server.session.get('edit_analyza_id')
 
 @anvil.server.callable
-def nacti_kriteria(analyza_id):
+def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
+    """
+    Načte kompletní data analýzy podle zadaného ID.
+    Vrací slovník obsahující údaje o samotné analýze a k ní patřící kritéria,
+    varianty a hodnoty.
+
+    Args:
+        analyza_id: ID analýzy k načtení
+
+    Returns:
+        Dict obsahující klíče:
+            'analyza': dict s klíči 'id', 'nazev', 'popis', 'zvolena_metoda', 'datum_vytvoreni', 'datum_upravy', 'stav'
+            'kriteria': list slovníků s klíči 'nazev_kriteria', 'typ', 'vaha'
+            'varianty': list slovníků s klíči 'nazev_varianty', 'popis_varianty'
+            'hodnoty': dict, kde 'matice_hodnoty' je dict klíč = "{nazev_varianty}_{nazev_kriteria}", hodnota = float
+    """
     analyza = app_tables.analyza.get_by_id(analyza_id)
-    if analyza:
-        kriteria = list(app_tables.kriterium.search(analyza=analyza))
-        return [{
+    if not analyza:
+        raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
+
+    analyza_data = {
+        'id': analyza.get_id(),
+        'nazev': analyza['nazev'],
+        'popis': analyza['popis'],
+        'zvolena_metoda': analyza['zvolena_metoda'],
+        'datum_vytvoreni': analyza['datum_vytvoreni'],
+        'datum_upravy': analyza['datum_upravy'],
+        'stav': analyza['stav']
+    }
+
+    # Načtení kritérií
+    zaznamy_kriterii = app_tables.kriterium.search(analyza=analyza)
+    kriteria = [
+        {
             'nazev_kriteria': k['nazev_kriteria'],
             'typ': k['typ'],
-            'vaha': k['vaha']
-        } for k in kriteria]
-    return []
+            'vaha': float(k['vaha'])
+        }
+        for k in zaznamy_kriterii
+    ]
 
-@anvil.server.callable
-def nacti_varianty(analyza_id):
-    analyza = app_tables.analyza.get_by_id(analyza_id)
-    if analyza:
-        varianty = list(app_tables.varianta.search(analyza=analyza))
-        return [{
+    # Načtení variant
+    zaznamy_variant = app_tables.varianta.search(analyza=analyza)
+    varianty = [
+        {
             'nazev_varianty': v['nazev_varianty'],
             'popis_varianty': v['popis_varianty']
-        } for v in varianty]
-    return []
+        }
+        for v in zaznamy_variant
+    ]
 
-@anvil.server.callable
-def nacti_hodnoty(analyza_id):
-    analyza = app_tables.analyza.get_by_id(analyza_id)
+    # Načtení hodnot
+    zaznamy_hodnot = app_tables.hodnota.search(analyza=analyza)
     hodnoty = {'matice_hodnoty': {}}
-    
-    if analyza:
-        print("Found analyza:", analyza)
-        for h in app_tables.hodnota.search(analyza=analyza):
-            print("Checking hodnota:", h)
-            if h['varianta'] and h['kriterium']:
-                # Create string key instead of tuple
-                key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
-                hodnoty['matice_hodnoty'][key] = h['hodnota']
-                print(f"Successfully mapped hodnota {h['hodnota']} to {key}")
-    
-    return hodnoty
+    for h in zaznamy_hodnot:
+        if h['varianta'] and h['kriterium']:
+            klic = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+            hodnoty['matice_hodnoty'][klic] = float(h['hodnota'])
 
-@anvil.server.callable
-def nacti_hodnotu_pro_variantu_kriterium(analyza_id, nazev_varianty, nazev_kriteria):
-    print(f"Loading hodnota for analyza:{analyza_id}, varianta:{nazev_varianty}, kriterium:{nazev_kriteria}")
-    
-    analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        print("Analyza not found")
-        return None
-        
-    # Debug print to see what's in the database
-    varianty = list(app_tables.varianta.search(analyza=analyza))
-    kriteria = list(app_tables.kriterium.search(analyza=analyza))
-    print("Available varianty:", [v['nazev_varianty'] for v in varianty])
-    print("Available kriteria:", [k['nazev_kriteria'] for k in kriteria])
-    
-    varianta = app_tables.varianta.get(
-        analyza=analyza,
-        nazev_varianty=nazev_varianty
-    )
-    print(f"Looking for varianta: {nazev_varianty}, found: {varianta}")
-    
-    kriterium = app_tables.kriterium.get(
-        analyza=analyza,
-        nazev_kriteria=nazev_kriteria
-    )
-    print(f"Looking for kriterium: {nazev_kriteria}, found: {kriterium}")
-    
-    if varianta and kriterium:
-        hodnota = app_tables.hodnota.get(
-            analyza=analyza,
-            varianta=varianta,
-            kriterium=kriterium
-        )
-        print(f"Found hodnota record: {hodnota}")
-        if hodnota:
-            print(f"Returning hodnota value: {hodnota['hodnota']}")
-            return str(hodnota['hodnota'])
-    
-    return ''
-
-@anvil.server.callable
-def uprav_analyzu(analyza_id, nazev, popis, zvolena_metoda):
-    analyza = app_tables.analyza.get_by_id(analyza_id)
-    if not analyza:
-        raise Exception(f"Analýza s ID {analyza_id} neexistuje.")
-    analyza.update(
-        nazev=nazev,
-        popis=popis,
-        zvolena_metoda=zvolena_metoda,
-        datum_upravy=datetime.datetime.now()
-    )
+    return {
+        'analyza': analyza_data,
+        'kriteria': kriteria,
+        'varianty': varianty,
+        'hodnoty': hodnoty
+    }

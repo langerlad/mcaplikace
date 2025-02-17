@@ -6,6 +6,12 @@ components:
     name: label_nazev
     properties: {bold: true, role: null}
     type: Label
+  - data_bindings: []
+    event_bindings: {click: button_vypocet_click}
+    layout_properties: {grid_position: 'WUIAWA,CUIMWE'}
+    name: button_vypocet
+    properties: {role: secondary-color, text: Analyzovat data}
+    type: Button
   - event_bindings: {click: button_upravit_click}
     layout_properties: {grid_position: 'WUIAWA,QJGUTW'}
     name: button_upravit
@@ -62,7 +68,7 @@ components:
     type: Label
   layout_properties: {grid_position: 'XBCGQH,EGBQBF'}
   name: card_1
-  properties: {col_widths: '{"EEHTOB":10,"BBHAXF":15,"JMYEDJ":65,"ZPLMIT":10,"ISPXCO":20,"YIRKAY":15,"TAWGSN":12,"HJZWGM":9,"QJGUTW":10,"HLTDBX":10}', role: card}
+  properties: {col_widths: '{"EEHTOB":10,"BBHAXF":15,"JMYEDJ":55,"ZPLMIT":10,"ISPXCO":20,"YIRKAY":15,"TAWGSN":12,"HJZWGM":9,"QJGUTW":10,"HLTDBX":10,"CUIMWE":22}', role: card}
   type: ColumnPanel
 container:
   properties: {tooltip: Odstranit analýzu}

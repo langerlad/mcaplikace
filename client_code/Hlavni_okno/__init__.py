@@ -20,26 +20,26 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     Navigace.komponenta_hl_okna = self
     uzivatel = Sprava_dat.je_prihlasen() 
     self.nastav_ucet(uzivatel)
-    Navigace.go_domu()
+    Navigace.go('domu')
 
   # Odkazy z levého panelu a navbaru - řeší modul Navigace
   def link_domu_click(self, **event_args):
-    Navigace.go_domu()
+    Navigace.go('domu')
 
   def link_pridat_analyzu_click(self, **event_args):
-    Navigace.go_pridat_analyzu()
+    Navigace.go('pridat_analyzu')
 
   def link_nastaveni_click(self, **event_args):
-    Navigace.go_nastaveni()
+    Navigace.go('nastaveni')
 
   def link_info_click(self, **event_args):
-    Navigace.go_info()
+    Navigace.go('info')
 
   def link_administrace_click(self, **event_args):
-    Navigace.go_administrace()
+    Navigace.go('administrace')
 
   def link_ucet_click(self, **event_args):
-    Navigace.go_ucet()
+    Navigace.go('ucet')
 
   # Nahraje komponentu do pravého panelu
   def nahraj_komponentu(self, komp):
@@ -66,15 +66,15 @@ class Hlavni_okno(Hlavni_oknoTemplate):
   def link_registrace_click(self, **event_args):
     uzivatel = anvil.users.signup_with_form(allow_cancel=True)
     self.nastav_ucet(uzivatel)
-    Navigace.go_domu()
+    Navigace.go('domu')
 
   def link_odhlasit_click(self, **event_args):
     anvil.users.logout()  # Odhlášení na serveru
     self.nastav_ucet(None)
     Sprava_dat.logout()   # Smaže cache z klienta
-    Navigace.go_domu()
+    Navigace.go('domu')
 
   def link_prihlasit_click(self, **event_args):
     uzivatel = anvil.users.login_with_form(allow_cancel=True)
     self.nastav_ucet(uzivatel)
-    Navigace.go_domu()
+    Navigace.go('domu')
