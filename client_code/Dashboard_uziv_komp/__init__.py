@@ -5,6 +5,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
+from .. import Navigace
 
 
 class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
@@ -31,3 +32,6 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
                 'zvolena_metoda': a['zvolena_metoda']
             } for a in analyzy
         ]
+
+    def button_pridat_analyzu_click(self, **event_args):
+      Navigace.go('pridat_analyzu')
