@@ -9,7 +9,6 @@
 # (přihlášení) a brání se ztrátě neuložených dat.
 
 # -------------------------------------------------------
-import logging
 import anvil.server
 import anvil.users
 from anvil import *
@@ -28,6 +27,15 @@ from .Vystup_saw_komp import Vystup_saw_komp
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
+
+def zapsat_chybu(zprava):
+    """
+    Funkce pro konzolové výpisy chyb v klientském kódu
+    
+    Args:
+        zprava (str): Chybová zpráva k vypsání
+    """
+    print(f"[CHYBA] {zprava}")
 
 # Konfigurace stránek a navigace
 KONFIGURACE_NAVIGACE = {
@@ -141,7 +149,7 @@ def go(stranka, **parametry):
         komp.nahraj_komponentu(konfig['komponenta'](**vsechny_parametry))
 
     except Exception as e:
-        logging.error(f"Chyba při navigaci na stránku {stranka}: {str(e)}")
+        zapsat_chybu(f"Chyba při navigaci na stránku {stranka}: {str(e)}")
         alert("Došlo k chybě při navigaci")
         go('domu')
 
@@ -202,8 +210,8 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
                                buttons=[("Ano", True), ("Ne", False)]):
                         try:
                             anvil.server.call('smaz_analyzu', wizard.analyza_id)
-                        except Exception:
-                            logging.error(f"Nepodařilo se smazat analýzu {wizard.analyza_id}")
+                        except Exception as e:
+                            zapsat_chybu(f"Nepodařilo se smazat analýzu {wizard.analyza_id}: {str(e)}")
                         return True
                     return False
 
@@ -214,5 +222,5 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
         return True
 
     except Exception as e:
-        logging.error(f"Chyba při kontrole rozpracované analýzy: {str(e)}")
+        zapsat_chybu(f"Chyba při kontrole rozpracované analýzy: {str(e)}")
         return True

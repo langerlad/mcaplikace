@@ -1,7 +1,6 @@
 # -------------------------------------------------------
 # Form: Wizard_komp
 # -------------------------------------------------------
-import logging
 from ._anvil_designer import Wizard_kompTemplate
 from anvil import *
 import anvil.server
@@ -11,6 +10,15 @@ from anvil.tables import app_tables
 import anvil.users
 from .. import Navigace
 from .. import Konstanty
+
+
+def zapsat_info(zprava):
+    """Pomocná funkce pro konzolové výpisy info v klientském kódu"""
+    print(f"[INFO] {zprava}")
+
+def zapsat_chybu(zprava):
+    """Pomocná funkce pro konzolové výpisy error v klientském kódu"""
+    print(f"[CHYBA] {zprava}")
 
 
 class Wizard_komp(Wizard_kompTemplate):
@@ -259,10 +267,10 @@ class Wizard_komp(Wizard_kompTemplate):
         return
         
     try:
-        logging.info(f"Ukládám analýzu {self.analyza_id}")
-        logging.info(f"Počet kritérií: {len(self.cached_kriteria)}")
-        logging.info(f"Počet variant: {len(self.cached_varianty)}")
-        logging.info(f"Počet hodnot: {len(self.cached_hodnoty.get('matice_hodnoty', {}))}")
+        zapsat_info(f"Ukládám analýzu {self.analyza_id}")
+        zapsat_info(f"Počet kritérií: {len(self.cached_kriteria)}")
+        zapsat_info(f"Počet variant: {len(self.cached_varianty)}")
+        zapsat_info(f"Počet hodnot: {len(self.cached_hodnoty.get('matice_hodnoty', {}))}")
         
         anvil.server.call(
             'uloz_kompletni_analyzu', 
@@ -276,7 +284,7 @@ class Wizard_komp(Wizard_kompTemplate):
         Navigace.go('domu')
     except Exception as e:
         error_msg = f"Chyba při ukládání: {str(e)}"
-        logging.error(error_msg)
+        zapsat_chybu(error_msg)
         self.label_chyba_4.text = error_msg
         self.label_chyba_4.visible = True
 
@@ -347,7 +355,7 @@ class Wizard_komp(Wizard_kompTemplate):
                     try:
                         anvil.server.call('smaz_analyzu', self.analyza_id)
                     except Exception as e:
-                        logging.error(f"Chyba při mazání analýzy: {str(e)}")
+                        zapsat_chybu(f"Chyba při mazání analýzy: {str(e)}")
                     finally:
                         self.analyza_id = None
                 Navigace.go('domu')
