@@ -5,10 +5,12 @@ components:
   properties: {}
   type: ColumnPanel
 - components:
-  - event_bindings: {click: link_ucet_click}
+  - data_bindings:
+    - {code: 'self.item[''jmeno'']', property: text, writeback: false}
+    event_bindings: {click: link_ucet_click}
     layout_properties: {}
     name: link_ucet
-    properties: {text: Můj účet}
+    properties: {text: uživatel}
     type: Link
   - event_bindings: {click: link_odhlasit_click}
     layout_properties: {}

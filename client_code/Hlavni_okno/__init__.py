@@ -54,14 +54,61 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     self.link_info.role = 'selected' if stav == 'info' else None
     self.link_administrace.role = 'selected' if stav == 'administrace' else None
 
-  # Viditelnost linků na navbaru
   def nastav_ucet(self, uzivatel):
+    """
+    Nastaví viditelnost prvků pro přihlášeného/odhlášeného uživatele
+    a zobrazí informace o přihlášeném uživateli.
+    
+    Args:
+        uzivatel: Instance přihlášeného uživatele nebo None
+    """
     prihlasen = (uzivatel is not None)
     self.link_ucet.visible = prihlasen
     self.link_odhlasit.visible = prihlasen
     self.link_prihlasit.visible = not prihlasen
     self.link_registrace.visible = not prihlasen
+    
+    if prihlasen:
+        uzivatel_info = self.ziskej_info_uzivatele(uzivatel)
+        if uzivatel_info:
+            self.link_ucet.text = uzivatel_info['zobrazene_jmeno']
+            self.link_ucet.tooltip = uzivatel_info['tooltip']
 
+  def ziskej_info_uzivatele(self, uzivatel):
+    """
+    Získá informace o uživateli pro zobrazení v UI.
+    
+    Args:
+        uzivatel: Instance přihlášeného uživatele
+    
+    Returns:
+        dict: Slovník obsahující 'zobrazene_jmeno' a 'tooltip',
+              nebo None v případě chyby
+    """
+    if not uzivatel:
+        return None
+    
+    try:
+        # Získání základních informací z objektu uživatele
+        email = uzivatel['email']
+        zobrazeny_text = f"[{email}]"  # Výchozí formát je email v závorkách
+        
+        # Pokus o získání celého jména, pokud existuje
+        try:
+            if uzivatel['jmeno']:
+                zobrazeny_text = f"{uzivatel['jmeno']} [{email}]"
+        except KeyError:
+            # Pokud jméno neexistuje v objektu uživatele, zůstane jen email v závorkách
+            pass
+            
+        return {
+            'zobrazene_jmeno': zobrazeny_text,
+            'tooltip': zobrazeny_text
+        }
+    except Exception as e:
+        print(f"Chyba při získávání informací o uživateli: {str(e)}")
+        return None
+  
   # Vytvoření účtu / přihlášení    
   def link_registrace_click(self, **event_args):
     uzivatel = anvil.users.signup_with_form(allow_cancel=True)
