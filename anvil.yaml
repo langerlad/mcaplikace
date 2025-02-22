@@ -98,6 +98,9 @@ db_schema:
     - admin_ui: {order: 9, width: 200}
       name: role
       type: string
+    - admin_ui: {order: 8.5, width: 200}
+      name: prijmeni
+      type: string
     server: full
     title: Users
   varianta:
