@@ -4,7 +4,7 @@ components:
   properties: {text: 'Administrace uživatelů:'}
   type: Label
 - components:
-  - name: repeating_panel_admin
+  - name: repeating_panel_uzvatele
     properties: {item_template: Administrace_komp.RowTemplate1}
     type: RepeatingPanel
   layout_properties: {grid_position: 'SJWFLA,SRYALJ'}

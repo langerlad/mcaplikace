@@ -495,3 +495,16 @@ def nacti_vsechny_uzivatele() -> List[Any]:
     except Exception as e:
         logging.error(f"Chyba při načítání uživatelů: {str(e)}")
         return []
+
+@anvil.server.callable
+def get_count_analyses_for_user(user_row):
+  """
+  Vrátí počet analýz, které jsou přiřazeny ke konkrétnímu uživateli.
+  """
+  try:
+    # Vyhledá v tabulce 'analyza' záznamy, kde sloupec 'uzivatel' odpovídá předanému uživateli
+    count = app_tables.analyza.search(uzivatel=user_row).count()
+    return count
+  except Exception as e:
+    logging.error(f"Chyba při načítání počtu analýz pro uživatele {user_row['email']}: {str(e)}")
+    return 0
