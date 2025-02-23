@@ -7,14 +7,7 @@ components:
   name: label_1
   properties: {bold: true, icon: '', text: 'Přehled účtů:'}
   type: Label
-- layout_properties: {grid_position: 'IQZFZX,BOQKFO'}
-  name: label_zadni_uzivatele
-  properties: {align: center, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: Uživatelé nebyli nalezeni, visible: false}
-  type: Label
 - components:
-  - name: data_row_panel_1
-    properties: {}
-    type: DataRowPanel
   - name: repeating_panel_uzvatele
     properties: {item_template: Administrace_komp.Uzivatele_Row}
     type: RepeatingPanel
@@ -29,6 +22,10 @@ components:
     - {data_key: column_prihlaseni, expand: false, id: DTZEJU, title: Poslední přihlášení, width: 159}
     - {data_key: column_role, expand: false, id: WLNPJM, title: Práva, width: 70}
   type: DataGrid
+- layout_properties: {grid_position: 'AUAMEM,PRRNLT'}
+  name: label_zadni_uzivatele
+  properties: {align: center, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: Uživatelé nebyli nalezeni, visible: false}
+  type: Label
 - layout_properties: {grid_position: 'VDJMJR,NIGSRB'}
   name: spacer_1
   properties: {height: 32}
@@ -37,19 +34,27 @@ components:
   name: label_2
   properties: {bold: true, icon: '', text: 'Přehled analýz:'}
   type: Label
+- layout_properties: {grid_position: 'PTJIMB,LTJNPF'}
+  name: label_uzivatel
+  properties: {bold: true}
+  type: Label
 - components:
   - name: repeating_panel_analyzy
-    properties: {item_template: Administrace_komp.RowTemplate1}
+    properties: {item_template: Administrace_komp.Analyzy_Row}
     type: RepeatingPanel
-  layout_properties: {grid_position: 'UYJRFB,FWCTXN'}
+  layout_properties: {grid_position: 'UMFMFC,UKONFT'}
   name: data_grid_analyzy
   properties:
     columns:
-    - {data_key: column_1, id: JKSDUP, title: Column 1}
-    - {data_key: column_2, id: VJQQOR, title: Column 2}
-    - {data_key: column_3, id: OJLQEN, title: Column 3}
+    - {data_key: column_1, expand: false, id: JKSDUP, title: Akce, width: 107}
+    - {data_key: column_2, id: VJQQOR, title: Název analýzy}
+    - {data_key: column_3, id: OJLQEN, title: Popis}
+    - {data_key: column_3, id: JBZGBE, title: Metoda}
+    - {data_key: column_1, id: QMVGNK, title: Vytvořeno}
+    - {data_key: column_2, id: UKZPVR, title: Naposledy upraveno}
   type: DataGrid
 container:
   event_bindings: {}
+  properties: {col_widths: '{"WJZFBS":10,"LTJNPF":50}'}
   type: ColumnPanel
 is_package: true
