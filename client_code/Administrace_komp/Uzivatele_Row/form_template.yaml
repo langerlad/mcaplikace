@@ -1,0 +1,38 @@
+components:
+- components: []
+  layout_properties: {column: JKSDUP}
+  name: link_detail
+  properties: {icon: 'fa:crosshairs', role: null, text: Detail}
+  type: Link
+- data_bindings:
+  - {code: 'self.item[''email'']', property: text, writeback: false}
+  layout_properties: {column: KKPUXW}
+  name: label_email
+  properties: {}
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''vytvoreni'']', property: text, writeback: false}
+  layout_properties: {column: IBHVET}
+  name: label_vytvoreni
+  properties: {}
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''prihlaseni'']', property: text, writeback: false}
+  layout_properties: {column: DTZEJU}
+  name: label_prihlaseni
+  properties: {}
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''pocet_analyz'']', property: text, writeback: false}
+  layout_properties: {column: GWNUBU}
+  name: label_pocet_analyz
+  properties: {}
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''role'']', property: text, writeback: false}
+  layout_properties: {column: WLNPJM}
+  name: label_role
+  properties: {}
+  type: Label
+container: {type: DataRowPanel}
+is_package: true

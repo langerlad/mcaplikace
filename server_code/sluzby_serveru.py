@@ -480,31 +480,38 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
     }
 
 @anvil.server.callable
-def nacti_vsechny_uzivatele() -> List[Any]:
+def nacti_vsechny_uzivatele():
     """
-    Načte všechny uživatele z tabulky 'users'.
+    Načte všechny uživatele z databáze.
     
     Returns:
-        List[Any]: Seznam uživatelských řádků nebo slovníků s údaji
+        List[Row]: Seznam uživatelů nebo prázdný seznam při chybě
     """
     try:
-        vsichni_uzivatele = app_tables.users.search()
-        return list(vsichni_uzivatele)
-        # nebo můžete vracet jen dictionary s vybranými poli:
-        # return [{"id": u.get_id(), "email": u["email"], ...} for u in vsichni_uzivatele]
+        return list(app_tables.users.search())
     except Exception as e:
         logging.error(f"Chyba při načítání uživatelů: {str(e)}")
-        return []
+        raise Exception("Nepodařilo se načíst seznam uživatelů")
 
 @anvil.server.callable
-def get_count_analyses_for_user(user_row):
+def vrat_pocet_analyz_pro_uzivatele(uzivatel):
   """
-  Vrátí počet analýz, které jsou přiřazeny ke konkrétnímu uživateli.
+  Vrátí počet analýz přidružených k danému uživateli.
+  
+  Parametry:
+      uzivatel: Řádek uživatele z tabulky 'users'
+  
+  Návratová hodnota:
+      Celkový počet analýz, které se vážou k danému uživateli.
   """
   try:
-    # Vyhledá v tabulce 'analyza' záznamy, kde sloupec 'uzivatel' odpovídá předanému uživateli
-    count = app_tables.analyza.search(uzivatel=user_row).count()
-    return count
+    print(f"Hledám analýzy pro uživatele: {uzivatel['email']}")
+    # Převedeme výsledek vyhledávání na list a spočítáme jeho délku
+    analyzy = list(app_tables.analyza.search(uzivatel=uzivatel))
+    pocet = len(analyzy)
+    print(f"Nalezeno analýz: {pocet}")
+    return pocet
   except Exception as e:
-    logging.error(f"Chyba při načítání počtu analýz pro uživatele {user_row['email']}: {str(e)}")
+    print(f"Chyba při načítání počtu analýz: {str(e)}")
+    logging.error(f"Chyba při načítání počtu analýz pro uživatele {uzivatel['email']}: {str(e)}")
     return 0

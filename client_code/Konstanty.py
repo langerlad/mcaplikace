@@ -53,7 +53,10 @@ ZPRAVY_CHYB = {
     'POTVRZENI_ZRUSENI_UPRAVY': 'Opustíte upravovanou analýzu. Změny nebudou uloženy. Pokračovat?',
     
     # Úspěch
-    'ANALYZA_ULOZENA': 'Analýza byla úspěšně uložena.'
+    'ANALYZA_ULOZENA': 'Analýza byla úspěšně uložena.',
+
+    # Administrace
+    'CHYBA_NACTENI_UZIVATELU': 'Chyba při načítání uživatelů: {}',
 }
 
 # Popisy hodnot pro uživatele

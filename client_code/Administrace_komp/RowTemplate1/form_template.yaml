@@ -1,35 +1,3 @@
-components:
-- layout_properties: {column: JKSDUP}
-  name: link_detail
-  properties: {icon: 'fa:crosshairs', role: null, text: Detail}
-  type: Link
-- layout_properties: {column: VJQQOR}
-  name: label_prijmeni
-  properties: {}
-  type: Label
-- layout_properties: {column: OJLQEN}
-  name: label_jmeno
-  properties: {}
-  type: Label
-- layout_properties: {column: KKPUXW}
-  name: label_email
-  properties: {}
-  type: Label
-- layout_properties: {column: IBHVET}
-  name: label_vytvoreni
-  properties: {}
-  type: Label
-- layout_properties: {column: DTZEJU}
-  name: label_prihlaseni
-  properties: {}
-  type: Label
-- layout_properties: {column: GWNUBU}
-  name: label_pocet_analyz
-  properties: {}
-  type: Label
-- layout_properties: {column: WLNPJM}
-  name: check_box_role
-  properties: {text: check_box_role}
-  type: CheckBox
+components: []
 container: {type: DataRowPanel}
 is_package: true

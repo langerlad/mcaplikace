@@ -89,17 +89,9 @@ class Hlavni_okno(Hlavni_oknoTemplate):
         return None
     
     try:
-        # Získání základních informací z objektu uživatele
+        # Získání emailu z objektu uživatele
         email = uzivatel['email']
-        zobrazeny_text = f"[{email}]"  # Výchozí formát je email v závorkách
-        
-        # Pokus o získání celého jména, pokud existuje
-        try:
-            if uzivatel['jmeno']:
-                zobrazeny_text = f"{uzivatel['jmeno']} [{email}]"
-        except KeyError:
-            # Pokud jméno neexistuje v objektu uživatele, zůstane jen email v závorkách
-            pass
+        zobrazeny_text = f"[{email}]"
             
         return {
             'zobrazene_jmeno': zobrazeny_text,
