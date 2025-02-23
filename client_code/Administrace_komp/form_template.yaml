@@ -5,7 +5,7 @@ components:
   type: Label
 - layout_properties: {grid_position: 'VXCYJY,QRNPSG'}
   name: label_1
-  properties: {bold: true, text: 'Přehled účtů:'}
+  properties: {bold: true, icon: '', text: 'Přehled účtů:'}
   type: Label
 - layout_properties: {grid_position: 'IQZFZX,BOQKFO'}
   name: label_zadni_uzivatele
@@ -23,11 +23,31 @@ components:
   properties:
     columns:
     - {data_key: column_detail, expand: false, id: JKSDUP, title: '', width: 123}
-    - {data_key: column_email, expand: false, id: KKPUXW, title: E-mail, width: 273}
+    - {data_key: column_email, expand: false, id: KKPUXW, title: Účet, width: 273}
     - {data_key: column_pocet_analyz, expand: false, id: GWNUBU, title: Počet analýz, width: 107}
     - {data_key: column_vytvoreni_uctu, expand: false, id: IBHVET, title: Datum vytvoření účtu, width: 162}
     - {data_key: column_prihlaseni, expand: false, id: DTZEJU, title: Poslední přihlášení, width: 159}
     - {data_key: column_role, expand: false, id: WLNPJM, title: Práva, width: 70}
+  type: DataGrid
+- layout_properties: {grid_position: 'VDJMJR,NIGSRB'}
+  name: spacer_1
+  properties: {height: 32}
+  type: Spacer
+- layout_properties: {grid_position: 'PTJIMB,WJZFBS'}
+  name: label_2
+  properties: {bold: true, icon: '', text: 'Přehled analýz:'}
+  type: Label
+- components:
+  - name: repeating_panel_analyzy
+    properties: {item_template: Administrace_komp.RowTemplate1}
+    type: RepeatingPanel
+  layout_properties: {grid_position: 'UYJRFB,FWCTXN'}
+  name: data_grid_analyzy
+  properties:
+    columns:
+    - {data_key: column_1, id: JKSDUP, title: Column 1}
+    - {data_key: column_2, id: VJQQOR, title: Column 2}
+    - {data_key: column_3, id: OJLQEN, title: Column 3}
   type: DataGrid
 container:
   event_bindings: {}
