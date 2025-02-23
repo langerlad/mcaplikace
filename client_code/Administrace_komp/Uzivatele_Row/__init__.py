@@ -14,8 +14,6 @@ class Uzivatele_Row(Uzivatele_RowTemplate):
         self.link_email.text = self.item['email']
 
     def link_email_click(self, **event_args):
-        """Handler pro klik na email uživatele."""
-        # Získáme referenci na hlavní komponentu
-        admin_comp = self.parent.parent
-        # Zavoláme načtení analýz pro zvoleného uživatele
-        admin_comp.nacti_analyzy_uzivatele(self.item)
+      """Handler pro klik na email uživatele."""
+      # Vyvoláme událost se zvoleným uživatelem
+      self.parent.raise_event('x-uzivatel-zvolen', uzivatel=self.item)

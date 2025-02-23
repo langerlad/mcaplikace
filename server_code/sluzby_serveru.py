@@ -517,19 +517,28 @@ def vrat_pocet_analyz_pro_uzivatele(uzivatel):
     return 0
 
 @anvil.server.callable
-def nacti_analyzy_uzivatele_admin(uzivatel):
+def nacti_analyzy_uzivatele_admin(email):
     """
     Načte všechny analýzy daného uživatele pro admin rozhraní.
     
     Args:
-        uzivatel: Řádek uživatele z tabulky users
+        email: Email uživatele
         
     Returns:
         List[Row]: Seznam analýz uživatele
     """
     try:
+        print(f"Načítám analýzy pro uživatele: {email}")
+        # Nejprve získáme správný Row objekt uživatele
+        uzivatel = app_tables.users.get(email=email)
+        if not uzivatel:
+            raise Exception(f"Uživatel {email} nenalezen")
+            
         analyzy = app_tables.analyza.search(uzivatel=uzivatel)
-        return list(analyzy)
+        analyzy_list = list(analyzy)
+        print(f"Nalezeno {len(analyzy_list)} analýz")
+        return analyzy_list
     except Exception as e:
-        logging.error(f"Chyba při načítání analýz uživatele {uzivatel['email']}: {str(e)}")
+        print(f"Server chyba: {str(e)}")
+        logging.error(f"Chyba při načítání analýz uživatele {email}: {str(e)}")
         raise Exception("Nepodařilo se načíst analýzy uživatele")
