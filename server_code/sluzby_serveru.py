@@ -14,9 +14,6 @@ import Konstanty
 
 # =============== Validační funkce ===============
 
-@anvil.server.callable
-def get_user_data(email):
-    return app_tables.users.get(email=email)
 
 def validuj_nazev_analyzy(nazev: str) -> None:
     """
