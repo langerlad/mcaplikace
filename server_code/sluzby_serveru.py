@@ -478,3 +478,20 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
         'varianty': varianty,
         'hodnoty': hodnoty
     }
+
+@anvil.server.callable
+def nacti_vsechny_uzivatele() -> List[Any]:
+    """
+    Načte všechny uživatele z tabulky 'users'.
+    
+    Returns:
+        List[Any]: Seznam uživatelských řádků nebo slovníků s údaji
+    """
+    try:
+        vsichni_uzivatele = app_tables.users.search()
+        return list(vsichni_uzivatele)
+        # nebo můžete vracet jen dictionary s vybranými poli:
+        # return [{"id": u.get_id(), "email": u["email"], ...} for u in vsichni_uzivatele]
+    except Exception as e:
+        logging.error(f"Chyba při načítání uživatelů: {str(e)}")
+        return []

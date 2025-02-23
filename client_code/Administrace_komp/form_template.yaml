@@ -24,13 +24,7 @@ components:
   name: spacer_1
   properties: {height: 175}
   type: Spacer
-- layout_properties: {grid_position: 'VAHVIR,RRZQQB'}
-  name: image_1
-  properties: {source: _/theme/gears_7187216.png}
-  type: Image
-- layout_properties: {grid_position: 'OTJIEN,URIGFG'}
-  name: label_1
-  properties: {align: center, bold: true, text: TADY SE JEŠTĚ PRACUJE!}
-  type: Label
-container: {type: ColumnPanel}
+container:
+  event_bindings: {show: form_show}
+  type: ColumnPanel
 is_package: true
