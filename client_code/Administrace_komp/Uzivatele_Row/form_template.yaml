@@ -30,6 +30,7 @@ components:
   type: Label
 - data_bindings:
   - {code: 'self.item[''email'']', property: text, writeback: false}
+  event_bindings: {click: link_email_click}
   layout_properties: {column: KKPUXW}
   name: link_email
   properties: {icon: 'fa:folder-open'}

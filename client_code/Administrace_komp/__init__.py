@@ -12,6 +12,7 @@ class Administrace_komp(Administrace_kompTemplate):
     def __init__(self, **properties):
         """Inicializace komponenty pro správu uživatelů."""
         self.init_components(**properties)
+        self.zvoleny_uzivatel = None
         self.nacti_uzivatele()
   
     def nacti_uzivatele(self):
@@ -41,10 +42,31 @@ class Administrace_komp(Administrace_kompTemplate):
               
       except Exception as e:
           alert(Konstanty.ZPRAVY_CHYB['CHYBA_NACTENI_UZIVATELU'].format(str(e)))
+
+    def nacti_analyzy_uzivatele(self, uzivatel):
+        """Načte a zobrazí analýzy zvoleného uživatele."""
+        try:
+            analyzy = anvil.server.call('nacti_analyzy_uzivatele_admin', uzivatel)
             
-    @staticmethod
-    def _formatuj_datum(datum):
-        """Formátuje datum do českého formátu."""
-        return datum.strftime("%d.%m.%Y") if datum else ""
+            # Aktualizace UI
+            self.label_uzivatel.text = f"Zvolený uživatel: {uzivatel['email']}"
+            self.data_grid_analyzy.visible = bool(analyzy)
+            
+            if not analyzy:
+                return
+            
+            self.repeating_panel_analyzy.items = [
+                {
+                    'nazev': a['nazev'],
+                    'popis': a['popis'],
+                    'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else '',
+                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else '',
+                    'zvolena_metoda': a['zvolena_metoda']
+                }
+                for a in analyzy
+            ]
+            
+        except Exception as e:
+            alert(f"Chyba při načítání analýz: {str(e)}")
 
 

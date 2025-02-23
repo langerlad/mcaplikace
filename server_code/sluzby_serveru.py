@@ -515,3 +515,21 @@ def vrat_pocet_analyz_pro_uzivatele(uzivatel):
     print(f"Chyba při načítání počtu analýz: {str(e)}")
     logging.error(f"Chyba při načítání počtu analýz pro uživatele {uzivatel['email']}: {str(e)}")
     return 0
+
+@anvil.server.callable
+def nacti_analyzy_uzivatele_admin(uzivatel):
+    """
+    Načte všechny analýzy daného uživatele pro admin rozhraní.
+    
+    Args:
+        uzivatel: Řádek uživatele z tabulky users
+        
+    Returns:
+        List[Row]: Seznam analýz uživatele
+    """
+    try:
+        analyzy = app_tables.analyza.search(uzivatel=uzivatel)
+        return list(analyzy)
+    except Exception as e:
+        logging.error(f"Chyba při načítání analýz uživatele {uzivatel['email']}: {str(e)}")
+        raise Exception("Nepodařilo se načíst analýzy uživatele")
