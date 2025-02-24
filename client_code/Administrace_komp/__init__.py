@@ -13,11 +13,18 @@ class Administrace_komp(Administrace_kompTemplate):
         """Inicializace komponenty pro správu uživatelů."""
         self.init_components(**properties)
         self.zvoleny_uzivatel = None
-        # Nastavení handleru pro události z Uzivatele_Row
+        # Nastavení handleru pro události z x_Row
         self.repeating_panel_uzvatele.set_event_handler('x-uzivatel-zvolen', self.nacti_analyzy_uzivatele)
+        self.repeating_panel_uzvatele.set_event_handler('x-refresh', self.nacti_uzivatele)
+        self.repeating_panel_analyzy.set_event_handler('x-zobraz-vystup', self.zobraz_vystup_analyzy)
+        
+        # Inicializace stavu analýz - na začátku není vybrán žádný uživatel
+        self.data_grid_analyzy.visible = False
+        self.label_vyberte_ucet.visible = True
+        
         self.nacti_uzivatele()
   
-    def nacti_uzivatele(self):
+    def nacti_uzivatele(self, sender=None, **event_args):
       """Načte seznam uživatelů a aktualizuje UI."""
       try:
           uzivatele = anvil.server.call('nacti_vsechny_uzivatele')
@@ -51,9 +58,14 @@ class Administrace_komp(Administrace_kompTemplate):
           print(f"Načítám analýzy pro uživatele: {uzivatel['email']}")
           # Předáváme pouze email místo celého objektu uživatele
           analyzy = anvil.server.call('nacti_analyzy_uzivatele_admin', uzivatel['email'])
+
+          # Aktualizace UI - skrytí zprávy o nutnosti výběru uživatele
+          self.label_vyberte_ucet.visible = False
           
           # Aktualizace UI
           self.label_uzivatel.text = f"Zvolený uživatel: {uzivatel['email']}"
+        
+          # Zobrazení/skrytí datagridu podle toho, jestli jsou nalezeny analýzy
           self.data_grid_analyzy.visible = bool(analyzy)
           
           if not analyzy:
@@ -61,8 +73,13 @@ class Administrace_komp(Administrace_kompTemplate):
               return
           
           print(f"Zpracovávám {len(analyzy)} analýz")
+
+          # Nastavení handleru pro události z řádků
+          self.repeating_panel_analyzy.set_event_handler('x-zobraz-vystup', self.zobraz_vystup_analyzy)
+        
           self.repeating_panel_analyzy.items = [
               {
+                  'id': a.get_id(),
                   'nazev': a['nazev'],
                   'popis': a['popis'],
                   'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else '',
@@ -77,4 +94,22 @@ class Administrace_komp(Administrace_kompTemplate):
           print(f"Klient chyba: {str(e)}")
           alert(f"Chyba při načítání analýz: {str(e)}")
 
+    def zobraz_vystup_analyzy(self, sender, analyza_id, **event_args):
+      """
+      Zobrazí výstup zvolené analýzy.
+      
+      Args:
+          sender: Komponenta, která událost vyvolala
+          analyza_id: ID zvolené analýzy
+          event_args: Další argumenty události
+      """
+      try:
+          print(f"Zobrazuji výstup analýzy: {analyza_id}")
+          
+          # Přesměrování na stránku s výstupem analýzy
+          from .. import Navigace
+          Navigace.go('saw_vystup', analyza_id=analyza_id)
+          
+      except Exception as e:
+          alert(f"Chyba při zobrazování výstupu analýzy: {str(e)}")
 

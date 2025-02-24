@@ -542,3 +542,49 @@ def nacti_analyzy_uzivatele_admin(email):
         print(f"Server chyba: {str(e)}")
         logging.error(f"Chyba při načítání analýz uživatele {email}: {str(e)}")
         raise Exception("Nepodařilo se načíst analýzy uživatele")
+
+@anvil.server.callable
+def smaz_uzivatele(email):
+    """
+    Smaže uživatele a všechny jeho analýzy.
+    
+    Args:
+        email: Email uživatele ke smazání
+    
+    Returns:
+        bool: True pokud byl uživatel úspěšně smazán
+    """
+    try:
+        print(f"Mažu uživatele: {email}")
+        uzivatel = app_tables.users.get(email=email)
+
+        # Kontrola, zda nejde o aktuálně přihlášeného uživatele
+        aktualni_uzivatel = anvil.users.get_user()
+        if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
+            raise ValueError("Nelze smazat vlastní účet, se kterým jste aktuálně přihlášeni.")
+        
+        if not uzivatel:
+            raise ValueError(f"Uživatel {email} nebyl nalezen")
+            
+        # Nejprve získáme všechny analýzy uživatele
+        analyzy = app_tables.analyza.search(uzivatel=uzivatel)
+        
+        # Postupně smažeme každou analýzu včetně souvisejících dat
+        for analyza in analyzy:
+            analyza_id = analyza.get_id()
+            try:
+                smaz_analyzu(analyza_id)
+                print(f"Analýza {analyza_id} smazána")
+            except Exception as e:
+                print(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
+                # Pokračujeme s dalšími analýzami
+        
+        # Nakonec smažeme samotného uživatele
+        uzivatel.delete()
+        print(f"Uživatel {email} úspěšně smazán")
+        return True
+        
+    except Exception as e:
+        print(f"Chyba při mazání uživatele: {str(e)}")
+        logging.error(f"Chyba při mazání uživatele {email}: {str(e)}")
+        raise ValueError(f"Nepodařilo se smazat uživatele: {str(e)}")

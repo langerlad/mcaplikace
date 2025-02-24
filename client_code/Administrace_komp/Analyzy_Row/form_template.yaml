@@ -1,7 +1,8 @@
 components:
-- layout_properties: {column: JKSDUP}
+- event_bindings: {click: link_zoom_click}
+  layout_properties: {column: JKSDUP}
   name: link_zoom
-  properties: {}
+  properties: {icon: 'fa:search', text: Deatail}
   type: Link
 - data_bindings:
   - {code: 'self.item[''nazev'']', property: text, writeback: false}

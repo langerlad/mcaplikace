@@ -1,9 +1,4 @@
 components:
-- components: []
-  layout_properties: {column: JKSDUP}
-  name: link_detail
-  properties: {icon: 'fa:trash', role: null, text: Odstranit}
-  type: Link
 - data_bindings:
   - {code: 'self.item[''vytvoreni'']', property: text, writeback: false}
   layout_properties: {column: IBHVET}
@@ -35,5 +30,17 @@ components:
   name: link_email
   properties: {icon: 'fa:folder-open'}
   type: Link
+- components: []
+  event_bindings: {click: link_odstranit_click}
+  layout_properties: {column: JKSDUP}
+  name: link_odstranit
+  properties: {icon: 'fa:user-times', role: null, text: '', tooltip: Smazat uživatele}
+  type: Link
+- data_bindings:
+  - {code: 'self.item[''role'']', property: text, writeback: false}
+  layout_properties: {column: IODTUM}
+  name: check_box_admin
+  properties: {text: ''}
+  type: CheckBox
 container: {type: DataRowPanel}
 is_package: true
