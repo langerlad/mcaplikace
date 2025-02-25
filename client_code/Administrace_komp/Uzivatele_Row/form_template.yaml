@@ -15,13 +15,7 @@ components:
   - {code: 'self.item[''pocet_analyz'']', property: text, writeback: false}
   layout_properties: {column: GWNUBU}
   name: label_pocet_analyz
-  properties: {}
-  type: Label
-- data_bindings:
-  - {code: 'self.item[''role'']', property: text, writeback: false}
-  layout_properties: {column: WLNPJM}
-  name: label_role
-  properties: {}
+  properties: {align: center}
   type: Label
 - data_bindings:
   - {code: 'self.item[''email'']', property: text, writeback: false}
@@ -38,9 +32,10 @@ components:
   type: Link
 - data_bindings:
   - {code: 'self.item[''role'']', property: text, writeback: false}
+  event_bindings: {change: check_box_admin_change}
   layout_properties: {column: IODTUM}
   name: check_box_admin
-  properties: {text: ''}
+  properties: {align: center, text: ''}
   type: CheckBox
 container: {type: DataRowPanel}
 is_package: true

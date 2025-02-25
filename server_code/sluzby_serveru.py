@@ -588,3 +588,39 @@ def smaz_uzivatele(email):
         print(f"Chyba při mazání uživatele: {str(e)}")
         logging.error(f"Chyba při mazání uživatele {email}: {str(e)}")
         raise ValueError(f"Nepodařilo se smazat uživatele: {str(e)}")
+
+@anvil.server.callable
+def zmenit_roli_uzivatele(email, nova_role):
+    """
+    Změní roli uživatele.
+    
+    Args:
+        email: Email uživatele
+        nova_role: Nová role uživatele ('admin' nebo 'uživatel')
+    
+    Returns:
+        bool: True pokud byla role úspěšně změněna
+    """
+    try:
+        print(f"Měním roli uživatele {email} na: {nova_role}")
+        
+        # Kontrola, zda nejde o aktuálně přihlášeného uživatele
+        aktualni_uzivatel = anvil.users.get_user()
+        if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
+            raise ValueError("Nemůžete měnit roli vlastního účtu.")
+        
+        uzivatel = app_tables.users.get(email=email)
+        
+        if not uzivatel:
+            raise ValueError(f"Uživatel {email} nebyl nalezen")
+            
+        # Změna role
+        uzivatel['role'] = nova_role
+        
+        print(f"Role uživatele {email} úspěšně změněna na {nova_role}")
+        return True
+        
+    except Exception as e:
+        print(f"Chyba při změně role uživatele: {str(e)}")
+        logging.error(f"Chyba při změně role uživatele {email}: {str(e)}")
+        raise ValueError(f"Nepodařilo se změnit roli uživatele: {str(e)}")
