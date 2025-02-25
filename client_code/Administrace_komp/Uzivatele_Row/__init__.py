@@ -41,6 +41,8 @@ class Uzivatele_Row(Uzivatele_RowTemplate):
               result = anvil.server.call('smaz_uzivatele', email)
               
               if result:
+                  # Vyčistíme zobrazení analýz
+                  self.parent.raise_event('x-vycisti-analyzy')
                   # Vyvoláme událost pro obnovení seznamu uživatelů
                   self.parent.raise_event('x-refresh')
                   
@@ -68,7 +70,7 @@ class Uzivatele_Row(Uzivatele_RowTemplate):
                 # Zavolání serverové funkce pro změnu role
                 result = anvil.server.call('zmenit_roli_uzivatele', email, nova_role)
                 
-                if result:
+                if result:                   
                     # Vyvoláme událost pro obnovení seznamu uživatelů
                     self.parent.raise_event('x-refresh')
                     

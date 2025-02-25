@@ -74,6 +74,17 @@ class Hlavni_okno(Hlavni_oknoTemplate):
             self.link_ucet.text = uzivatel_info['zobrazene_jmeno']
             self.link_ucet.tooltip = uzivatel_info['tooltip']
 
+    # Zobrazení odkazu na administraci pouze pro adminy
+    is_admin = False
+    if prihlasen:
+        try:
+            is_admin = uzivatel['role'] == 'admin'
+        except KeyError:
+            # Pokud vlastnost 'role' neexistuje, uživatel není admin
+            is_admin = False
+            
+    self.link_administrace.visible = is_admin
+  
   def ziskej_info_uzivatele(self, uzivatel):
     """
     Získá informace o uživateli pro zobrazení v UI.

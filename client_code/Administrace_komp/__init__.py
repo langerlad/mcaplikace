@@ -16,6 +16,7 @@ class Administrace_komp(Administrace_kompTemplate):
         # Nastavení handleru pro události z x_Row
         self.repeating_panel_uzvatele.set_event_handler('x-uzivatel-zvolen', self.nacti_analyzy_uzivatele)
         self.repeating_panel_uzvatele.set_event_handler('x-refresh', self.nacti_uzivatele)
+        self.repeating_panel_uzvatele.set_event_handler('x-vycisti-analyzy', self.vycisti_analyzy)
         self.repeating_panel_analyzy.set_event_handler('x-zobraz-vystup', self.zobraz_vystup_analyzy)
         
         # Inicializace stavu analýz - na začátku není vybrán žádný uživatel
@@ -112,4 +113,11 @@ class Administrace_komp(Administrace_kompTemplate):
           
       except Exception as e:
           alert(f"Chyba při zobrazování výstupu analýzy: {str(e)}")
+
+    def vycisti_analyzy(self, **event_args):
+      """Vyčistí zobrazení analýz."""
+      self.data_grid_analyzy.visible = False
+      self.label_vyberte_ucet.visible = True
+      self.label_uzivatel.text = ""
+      self.repeating_panel_analyzy.items = []
 

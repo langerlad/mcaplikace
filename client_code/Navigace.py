@@ -74,6 +74,7 @@ KONFIGURACE_NAVIGACE = {
     'administrace': {
         'komponenta': Administrace_komp,
         'vyzaduje_prihlaseni': True,
+        'vyzaduje_admin': True,
         'oznaceni_nav': 'administrace',
         'kontrola_rozpracovane': True
     },
@@ -124,6 +125,26 @@ def go(stranka, **parametry):
                 go('domu')
                 return
 
+        # Kontrola admin práv
+        if konfig.get('vyzaduje_admin', False):
+            uzivatel = Sprava_dat.je_prihlasen()
+            if not uzivatel:
+                alert("Pro přístup do této sekce musíte být přihlášeni.")
+                go('domu')
+                return
+                
+            # Přístup k vlastnosti přímo - ne pomocí get()
+            try:
+                is_admin = uzivatel['role'] == 'admin'
+            except KeyError:
+                # Pokud vlastnost 'role' neexistuje, uživatel není admin
+                is_admin = False
+                
+            if not is_admin:
+                alert("Pro přístup do této sekce potřebujete administrátorská práva.")
+                go('domu')
+                return
+              
         # Kontrola rozpracované analýzy
         if konfig['kontrola_rozpracovane']:
             if not over_a_smaz_rozpracovanou(stranka):
