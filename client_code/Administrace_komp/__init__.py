@@ -6,6 +6,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
 from .. import Konstanty
+from ..Pridej_uzivatele_form import Pridej_uzivatele_form
 
 
 class Administrace_komp(Administrace_kompTemplate):
@@ -120,4 +121,43 @@ class Administrace_komp(Administrace_kompTemplate):
       self.label_vyberte_ucet.visible = True
       self.label_uzivatel.text = ""
       self.repeating_panel_analyzy.items = []
+
+    def button_pridat_uzivatele_click(self, **event_args):
+      """Handler pro tlačítko přidání nového uživatele."""     
+      pridej_form = Pridej_uzivatele_form()
+      
+      while True:
+          save_clicked = alert(
+              content=pridej_form,
+              title="Přidat uživatele",
+              large=True,
+              dismissible=True,
+              buttons=[("Vytvořit", True), ("Zrušit", False)]
+          )
+          
+          if not save_clicked:
+              break
+              
+          user_data = pridej_form.ziskej_data_uzivatele()
+          if user_data:
+              try:
+                  # Zavolání serverové funkce
+                  vysledek = anvil.server.call(
+                      'vytvor_noveho_uzivatele', 
+                      user_data['email'], 
+                      user_data['heslo'], 
+                      user_data['je_admin']
+                  )
+                  
+                  if vysledek:
+                      # Obnovíme seznam uživatelů
+                      self.nacti_uzivatele()
+                      
+                      # Informujeme administrátora
+                      alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.")
+                      break
+                      
+              except Exception as e:
+                  pridej_form.label_chyba.text = str(e)
+                  pridej_form.label_chyba.visible = True
 

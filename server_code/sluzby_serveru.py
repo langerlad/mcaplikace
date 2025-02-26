@@ -624,3 +624,50 @@ def zmenit_roli_uzivatele(email, nova_role):
         print(f"Chyba při změně role uživatele: {str(e)}")
         logging.error(f"Chyba při změně role uživatele {email}: {str(e)}")
         raise ValueError(f"Nepodařilo se změnit roli uživatele: {str(e)}")
+
+@anvil.server.callable
+def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
+    """
+    Vytvoří nového uživatele z administrátorského rozhraní.
+    
+    Args:
+        email: Email nového uživatele
+        heslo: Heslo pro nový účet
+        je_admin: True pokud má být uživatel administrátor
+    
+    Returns:
+        dict: Informace o vytvořeném uživateli nebo None při chybě
+    """
+    try:
+        print(f"Vytvářím nového uživatele: {email}")
+        
+        # Kontrola, zda uživatel již neexistuje
+        existujici = app_tables.users.get(email=email)
+        if existujici:
+            raise ValueError(f"Uživatel s emailem {email} již existuje")
+        
+        # Vytvoření uživatele pomocí signup_with_email
+        novy_uzivatel = anvil.users.signup_with_email(email, heslo, remember=False)
+        
+        # Nastavení data vytvoření a aktivace účtu
+        novy_uzivatel['signed_up'] = datetime.datetime.now()
+        novy_uzivatel['enabled'] = True
+        
+        # Nastavení role pokud je admin
+        if je_admin:
+            novy_uzivatel['role'] = 'admin'
+        
+        print(f"Uživatel {email} úspěšně vytvořen")
+        
+        # Vytvořit jednoduchý slovník místo použití get()
+        return {
+            'email': email,
+            'signed_up': novy_uzivatel['signed_up'],
+            'enabled': True,
+            'role': 'admin' if je_admin else None
+        }
+        
+    except Exception as e:
+        print(f"Chyba při vytváření uživatele: {str(e)}")
+        logging.error(f"Chyba při vytváření uživatele {email}: {str(e)}")
+        raise ValueError(f"Nepodařilo se vytvořit uživatele: {str(e)}")
