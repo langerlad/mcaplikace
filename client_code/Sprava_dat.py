@@ -3,19 +3,22 @@
 # -------------------------------------------------------
 import anvil.server
 import anvil.users
-import anvil.tables as tables
-import anvil.tables.query as q
-from anvil.tables import app_tables
+from . import Spravce_stavu
 
-__uzivatel = None
-
+# Pro zpětnou kompatibilitu
 def je_prihlasen():
-  global __uzivatel
-  if __uzivatel:
-    return __uzivatel
-  __uzivatel = anvil.users.get_user()
-  return __uzivatel
+  """
+  Zjistí, zda je uživatel přihlášen (zpětně kompatibilní funkce).
+  
+  Returns:
+      objekt uživatele nebo None
+  """
+  spravce = Spravce_stavu.Spravce_stavu()
+  return spravce.nacti_uzivatele()
 
 def logout():
-  global __uzivatel
-  __uzivatel = None
+  """
+  Odhlásí uživatele (zpětně kompatibilní funkce).
+  """
+  spravce = Spravce_stavu.Spravce_stavu()
+  spravce.odhlasit()

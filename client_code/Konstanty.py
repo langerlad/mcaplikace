@@ -4,6 +4,13 @@ import anvil.server
 # Obsahuje sdílené konstanty používané napříč aplikací
 # -------------------------------------------------------
 
+# Stavy správce stavu
+STAV_SPRAVCE = {
+    'OK': 'ok',
+    'CHYBA': 'error',
+    'NEINICIALIZOVANO': 'uninitialized'
+}
+
 # Stavy analýzy
 STAV_ANALYZY = {
     'NOVY': 'new',

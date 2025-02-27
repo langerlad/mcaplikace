@@ -13,7 +13,7 @@ import anvil.server
 import anvil.users
 from anvil import *
 
-from . import Konstanty, Sprava_dat
+from . import Konstanty, Spravce_stavu, Utils
 from .Administrace_komp import Administrace_komp
 from .Analyza_ahp_komp import Analyza_ahp_komp
 from .Wizard_komp import Wizard_komp
@@ -118,6 +118,9 @@ def go(stranka, **parametry):
         if not konfig:
             raise ValueError(f"Neznámá stránka: {stranka}")
 
+        # Inicializace správce stavu
+        spravce = Spravce_stavu.Spravce_stavu()
+
         # Kontrola přihlášení
         if konfig['vyzaduje_prihlaseni']:
             uzivatel = kontrola_prihlaseni()
@@ -127,20 +130,7 @@ def go(stranka, **parametry):
 
         # Kontrola admin práv
         if konfig.get('vyzaduje_admin', False):
-            uzivatel = Sprava_dat.je_prihlasen()
-            if not uzivatel:
-                alert("Pro přístup do této sekce musíte být přihlášeni.")
-                go('domu')
-                return
-                
-            # Přístup k vlastnosti přímo - ne pomocí get()
-            try:
-                is_admin = uzivatel['role'] == 'admin'
-            except KeyError:
-                # Pokud vlastnost 'role' neexistuje, uživatel není admin
-                is_admin = False
-                
-            if not is_admin:
+            if not spravce.je_admin():
                 alert("Pro přístup do této sekce potřebujete administrátorská práva.")
                 go('domu')
                 return
@@ -158,7 +148,7 @@ def go(stranka, **parametry):
         # Speciální případy
         if stranka == 'domu':
             komp = ziskej_komponentu()
-            uzivatel = Sprava_dat.je_prihlasen()
+            uzivatel = spravce.je_prihlasen()
             komponenta = konfig['dashboard_komponenta'] if uzivatel else konfig['komponenta']
             komp.nahraj_komponentu(komponenta())
             return
@@ -170,7 +160,7 @@ def go(stranka, **parametry):
         komp.nahraj_komponentu(konfig['komponenta'](**vsechny_parametry))
 
     except Exception as e:
-        zapsat_chybu(f"Chyba při navigaci na stránku {stranka}: {str(e)}")
+        Utils.zapsat_chybu(f"Chyba při navigaci na stránku {stranka}: {str(e)}")
         alert("Došlo k chybě při navigaci")
         go('domu')
 
@@ -197,11 +187,16 @@ def kontrola_prihlaseni():
     Returns:
         Instance přihlášeného uživatele nebo None
     """
-    uzivatel = Sprava_dat.je_prihlasen()
+    spravce = Spravce_stavu.Spravce_stavu()
+    uzivatel = spravce.nacti_uzivatele()
+    
     if uzivatel:
         return uzivatel
 
     uzivatel = anvil.users.login_with_form(allow_cancel=True)
+    if uzivatel:
+        spravce.nacti_uzivatele()  # Aktualizace správce stavu
+        
     komp = ziskej_komponentu()
     komp.nastav_ucet(uzivatel)
     return uzivatel
@@ -218,7 +213,9 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
         True pokud lze pokračovat v navigaci, False pokud byla zrušena
     """
     try:
+        spravce = Spravce_stavu.Spravce_stavu()
         komp = ziskej_komponentu()
+        
         if hasattr(komp, 'pravy_panel'):
             components = komp.pravy_panel.get_components()
             if components and isinstance(components[0], Wizard_komp):
@@ -226,20 +223,24 @@ def over_a_smaz_rozpracovanou(cilova_stranka):
 
                 # Kontrola nové analýzy
                 if wizard.mode == Konstanty.STAV_ANALYZY['NOVY'] and wizard.analyza_id:
-                    if confirm(Konstanty.ZPRAVY_CHYB['POTVRZENI_ZRUSENI_NOVE'],
-                               dismissible=True,
-                               buttons=[("Ano", True), ("Ne", False)]):
+                    if Utils.zobraz_potvrzovaci_dialog(Konstanty.ZPRAVY_CHYB['POTVRZENI_ZRUSENI_NOVE']):
                         try:
                             anvil.server.call('smaz_analyzu', wizard.analyza_id)
+                            spravce.vycisti_data_analyzy()  # Vyčištění správce stavu
                         except Exception as e:
-                            zapsat_chybu(f"Nepodařilo se smazat analýzu {wizard.analyza_id}: {str(e)}")
+                            Utils.zapsat_chybu(f"Nepodařilo se smazat analýzu {wizard.analyza_id}: {str(e)}")
                         return True
                     return False
 
                 elif wizard.mode == Konstanty.STAV_ANALYZY['UPRAVA'] and wizard.mode != Konstanty.STAV_ANALYZY['ULOZENY']:
-                    return confirm(Konstanty.ZPRAVY_CHYB['POTVRZENI_ZRUSENI_UPRAVY'],
-                                   dismissible=True,
-                                   buttons=[("Ano", True), ("Ne", False)])
+                    if Utils.zobraz_potvrzovaci_dialog(Konstanty.ZPRAVY_CHYB['POTVRZENI_ZRUSENI_UPRAVY']):
+                        spravce.vycisti_data_analyzy()  # Vyčištění správce stavu
+                        return True
+                    return False
+        return True
+
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při kontrole rozpracované analýzy: {str(e)}")
         return True
 
     except Exception as e:

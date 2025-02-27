@@ -1,9 +1,13 @@
 # -------------------------------------------------------
 # Modul: Sluzby_serveru
-# Serverové funkce pro práci s analýzami
+#
+# Tento modul poskytuje serverové funkce, které jsou volány z klientského kódu.
+# Klientský kód používá SpravceStavu pro správu lokálního stavu aplikace,
+# který se synchronizuje se serverem pomocí těchto funkcí.
 # -------------------------------------------------------
 import datetime
 import logging
+import functools
 from typing import Dict, List, Optional, Any
 import anvil.server
 import anvil.users
@@ -12,8 +16,32 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import Konstanty
 
-# =============== Validační funkce ===============
+# ============= Pomocné funkce pro error handling =============
 
+def zapsat_info(zprava):
+    """Pomocná funkce pro serverové logování info zpráv"""
+    logging.info(f"[INFO] {zprava}")
+    
+def zapsat_chybu(zprava):
+    """Pomocná funkce pro serverové logování chyb"""
+    logging.error(f"[CHYBA] {zprava}")
+
+def handle_errors(func):
+    """
+    Dekorátor pro jednotné zpracování chyb v serverových funkcích.
+    Zachytí výjimky, zaloguje je a přehodí klientovi.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            zprava = f"Chyba v {func.__name__}: {str(e)}"
+            zapsat_chybu(zprava)
+            raise ValueError(zprava) from e
+    return wrapper
+
+# =============== Validační funkce ===============
 
 def validuj_nazev_analyzy(nazev: str) -> None:
     """
@@ -134,6 +162,7 @@ def _uloz_hodnoty(analyza: Any, hodnoty: Dict) -> None:
 # =============== Veřejné serverové funkce ===============
 
 @anvil.server.callable
+@handle_errors
 def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
     """
     Vytvoří novou analýzu.
@@ -171,6 +200,7 @@ def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
         raise
 
 @anvil.server.callable
+@handle_errors
 def nacti_analyzu(analyza_id: str) -> Dict:
     """
     Načte detaily konkrétní analýzy.
@@ -197,9 +227,10 @@ def nacti_analyzu(analyza_id: str) -> Dict:
         raise
 
 @anvil.server.callable
+@handle_errors
 def nacti_analyzy_uzivatele() -> List[Any]:
     """
-    Načte seznam analýz přihlášeného uživatele.
+    Načte seznam analýz přihlášeného uživatele pro uživatelský dashboard.
     
     Returns:
         List[Any]: Seznam analýz s jejich základními údaji
@@ -219,6 +250,7 @@ def nacti_analyzy_uzivatele() -> List[Any]:
 
 
 @anvil.server.callable
+@handle_errors
 def nacti_kriteria(analyza_id: str) -> List[Dict]:
     """
     Načte kritéria pro danou analýzu.
@@ -244,6 +276,7 @@ def nacti_kriteria(analyza_id: str) -> List[Dict]:
         raise
 
 @anvil.server.callable
+@handle_errors
 def nacti_varianty(analyza_id: str) -> List[Dict]:
     """
     Načte varianty pro danou analýzu.
@@ -268,6 +301,7 @@ def nacti_varianty(analyza_id: str) -> List[Dict]:
         raise
 
 @anvil.server.callable
+@handle_errors
 def nacti_hodnoty(analyza_id: str) -> Dict:
     """
     Načte matici hodnot pro danou analýzu.
@@ -294,6 +328,7 @@ def nacti_hodnoty(analyza_id: str) -> Dict:
         raise
 
 @anvil.server.callable
+@handle_errors
 def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) -> None:
     """
     Upraví základní údaje analýzy.
@@ -322,6 +357,7 @@ def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) 
         raise
 
 @anvil.server.callable
+@handle_errors
 def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict], 
                           varianty: List[Dict], hodnoty: Dict) -> None:
     """
@@ -340,11 +376,7 @@ def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict],
 
         validuj_kriteria(kriteria)
         
-        # Smaže existující data
-        #smaz_analyzu(analyza_id) <- Asi logický BUG
-        # Smaže pouze související data, ne samotnou analýzu
         try:
-            # Delete related data first
             for hodnota in app_tables.hodnota.search(analyza=analyza):
                 hodnota.delete()
             for varianta in app_tables.varianta.search(analyza=analyza):
@@ -365,6 +397,7 @@ def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict],
         raise
 
 @anvil.server.callable
+@handle_errors
 def smaz_analyzu(analyza_id: str) -> None:
     """
     Smaže analýzu a všechna související data.
@@ -393,6 +426,7 @@ def smaz_analyzu(analyza_id: str) -> None:
         raise ValueError(Konstanty.ZPRAVY_CHYB['SMAZANI_SELHALO'])
 
 @anvil.server.callable
+@handle_errors
 def set_edit_analyza_id(analyza_id: str) -> None:
     """
     Nastaví ID editované analýzy do session.
@@ -403,6 +437,7 @@ def set_edit_analyza_id(analyza_id: str) -> None:
     anvil.server.session['edit_analyza_id'] = analyza_id
 
 @anvil.server.callable
+@handle_errors
 def get_edit_analyza_id() -> Optional[str]:
     """
     Získá ID editované analýzy ze session.
@@ -413,6 +448,7 @@ def get_edit_analyza_id() -> Optional[str]:
     return anvil.server.session.get('edit_analyza_id')
 
 @anvil.server.callable
+@handle_errors
 def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
     """
     Načte kompletní data analýzy podle zadaného ID.
@@ -443,31 +479,32 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
         'stav': analyza['stav']
     }
 
-    # Načtení kritérií
-    zaznamy_kriterii = app_tables.kriterium.search(analyza=analyza)
+    [kriteria_query, varianty_query, hodnoty_query] = [
+        app_tables.kriterium.search(analyza=analyza),
+        app_tables.varianta.search(analyza=analyza),
+        app_tables.hodnota.search(analyza=analyza)
+    ]
+
+    # Zpracuje výsledky dotazu
     kriteria = [
         {
             'nazev_kriteria': k['nazev_kriteria'],
             'typ': k['typ'],
             'vaha': float(k['vaha'])
         }
-        for k in zaznamy_kriterii
+        for k in kriteria_query
     ]
 
-    # Načtení variant
-    zaznamy_variant = app_tables.varianta.search(analyza=analyza)
     varianty = [
         {
             'nazev_varianty': v['nazev_varianty'],
             'popis_varianty': v['popis_varianty']
         }
-        for v in zaznamy_variant
+        for v in varianty_query
     ]
 
-    # Načtení hodnot
-    zaznamy_hodnot = app_tables.hodnota.search(analyza=analyza)
     hodnoty = {'matice_hodnoty': {}}
-    for h in zaznamy_hodnot:
+    for h in hodnoty_query:
         if h['varianta'] and h['kriterium']:
             klic = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
             hodnoty['matice_hodnoty'][klic] = float(h['hodnota'])
@@ -479,7 +516,15 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
         'hodnoty': hodnoty
     }
 
+    return {
+        'analyza': analyza_data,
+        'kriteria': kriteria,
+        'varianty': varianty,
+        'hodnoty': hodnoty
+    }
+
 @anvil.server.callable
+@handle_errors
 def nacti_vsechny_uzivatele():
     """
     Načte všechny uživatele z databáze.
@@ -494,6 +539,7 @@ def nacti_vsechny_uzivatele():
         raise Exception("Nepodařilo se načíst seznam uživatelů")
 
 @anvil.server.callable
+@handle_errors
 def vrat_pocet_analyz_pro_uzivatele(uzivatel):
   """
   Vrátí počet analýz přidružených k danému uživateli.
@@ -517,33 +563,36 @@ def vrat_pocet_analyz_pro_uzivatele(uzivatel):
     return 0
 
 @anvil.server.callable
-def nacti_analyzy_uzivatele_admin(email):
+@handle_errors
+def nacti_analyzy_uzivatele_admin(email, sort_by="datum_vytvoreni"):
     """
     Načte všechny analýzy daného uživatele pro admin rozhraní.
     
     Args:
         email: Email uživatele
+        limit: Maximální počet načtených analýz
+        sort_by: Pole pro řazení
         
     Returns:
         List[Row]: Seznam analýz uživatele
     """
-    try:
-        print(f"Načítám analýzy pro uživatele: {email}")
-        # Nejprve získáme správný Row objekt uživatele
-        uzivatel = app_tables.users.get(email=email)
-        if not uzivatel:
-            raise Exception(f"Uživatel {email} nenalezen")
-            
-        analyzy = app_tables.analyza.search(uzivatel=uzivatel)
-        analyzy_list = list(analyzy)
-        print(f"Nalezeno {len(analyzy_list)} analýz")
-        return analyzy_list
-    except Exception as e:
-        print(f"Server chyba: {str(e)}")
-        logging.error(f"Chyba při načítání analýz uživatele {email}: {str(e)}")
-        raise Exception("Nepodařilo se načíst analýzy uživatele")
+    zapsat_info(f"Načítám analýzy pro uživatele: {email}")
+    
+    # Nejprve získáme správný Row objekt uživatele
+    uzivatel = app_tables.users.get(email=email)
+    if not uzivatel:
+        raise ValueError(f"Uživatel {email} nenalezen")
+        
+    analyzy = list(app_tables.analyza.search(
+        tables.order_by(sort_by, ascending=False),
+        uzivatel=uzivatel,
+    ))
+    
+    zapsat_info(f"Nalezeno {len(analyzy)} analýz pro uživatele {email}")
+    return analyzy
 
 @anvil.server.callable
+@handle_errors
 def smaz_uzivatele(email):
     """
     Smaže uživatele a všechny jeho analýzy.
@@ -554,42 +603,48 @@ def smaz_uzivatele(email):
     Returns:
         bool: True pokud byl uživatel úspěšně smazán
     """
-    try:
-        print(f"Mažu uživatele: {email}")
-        uzivatel = app_tables.users.get(email=email)
-
-        # Kontrola, zda nejde o aktuálně přihlášeného uživatele
-        aktualni_uzivatel = anvil.users.get_user()
-        if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
-            raise ValueError("Nelze smazat vlastní účet, se kterým jste aktuálně přihlášeni.")
+    zapsat_info(f"Mažu uživatele: {email}")
+    
+    uzivatel = app_tables.users.get(email=email)
+    
+    # Kontrola, zda nejde o aktuálně přihlášeného uživatele
+    aktualni_uzivatel = anvil.users.get_user()
+    if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
+        raise ValueError("Nelze smazat vlastní účet, se kterým jste aktuálně přihlášeni.")
+    
+    if not uzivatel:
+        raise ValueError(f"Uživatel {email} nebyl nalezen")
         
-        if not uzivatel:
-            raise ValueError(f"Uživatel {email} nebyl nalezen")
-            
-        # Nejprve získáme všechny analýzy uživatele
-        analyzy = app_tables.analyza.search(uzivatel=uzivatel)
+    # Nejprve získáme všechny analýzy uživatele
+    analyzy = list(app_tables.analyza.search(uzivatel=uzivatel))
+    zapsat_info(f"Nalezeno {len(analyzy)} analýz k smazání")
+    
+    # Optimalizované mazání souvisejících dat
+    for analyza in analyzy:
+        # Načteme všechna související data najednou pro každou analýzu
+        hodnoty = list(app_tables.hodnota.search(analyza=analyza))
+        varianty = list(app_tables.varianta.search(analyza=analyza))
+        kriteria = list(app_tables.kriterium.search(analyza=analyza))
         
-        # Postupně smažeme každou analýzu včetně souvisejících dat
-        for analyza in analyzy:
-            analyza_id = analyza.get_id()
-            try:
-                smaz_analyzu(analyza_id)
-                print(f"Analýza {analyza_id} smazána")
-            except Exception as e:
-                print(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
-                # Pokračujeme s dalšími analýzami
+        # Smažeme data v optimálním pořadí (nejprve hodnoty, které odkazují na kritéria a varianty)
+        for h in hodnoty:
+            h.delete()
+        for v in varianty:
+            v.delete()
+        for k in kriteria:
+            k.delete()
         
-        # Nakonec smažeme samotného uživatele
-        uzivatel.delete()
-        print(f"Uživatel {email} úspěšně smazán")
-        return True
-        
-    except Exception as e:
-        print(f"Chyba při mazání uživatele: {str(e)}")
-        logging.error(f"Chyba při mazání uživatele {email}: {str(e)}")
-        raise ValueError(f"Nepodařilo se smazat uživatele: {str(e)}")
+        # Smažeme samotnou analýzu
+        analyza.delete()
+    
+    # Nakonec smažeme samotného uživatele
+    uzivatel.delete()
+    zapsat_info(f"Uživatel {email} a {len(analyzy)} analýz úspěšně smazáno")
+    
+    return True
 
 @anvil.server.callable
+@handle_errors
 def zmenit_roli_uzivatele(email, nova_role):
     """
     Změní roli uživatele.
@@ -626,6 +681,7 @@ def zmenit_roli_uzivatele(email, nova_role):
         raise ValueError(f"Nepodařilo se změnit roli uživatele: {str(e)}")
 
 @anvil.server.callable
+@handle_errors
 def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
     """
     Vytvoří nového uživatele z administrátorského rozhraní.
