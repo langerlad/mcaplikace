@@ -82,15 +82,29 @@ class Wizard_komp(Wizard_kompTemplate):
     
     self.spravce.uloz_data_analyzy(analyza_data)
 
+    # Check if we're creating a brand new analysis or going back and forth
     if self.mode == Konstanty.STAV_ANALYZY['NOVY']:
-      self.analyza_id = anvil.server.call(
-        "pridej_analyzu", 
-        analyza_data['nazev'],
-        analyza_data['popis'], 
-        analyza_data['zvolena_metoda']
-      )
-      # Aktualizujeme ID analýzy ve správci stavu
-      self.spravce.nastav_aktivni_analyzu(self.analyza_id, False)
+      # Only create a new analysis if we don't already have an ID
+      if not self.analyza_id:
+        self.analyza_id = anvil.server.call(
+          "pridej_analyzu", 
+          analyza_data['nazev'],
+          analyza_data['popis'], 
+          analyza_data['zvolena_metoda']
+        )
+        # Aktualizujeme ID analýzy ve správci stavu
+        self.spravce.nastav_aktivni_analyzu(self.analyza_id, False)
+        Utils.zapsat_info(f"Vytvořena nová analýza s ID: {self.analyza_id}")
+      else:
+        # If we already have an ID, just update the existing analysis
+        anvil.server.call(
+          'uprav_analyzu',
+          self.analyza_id,
+          analyza_data['nazev'],
+          analyza_data['popis'],
+          analyza_data['zvolena_metoda']
+        )
+        Utils.zapsat_info(f"Aktualizována existující analýza s ID: {self.analyza_id}")
     else:
       anvil.server.call(
         'uprav_analyzu',
@@ -99,6 +113,7 @@ class Wizard_komp(Wizard_kompTemplate):
         analyza_data['popis'],
         analyza_data['zvolena_metoda']
       )
+      Utils.zapsat_info(f"Aktualizována editovaná analýza s ID: {self.analyza_id}")
 
     self.card_krok_1.visible = False
     self.card_krok_2.visible = True
