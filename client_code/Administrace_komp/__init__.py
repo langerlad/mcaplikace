@@ -154,11 +154,10 @@ class Administrace_komp(Administrace_kompTemplate):
                       # Obnovíme seznam uživatelů
                       self.nacti_uzivatele()
 
-                      # Refresh the current user state to ensure it wasn't affected
+                      # CRITICAL: Refresh the current user state 
                       spravce = Spravce_stavu.Spravce_stavu()
                       spravce.nacti_uzivatele()
-                      
-                      
+                    
                       # Informujeme administrátora
                       alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.")
                       break

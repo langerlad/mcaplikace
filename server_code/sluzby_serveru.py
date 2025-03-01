@@ -688,7 +688,10 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
     """
     try:
         print(f"Vytvářím nového uživatele: {email}")
-        
+
+        # CRITICAL: Save the current user before creating a new one
+        puvodni_uzivatel = anvil.users.get_user()
+
         # Kontrola, zda uživatel již neexistuje
         existujici = app_tables.users.get(email=email)
         if existujici:
@@ -704,7 +707,12 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
         # Nastavení role pokud je admin
         if je_admin:
             novy_uzivatel['role'] = 'admin'
-        
+
+        # CRITICAL: Log back in as the original admin user
+        if puvodni_uzivatel:
+            # We use the internal login mechanism to restore the session
+            anvil.users.force_login(puvodni_uzivatel)
+      
         print(f"Uživatel {email} úspěšně vytvořen")
         
         # Vytvořit jednoduchý slovník místo použití get()
