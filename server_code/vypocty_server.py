@@ -1,3 +1,4 @@
+import anvil.secrets
 # import anvil.server
 # from skcriteria.core.data import mkdm
 # from skcriteria.preprocessing.scalers import MinMaxScaler

@@ -148,12 +148,22 @@ runtime_options:
   server_spec: {base: python310-standard}
   server_version: python3-sandbox
   version: 2
+secrets:
+  VYCHOZI_ADMIN_EMAIL:
+    type: secret
+    value: {A4IR6D7GOJXUA2EV: p3NQPjJkSph3CHKfnYyC0nQhvgNg8IFyVPkBxQpSTPpwAg0vCCJFZ86owDfwnRyB3XPod1Ds52CwvURpTjEaxS7GE/fGrXCDTGySveXdkgSozOK1oWRa2dvzJwwVdu5uBFqYQhdFCNI10eHTrg==}
+  VYCHOZI_ADMIN_HESLO:
+    type: secret
+    value: {A4IR6D7GOJXUA2EV: ''}
 services:
-- client_config: {}
+- client_config: {enable_v2: false}
   server_config: {}
   source: /runtime/services/tables.yml
 - client_config: {allow_remember_me: true, allow_signup: true, confirm_email: false, enable_automatically: true, remember_me_days: 365, use_email: true}
   server_config: {user_table: users}
   source: /runtime/services/anvil/users.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup: {module: Hlavni_okno, type: form}
 startup_form: null

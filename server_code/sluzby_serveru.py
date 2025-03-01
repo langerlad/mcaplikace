@@ -1,3 +1,4 @@
+import anvil.secrets
 # -------------------------------------------------------
 # Modul: Sluzby_serveru
 #
