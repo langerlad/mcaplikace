@@ -1,16 +1,9 @@
-# -------------------------------------------------------
-# Form: Hlavni_okno
-# -------------------------------------------------------
 from ._anvil_designer import Hlavni_oknoTemplate
 from anvil import *
 import anvil.server
-import anvil.tables as tables
-import anvil.tables.query as q
-from anvil.tables import app_tables
 import anvil.users
 from ..import Navigace
-from .. import Sprava_dat
-
+from .. import Spravce_stavu, Utils
 
 class Hlavni_okno(Hlavni_oknoTemplate):
   def __init__(self, **properties):
@@ -18,8 +11,12 @@ class Hlavni_okno(Hlavni_oknoTemplate):
 
     # Nastavení hlavní komponenty (obsah pravého panelu)
     Navigace.komponenta_hl_okna = self
-    uzivatel = Sprava_dat.je_prihlasen() 
+    
+    # Inicializace správce stavu
+    self.spravce = Spravce_stavu.Spravce_stavu()
+    uzivatel = self.spravce.nacti_uzivatele()
     self.nastav_ucet(uzivatel)
+    
     Navigace.go('domu')
 
   # Odkazy z levého panelu a navbaru - řeší modul Navigace
@@ -75,15 +72,7 @@ class Hlavni_okno(Hlavni_oknoTemplate):
             self.link_ucet.tooltip = uzivatel_info['tooltip']
 
     # Zobrazení odkazu na administraci pouze pro adminy
-    is_admin = False
-    if prihlasen:
-        try:
-            is_admin = uzivatel['role'] == 'admin'
-        except KeyError:
-            # Pokud vlastnost 'role' neexistuje, uživatel není admin
-            is_admin = False
-            
-    self.link_administrace.visible = is_admin
+    self.link_administrace.visible = self.spravce.je_admin()
   
   def ziskej_info_uzivatele(self, uzivatel):
     """
@@ -109,22 +98,26 @@ class Hlavni_okno(Hlavni_oknoTemplate):
             'tooltip': zobrazeny_text
         }
     except Exception as e:
-        print(f"Chyba při získávání informací o uživateli: {str(e)}")
+        Utils.zapsat_chybu(f"Chyba při získávání informací o uživateli: {str(e)}")
         return None
   
   # Vytvoření účtu / přihlášení    
   def link_registrace_click(self, **event_args):
     uzivatel = anvil.users.signup_with_form(allow_cancel=True)
+    if uzivatel:
+        self.spravce.nacti_uzivatele()  # Aktualizace stavu
     self.nastav_ucet(uzivatel)
     Navigace.go('domu')
 
   def link_odhlasit_click(self, **event_args):
     anvil.users.logout()  # Odhlášení na serveru
+    self.spravce.odhlasit()  # Vyčištění stavu
     self.nastav_ucet(None)
-    Sprava_dat.logout()   # Smaže cache z klienta
     Navigace.go('domu')
 
   def link_prihlasit_click(self, **event_args):
     uzivatel = anvil.users.login_with_form(allow_cancel=True)
+    if uzivatel:
+        self.spravce.nacti_uzivatele()  # Aktualizace stavu
     self.nastav_ucet(uzivatel)
     Navigace.go('domu')
