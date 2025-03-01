@@ -363,153 +363,136 @@ def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) 
 @handle_errors
 def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty, max_retries=3):
     """
-    Uloží kompletní analýzu s minimálním počtem mazání.
-    Automaticky opakuje operaci při konfliktu transakcí.
+    Uloží kompletní analýzu, tedy kritéria, varianty a odpovídající hodnoty.
+    Operace se provádí v rámci transakce, která zajistí konzistenci dat. Při konfliktu
+    transakce se operace opakuje až do dosažení maximálního počtu pokusů.
     
     Args:
-        analyza_id: ID analýzy
-        kriteria: Seznam kritérií
-        varianty: Seznam variant
-        hodnoty: Slovník s hodnotami matice
-        max_retries: Maximální počet pokusů při konfliktu transakcí
+        analyza_id: ID analýzy, ke které se data ukládají.
+        kriteria: Seznam slovníků s klíči 'nazev_kriteria', 'typ' a 'vaha'.
+        varianty: Seznam slovníků s klíči 'nazev_varianty' a 'popis_varianty'.
+        hodnoty: Slovník obsahující klíč 'matice_hodnoty'. Klíče v této matici mají formát 
+                 "nazev_varianty_nazev_kriteria" a hodnota je číslo.
+        max_retries: Maximální počet pokusů při konfliktu transakce.
+        
+    Returns:
+        True, pokud operace proběhla úspěšně.
+        
+    Raises:
+        ValueError: S chybovou zprávou v případě neúspěchu operace.
     """
-   
     retry_count = 0
     while retry_count <= max_retries:
         try:
-            cas_zacatku = time.time()
-            
-            # Používáme transakci pro konzistenci
             with Transaction():
-                # Získání analýzy
+                # Načtení analýzy z databáze
                 analyza = app_tables.analyza.get_by_id(analyza_id)
                 if not analyza:
-                    raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
-
+                    raise ValueError(f"Analýza s ID {analyza_id} neexistuje.")
+                
                 # Validace kritérií
                 validuj_kriteria(kriteria)
                 
-                # Načtení existujících dat
-                cas_zacatku_nacitani = time.time()
-                existujici_kriteria = {k['nazev_kriteria']: k for k in app_tables.kriterium.search(analyza=analyza)}
-                existujici_varianty = {v['nazev_varianty']: v for v in app_tables.varianta.search(analyza=analyza)}
-                cas_konce_nacitani = time.time()
-                print(f"Čas načítání: {cas_konce_nacitani - cas_zacatku_nacitani:.3f} sekund")
+                # Načtení existujících řádků z databáze
+                existujici_kriteria = list(app_tables.kriterium.search(analyza=analyza))
+                existujici_varianty = list(app_tables.varianta.search(analyza=analyza))
+                existujici_hodnoty = list(app_tables.hodnota.search(analyza=analyza))
                 
-                # Zpracování kritérií - aktualizace nebo vytvoření
-                cas_zacatku_kriterii = time.time()
-                id_kriterii = {}
+                # Vytvoření slovníků pro rychlý přístup podle názvu
+                dict_kriteria = {k['nazev_kriteria']: k for k in existujici_kriteria}
+                dict_varianty = {v['nazev_varianty']: v for v in existujici_varianty}
+                
+                # --- Zpracování kritérií ---
+                aktualizovana_kriteria = {}
                 for k in kriteria:
                     nazev = k['nazev_kriteria']
-                    if nazev in existujici_kriteria:
-                        # Aktualizace
-                        kr = existujici_kriteria[nazev]
-                        kr.update(typ=k['typ'], vaha=k['vaha'])
-                        id_kriterii[nazev] = kr
-                        # Odstranění z původního seznamu (zbydou jen ta ke smazání)
-                        del existujici_kriteria[nazev]
+                    if nazev in dict_kriteria:
+                        # Aktualizace existujícího kritéria
+                        row = dict_kriteria[nazev]
+                        row.update(typ=k['typ'], vaha=k['vaha'])
+                        aktualizovana_kriteria[nazev] = row
+                        # Odstranění z dict – zbylá kritéria budou smazána
+                        del dict_kriteria[nazev]
                     else:
-                        # Vytvoření nového
-                        kr = app_tables.kriterium.add_row(
+                        # Vložení nového kritéria
+                        row = app_tables.kriterium.add_row(
                             analyza=analyza,
                             nazev_kriteria=nazev,
                             typ=k['typ'],
                             vaha=k['vaha']
                         )
-                        id_kriterii[nazev] = kr
-                
-                # Smazání nepoužitých kritérií
-                for kr in existujici_kriteria.values():
-                    kr.delete()
-                cas_konce_kriterii = time.time()
-                print(f"Čas zpracování kritérií: {cas_konce_kriterii - cas_zacatku_kriterii:.3f} sekund")
-                
-                # Podobně pro varianty
-                cas_zacatku_variant = time.time()
-                id_variant = {}
+                        aktualizovana_kriteria[nazev] = row
+                # Smazání kritérií, která nejsou ve vstupních datech
+                for row in dict_kriteria.values():
+                    row.delete()
+                    
+                # --- Zpracování variant ---
+                aktualizovane_varianty = {}
                 for v in varianty:
                     nazev = v['nazev_varianty']
-                    if nazev in existujici_varianty:
-                        # Aktualizace
-                        var = existujici_varianty[nazev]
-                        var.update(popis_varianty=v['popis_varianty'])
-                        id_variant[nazev] = var
-                        del existujici_varianty[nazev]
+                    if nazev in dict_varianty:
+                        row = dict_varianty[nazev]
+                        row.update(popis_varianty=v['popis_varianty'])
+                        aktualizovane_varianty[nazev] = row
+                        del dict_varianty[nazev]
                     else:
-                        # Vytvoření nové
-                        var = app_tables.varianta.add_row(
+                        row = app_tables.varianta.add_row(
                             analyza=analyza,
                             nazev_varianty=nazev,
                             popis_varianty=v['popis_varianty']
                         )
-                        id_variant[nazev] = var
-                
-                # Smazání nepoužitých variant
-                for var in existujici_varianty.values():
-                    var.delete()
-                cas_konce_variant = time.time()
-                print(f"Čas zpracování variant: {cas_konce_variant - cas_zacatku_variant:.3f} sekund")
-                
-                # Pro hodnoty je složitější aktualizace - smažeme všechny a vytvoříme znovu
-                cas_zacatku_hodnot = time.time()
-                
-                # Získáme existující hodnoty pro porovnání
-                existujici_hodnoty = {}
-                for hodnota in app_tables.hodnota.search(analyza=analyza):
-                    klic = f"{hodnota['varianta']['nazev_varianty']}_{hodnota['kriterium']['nazev_kriteria']}"
-                    existujici_hodnoty[klic] = hodnota
-                
-                # Zpracování nových hodnot
-                matice = hodnoty.get('matice_hodnoty', {})
-                zpracovane_klice = set()
-                
-                for klic, hodnota_nova in matice.items():
-                    # Rozbor klíče pro získání názvů varianty a kritéria
-                    nazev_varianty, nazev_kriteria = klic.split('_', 1)
+                        aktualizovane_varianty[nazev] = row
+                # Smazání variant, které nejsou ve vstupních datech
+                for row in dict_varianty.values():
+                    row.delete()
                     
-                    # Uložení pouze pokud existují odpovídající varianta a kritérium
-                    if nazev_varianty in id_variant and nazev_kriteria in id_kriterii:
-                        if klic in existujici_hodnoty:
-                            # Aktualizace existující hodnoty
-                            hodnota_row = existujici_hodnoty[klic]
-                            if float(hodnota_row['hodnota']) != float(hodnota_nova):
-                                hodnota_row.update(hodnota=hodnota_nova)
-                            zpracovane_klice.add(klic)
+                # --- Zpracování hodnot ---
+                # Vytvoření slovníku existujících hodnot s klíčem "nazev_varianty_nazev_kriteria"
+                dict_hodnot = {}
+                for h in existujici_hodnoty:
+                    if h['varianta'] and h['kriterium']:
+                        key = f"{h['varianta']['nazev_varianty']}_{h['kriterium']['nazev_kriteria']}"
+                        dict_hodnot[key] = h
+                
+                nove_klice = set()
+                for key, nova_hodnota in hodnoty.get('matice_hodnoty', {}).items():
+                    # Rozdělení klíče na název varianty a kritéria
+                    parts = key.split('_', 1)
+                    if len(parts) != 2:
+                        continue
+                    nazev_varianty, nazev_kriteria = parts
+                    if (nazev_varianty in aktualizovane_varianty and 
+                        nazev_kriteria in aktualizovana_kriteria):
+                        nove_klice.add(key)
+                        if key in dict_hodnot:
+                            # Aktualizace existující hodnoty, pokud se změnila
+                            row = dict_hodnot[key]
+                            if float(row['hodnota']) != float(nova_hodnota):
+                                row.update(hodnota=nova_hodnota)
+                            del dict_hodnot[key]
                         else:
-                            # Vytvoření nové hodnoty
+                            # Vložení nové hodnoty
                             app_tables.hodnota.add_row(
                                 analyza=analyza,
-                                varianta=id_variant[nazev_varianty],
-                                kriterium=id_kriterii[nazev_kriteria],
-                                hodnota=hodnota_nova
+                                varianta=aktualizovane_varianty[nazev_varianty],
+                                kriterium=aktualizovana_kriteria[nazev_kriteria],
+                                hodnota=nova_hodnota
                             )
-                            zpracovane_klice.add(klic)
-                
-                # Smazání nepoužitých hodnot
-                for klic, hodnota_row in existujici_hodnoty.items():
-                    if klic not in zpracovane_klice:
-                        hodnota_row.delete()
-                
-                cas_konce_hodnot = time.time()
-                print(f"Čas zpracování hodnot: {cas_konce_hodnot - cas_zacatku_hodnot:.3f} sekund")
-                
-                # Aktualizace údaje o poslední úpravě analýzy
+                # Smazání hodnot, které nejsou ve vstupních datech
+                for row in dict_hodnot.values():
+                    row.delete()
+                    
+                # --- Aktualizace analýzy ---
                 analyza.update(datum_upravy=datetime.datetime.now())
             
-            celkovy_cas = time.time() - cas_zacatku
-            print(f"Celkový čas serveru: {celkovy_cas:.3f} sekund")
-            
-            # Pokud jsme došli sem, transakce byla úspěšně dokončena
+            # Pokud dojde k úspěšnému dokončení transakce, vrátíme True
             return True
-            
         except TransactionConflict:
             retry_count += 1
             if retry_count > max_retries:
                 raise ValueError(f"Nepodařilo se dokončit transakci po {max_retries} pokusech.")
-            print(f"Konflikt transakce, pokus {retry_count} z {max_retries}...")
-            time.sleep(0.5)  # Krátká pauza před opakováním
+            time.sleep(0.5)  # Krátká pauza před opakováním transakce
         except Exception as e:
-            print(f"Chyba při ukládání analýzy: {str(e)}")
             raise ValueError(f"Chyba při ukládání analýzy: {str(e)}")
 
 @anvil.server.callable
