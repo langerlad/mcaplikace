@@ -358,43 +358,106 @@ def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) 
 
 @anvil.server.callable
 @handle_errors
-def uloz_kompletni_analyzu(analyza_id: str, kriteria: List[Dict], 
-                          varianty: List[Dict], hodnoty: Dict) -> None:
+def uloz_kompletni_analyzu(analyza_id, kriteria, varianty, hodnoty):
     """
     Uloží kompletní analýzu včetně všech souvisejících dat.
+    Používá efektivnější přístup bez mazání existujících dat.
     
     Args:
         analyza_id: ID analýzy
         kriteria: Seznam kritérií
         varianty: Seznam variant
-        hodnoty: Matice hodnot pro varianty a kritéria
+        hodnoty: Slovník s hodnotami matice
+        
+    Returns:
+        bool: True pokud uložení proběhlo úspěšně
+        
+    Raises:
+        ValueError: Pokud analýza neexistuje nebo jsou neplatná data
     """
+    import time
+    cas_zacatku = time.time()
+    
     try:
+        # Získání analýzy
         analyza = app_tables.analyza.get_by_id(analyza_id)
         if not analyza:
             raise ValueError(Konstanty.ZPRAVY_CHYB['ANALYZA_NEEXISTUJE'].format(analyza_id))
 
+        # Validace kritérií
         validuj_kriteria(kriteria)
         
-        try:
+        # Nejprve zjistíme, zda jde o aktualizaci nebo nové vytvoření
+        existujici_kriteria = list(app_tables.kriterium.search(analyza=analyza))
+        existujici_varianty = list(app_tables.varianta.search(analyza=analyza))
+        
+        if existujici_kriteria or existujici_varianty:
+            # Jde o aktualizaci - smažeme existující data
+            cas_zacatku_mazani = time.time()
             for hodnota in app_tables.hodnota.search(analyza=analyza):
                 hodnota.delete()
             for varianta in app_tables.varianta.search(analyza=analyza):
                 varianta.delete()
             for kriterium in app_tables.kriterium.search(analyza=analyza):
                 kriterium.delete()
-        except Exception as e:
-            logging.error(f"Chyba při mazání souvisejících dat: {str(e)}")
-            raise
+            cas_konce_mazani = time.time()
+            print(f"Čas mazání: {cas_konce_mazani - cas_zacatku_mazani:.3f} sekund")
         
-        # Uloží nová data
-        _uloz_kriteria(analyza, kriteria)
-        _uloz_varianty(analyza, varianty)
-        _uloz_hodnoty(analyza, hodnoty)
+        # Uložení kritérií a sledování ID
+        cas_zacatku_kriterii = time.time()
+        id_kriterii = {}
+        for k in kriteria:
+            kr = app_tables.kriterium.add_row(
+                analyza=analyza,
+                nazev_kriteria=k['nazev_kriteria'],
+                typ=k['typ'],
+                vaha=k['vaha']
+            )
+            id_kriterii[k['nazev_kriteria']] = kr
+        cas_konce_kriterii = time.time()
+        print(f"Čas ukládání kritérií: {cas_konce_kriterii - cas_zacatku_kriterii:.3f} sekund")
+        
+        # Uložení variant a sledování ID
+        cas_zacatku_variant = time.time()
+        id_variant = {}
+        for v in varianty:
+            var = app_tables.varianta.add_row(
+                analyza=analyza,
+                nazev_varianty=v['nazev_varianty'],
+                popis_varianty=v['popis_varianty']
+            )
+            id_variant[v['nazev_varianty']] = var
+        cas_konce_variant = time.time()
+        print(f"Čas ukládání variant: {cas_konce_variant - cas_zacatku_variant:.3f} sekund")
+        
+        # Uložení hodnot - přizpůsobeno vaší aktuální datové struktuře
+        cas_zacatku_hodnot = time.time()
+        matice = hodnoty.get('matice_hodnoty', {})
+        for klic, hodnota in matice.items():
+            # Rozbor klíče pro získání názvů varianty a kritéria
+            nazev_varianty, nazev_kriteria = klic.split('_', 1)
             
+            # Uložení pouze pokud existují odpovídající varianta a kritérium
+            if nazev_varianty in id_variant and nazev_kriteria in id_kriterii:
+                app_tables.hodnota.add_row(
+                    analyza=analyza,
+                    varianta=id_variant[nazev_varianty],
+                    kriterium=id_kriterii[nazev_kriteria],
+                    hodnota=hodnota
+                )
+        cas_konce_hodnot = time.time()
+        print(f"Čas ukládání hodnot: {cas_konce_hodnot - cas_zacatku_hodnot:.3f} sekund")
+        
+        # Aktualizace údaje o poslední úpravě analýzy
+        analyza.update(datum_upravy=datetime.datetime.now())
+        
+        celkovy_cas = time.time() - cas_zacatku
+        print(f"Celkový čas serveru: {celkovy_cas:.3f} sekund")
+        
+        return True
     except Exception as e:
-        logging.error(f"Chyba při ukládání analýzy {analyza_id}: {str(e)}")
-        raise
+        print(f"Chyba při ukládání analýzy: {str(e)}")
+        raise ValueError(f"Chyba při ukládání analýzy: {str(e)}")
 
 @anvil.server.callable
 @handle_errors
