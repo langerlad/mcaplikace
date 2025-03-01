@@ -606,7 +606,7 @@ def smaz_uzivatele(email):
     zapsat_info(f"Mažu uživatele: {email}")
     
     uzivatel = app_tables.users.get(email=email)
-    
+
     # Kontrola, zda nejde o aktuálně přihlášeného uživatele
     aktualni_uzivatel = anvil.users.get_user()
     if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
@@ -616,30 +616,22 @@ def smaz_uzivatele(email):
         raise ValueError(f"Uživatel {email} nebyl nalezen")
         
     # Nejprve získáme všechny analýzy uživatele
-    analyzy = list(app_tables.analyza.search(uzivatel=uzivatel))
-    zapsat_info(f"Nalezeno {len(analyzy)} analýz k smazání")
+    analyzy = app_tables.analyza.search(uzivatel=uzivatel)
+    pocet_analyz = 0
     
-    # Optimalizované mazání souvisejících dat
+    # Použijeme existující, otestovanou funkci pro mazání jednotlivých analýz
     for analyza in analyzy:
-        # Načteme všechna související data najednou pro každou analýzu
-        hodnoty = list(app_tables.hodnota.search(analyza=analyza))
-        varianty = list(app_tables.varianta.search(analyza=analyza))
-        kriteria = list(app_tables.kriterium.search(analyza=analyza))
-        
-        # Smažeme data v optimálním pořadí (nejprve hodnoty, které odkazují na kritéria a varianty)
-        for h in hodnoty:
-            h.delete()
-        for v in varianty:
-            v.delete()
-        for k in kriteria:
-            k.delete()
-        
-        # Smažeme samotnou analýzu
-        analyza.delete()
+        analyza_id = analyza.get_id()
+        try:
+            smaz_analyzu(analyza_id)
+            pocet_analyz += 1
+        except Exception as e:
+            zapsat_chybu(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
+            # Pokračujeme s dalšími analýzami
     
     # Nakonec smažeme samotného uživatele
     uzivatel.delete()
-    zapsat_info(f"Uživatel {email} a {len(analyzy)} analýz úspěšně smazáno")
+    zapsat_info(f"Uživatel {email} a {pocet_analyz} analýz úspěšně smazáno")
     
     return True
 
