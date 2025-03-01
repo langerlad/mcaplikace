@@ -6,6 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
+from .. import Spravce_stavu
 
 
 class Vystup_saw_komp(Vystup_saw_kompTemplate):
@@ -19,7 +20,12 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
     """
     def __init__(self, analyza_id=None, **properties):
         self.init_components(**properties)
-        self.analyza_id = analyza_id
+        
+        # Inicializace správce stavu
+        self.spravce = Spravce_stavu.Spravce_stavu()
+        
+        # Pokud je předáno ID, použijeme ho, jinak se pokusíme získat aktivní analýzu
+        self.analyza_id = analyza_id or self.spravce.ziskej_aktivni_analyzu()
         
     def form_show(self, **event_args):
         """Načte a zobrazí data analýzy při zobrazení formuláře."""

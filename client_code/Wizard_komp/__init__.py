@@ -294,7 +294,6 @@ class Wizard_komp(Wizard_kompTemplate):
         
     try:
         # Získáme data ze správce stavu
-        analyza_data = self.spravce.ziskej_data_analyzy()
         kriteria = self.spravce.ziskej_kriteria()
         varianty = self.spravce.ziskej_varianty()
         hodnoty = self.spravce.ziskej_hodnoty()
