@@ -7,6 +7,7 @@ from anvil.tables import app_tables
 import anvil.users
 from .. import Konstanty
 from ..Pridej_uzivatele_form import Pridej_uzivatele_form
+from .. import Spravce_stavu
 
 
 class Administrace_komp(Administrace_kompTemplate):
@@ -152,6 +153,11 @@ class Administrace_komp(Administrace_kompTemplate):
                   if vysledek:
                       # Obnovíme seznam uživatelů
                       self.nacti_uzivatele()
+
+                      # Refresh the current user state to ensure it wasn't affected
+                      spravce = Spravce_stavu.Spravce_stavu()
+                      spravce.nacti_uzivatele()
+                      
                       
                       # Informujeme administrátora
                       alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.")
