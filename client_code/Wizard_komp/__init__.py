@@ -16,7 +16,7 @@ class Wizard_komp(Wizard_kompTemplate):
     self.init_components(**properties)
     
     # Inicializace správce stavu
-    self.spravce = Spravce_stavu.SpravceStavu()
+    self.spravce = Spravce_stavu.Spravce_stavu()
     
     self.mode = mode
     
