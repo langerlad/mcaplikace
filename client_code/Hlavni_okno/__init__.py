@@ -105,19 +105,17 @@ class Hlavni_okno(Hlavni_oknoTemplate):
   def link_registrace_click(self, **event_args):
     """
     Zpracuje registraci nového uživatele.
-    Speciálním emailům automaticky přidělí admin práva.
     """
     uzivatel = anvil.users.signup_with_form(allow_cancel=True)
     
     if uzivatel:
-        # Seznam emailů, které by měly automaticky získat admin práva
-        admin_emaily = ["servisni_ucet@505.kg", "servisni_ucet@5050.kg"]
-        
-        # Kontrola, zda email patří mezi admin emaily
-        if uzivatel['email'] in admin_emaily:
-            # Přidělení admin role
-            uzivatel['role'] = 'admin'
-            Utils.zapsat_info(f"Automaticky přidělena admin role uživateli: {uzivatel['email']}")
+        # Zavolání serverové funkce pro kontrolu a přidělení admin role
+        try:
+            je_admin = anvil.server.call('nastavit_roli_po_registraci', uzivatel['email'])
+            if je_admin:
+                Utils.zapsat_info(f"Uživateli {uzivatel['email']} byla přidělena role admin")
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při nastavování role: {str(e)}")
         
         # Aktualizace stavu
         self.spravce.nacti_uzivatele()

@@ -149,12 +149,9 @@ runtime_options:
   server_version: python3-sandbox
   version: 2
 secrets:
-  VYCHOZI_ADMIN_EMAIL:
+  ADMIN_EMAILY:
     type: secret
-    value: {A4IR6D7GOJXUA2EV: p3NQPjJkSph3CHKfnYyC0nQhvgNg8IFyVPkBxQpSTPpwAg0vCCJFZ86owDfwnRyB3XPod1Ds52CwvURpTjEaxS7GE/fGrXCDTGySveXdkgSozOK1oWRa2dvzJwwVdu5uBFqYQhdFCNI10eHTrg==}
-  VYCHOZI_ADMIN_HESLO:
-    type: secret
-    value: {A4IR6D7GOJXUA2EV: ''}
+    value: {A4IR6D7GOJXUA2EV: OfvuerfY24ny20ILnvvX9qBCJNqSFOCspwmqEk2UXPQdJvffko3WeOwEN2L0VoJ1oMGiE/hiyrrLg5wZok7YC5PMysxbqZf5JFGXjoBfxDeUBjxxP+8+12iD1Eu/gePgV4CQR4kTC17iWbZZ0W0Iek6w4jsSOa/cF+Z+73ZbXwrEjHqYtbfIAJEkiTQpBHg=}
 services:
 - client_config: {enable_v2: false}
   server_config: {}

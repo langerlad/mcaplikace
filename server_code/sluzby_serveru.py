@@ -827,3 +827,34 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
         print(f"Chyba při vytváření uživatele: {str(e)}")
         logging.error(f"Chyba při vytváření uživatele {email}: {str(e)}")
         raise ValueError(f"Nepodařilo se vytvořit uživatele: {str(e)}")
+
+@anvil.server.callable
+def nastavit_roli_po_registraci(email):
+    """
+    Kontroluje, zda nově registrovaný uživatel má mít automaticky admin roli.
+    
+    Args:
+        email: Email registrovaného uživatele
+        
+    Returns:
+        bool: True pokud byla přidělena role admin
+    """
+    try:
+        # Seznam admin emailů - ideálně z App Secrets
+        admin_emaily_text = anvil.secrets.get_secret('ADMIN_EMAILY')
+        admin_emaily = [e.strip() for e in admin_emaily_text.split(',')]
+        
+        # Kontrola, zda email patří mezi admin emaily
+        if email in admin_emaily:
+            # Získání uživatele podle emailu
+            uzivatel = app_tables.users.get(email=email)
+            if uzivatel:
+                # Přidělení admin role
+                uzivatel['role'] = 'admin'
+                print(f"Automaticky přidělena admin role uživateli: {email}")
+                return True
+    
+    except Exception as e:
+        print(f"Chyba při nastavování role: {str(e)}")
+    
+    return False
