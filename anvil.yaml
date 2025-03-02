@@ -148,10 +148,7 @@ runtime_options:
   server_spec: {base: python310-standard}
   server_version: python3-sandbox
   version: 2
-secrets:
-  ADMIN_EMAILY:
-    type: secret
-    value: {A4IR6D7GOJXUA2EV: OfvuerfY24ny20ILnvvX9qBCJNqSFOCspwmqEk2UXPQdJvffko3WeOwEN2L0VoJ1oMGiE/hiyrrLg5wZok7YC5PMysxbqZf5JFGXjoBfxDeUBjxxP+8+12iD1Eu/gePgV4CQR4kTC17iWbZZ0W0Iek6w4jsSOa/cF+Z+73ZbXwrEjHqYtbfIAJEkiTQpBHg=}
+secrets: {}
 services:
 - client_config: {enable_v2: false}
   server_config: {}

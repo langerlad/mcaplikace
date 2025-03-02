@@ -840,9 +840,8 @@ def nastavit_roli_po_registraci(email):
         bool: True pokud byla přidělena role admin
     """
     try:
-        # Seznam admin emailů - ideálně z App Secrets
-        admin_emaily_text = anvil.secrets.get_secret('ADMIN_EMAILY')
-        admin_emaily = [e.strip() for e in admin_emaily_text.split(',')]
+        # Seznam admin emailů
+        admin_emaily = ['servisni_ucet@505.kg','saur@utb.cz','langer_l@utb.cz']
         
         # Kontrola, zda email patří mezi admin emaily
         if email in admin_emaily:
