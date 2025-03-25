@@ -60,17 +60,109 @@ class Analyza_Row(Analyza_RowTemplate):
     def button_vypocet_click(self, **event_args):
         """
         Zpracuje požadavek na zobrazení výstupu analýzy.
+        Teď zobrazí dialog pro výběr metody analýzy.
         """
         try:
-            # Nastavíme ID aktivní analýzy (pouze pro zobrazení)
+            # Nastavíme ID aktivní analýzy
             self.spravce.nastav_aktivni_analyzu(self.item['id'], False)
             
-            # Přejdeme na stránku s výstupem
-            Navigace.go('saw_vystup', analyza_id=self.item['id'])
+            # Zobrazíme dialog pro výběr metody analýzy
+            self.zobraz_dialog_vyberu_metody()
+            
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při přípravě analýzy: {str(e)}")
+            alert(f"Chyba při přípravě analýzy: {str(e)}")
+            
+    def zobraz_dialog_vyberu_metody(self):
+        """
+        Zobrazí dialog pro výběr metody analýzy.
+        """
+        try:
+            # Vytvoříme jednoduchý dialog s výběrem metody
+            # from anvil import alert, DropDown, Button, Label, FlowPanel
+            
+            # Definice dostupných metod
+            dostupne_metody = [
+                ("Simple Additive Weighting (SAW)", "SAW"),
+                # Další metody můžete přidat později
+                # ("Weighted Product Model (WPM)", "WPM"),
+                # ("TOPSIS", "TOPSIS"),
+            ]
+            
+            # Vytvoření komponenty pro výběr
+            dropdown = DropDown(items=[m[0] for m in dostupne_metody])
+            dropdown.selected_value = dostupne_metody[0][0]  # Výchozí hodnota
+            
+            # Vytvoření panelu s komponenty
+            panel = FlowPanel()
+            panel.add_component(Label(text="Vyberte metodu analýzy:"))
+            panel.add_component(dropdown)
+            
+            # Zobrazení dialogu
+            result = alert(
+                content=panel,
+                title="Výběr metody analýzy",
+                large=False,
+                dismissible=True,
+                buttons=[("Pokračovat", True), ("Zrušit", False)]
+            )
+            
+            if result:  # Pokud uživatel klikl na "Pokračovat"
+                # Získání vybrané metody
+                vybrany_text = dropdown.selected_value
+                vybrana_metoda = next((kod for nazev, kod in dostupne_metody if nazev == vybrany_text), None)
+                
+                if vybrana_metoda:
+                    # Přesměrování na správnou výstupní stránku podle zvolené metody
+                    self.prechod_na_vystup(vybrana_metoda)
+                else:
+                    alert("Nebyla vybrána žádná metoda.")
+            
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při zobrazení dialogu pro výběr metody: {str(e)}")
+            alert(f"Chyba při výběru metody: {str(e)}")
+            
+    def prechod_na_vystup(self, metoda):
+        """
+        Přesměruje na stránku s výstupem podle zvolené metody.
+        
+        Args:
+            metoda: Kód zvolené metody (např. "SAW")
+        """
+        try:
+            analyza_id = self.item['id']
+            
+            # Přesměrování podle metody
+            if metoda == "SAW":
+                Navigace.go('saw_vystup', analyza_id=analyza_id, metoda=metoda)
+            # Další metody můžete přidat později
+            # elif metoda == "WPM":
+            #     Navigace.go('wpm_vystup', analyza_id=analyza_id, metoda=metoda)
+            # elif metoda == "TOPSIS":
+            #     Navigace.go('topsis_vystup', analyza_id=analyza_id, metoda=metoda)
+            else:
+                alert(f"Zvolená metoda '{metoda}' zatím není implementována.")
             
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při přechodu na výstup analýzy: {str(e)}")
             alert(f"Chyba při zobrazení výstupu analýzy: {str(e)}")
+
+
+
+    # def button_vypocet_click(self, **event_args):
+    #     """
+    #     Zpracuje požadavek na zobrazení výstupu analýzy.
+    #     """
+    #     try:
+    #         # Nastavíme ID aktivní analýzy (pouze pro zobrazení)
+    #         self.spravce.nastav_aktivni_analyzu(self.item['id'], False)
+            
+    #         # Přejdeme na stránku s výstupem
+    #         Navigace.go('saw_vystup', analyza_id=self.item['id'])
+            
+    #     except Exception as e:
+    #         Utils.zapsat_chybu(f"Chyba při přechodu na výstup analýzy: {str(e)}")
+    #         alert(f"Chyba při zobrazení výstupu analýzy: {str(e)}")
             
     # def button_klonovat_click(self, **event_args):
     #     """

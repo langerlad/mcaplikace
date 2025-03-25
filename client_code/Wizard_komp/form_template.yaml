@@ -1,7 +1,7 @@
 components:
 - layout_properties: {grid_position: 'LIPYZJ,OBNJPH'}
   name: headline_1
-  properties: {align: left, bold: true, role: headline, text: 'Metoda: Simple Additive Weighting (SAW)'}
+  properties: {align: left, bold: true, role: headline, text: Zadání dat pro analýzu}
   type: Label
 - components:
   - layout_properties: {grid_position: 'YZOIBS,ZMDROM'}

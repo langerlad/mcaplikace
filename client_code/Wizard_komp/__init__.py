@@ -77,7 +77,6 @@ class Wizard_komp(Wizard_kompTemplate):
     analyza_data = {
       'nazev': self.text_box_nazev.text,
       'popis': self.text_area_popis.text,
-      'zvolena_metoda': Konstanty.METODA_ANALYZY['SAW']
     }
     
     self.spravce.uloz_data_analyzy(analyza_data)
@@ -90,7 +89,6 @@ class Wizard_komp(Wizard_kompTemplate):
           "pridej_analyzu", 
           analyza_data['nazev'],
           analyza_data['popis'], 
-          analyza_data['zvolena_metoda']
         )
         # Aktualizujeme ID analýzy ve správci stavu
         self.spravce.nastav_aktivni_analyzu(self.analyza_id, False)
@@ -102,7 +100,6 @@ class Wizard_komp(Wizard_kompTemplate):
           self.analyza_id,
           analyza_data['nazev'],
           analyza_data['popis'],
-          analyza_data['zvolena_metoda']
         )
         Utils.zapsat_info(f"Aktualizována existující analýza s ID: {self.analyza_id}")
     else:
@@ -111,7 +108,6 @@ class Wizard_komp(Wizard_kompTemplate):
         self.analyza_id,
         analyza_data['nazev'],
         analyza_data['popis'],
-        analyza_data['zvolena_metoda']
       )
       Utils.zapsat_info(f"Aktualizována editovaná analýza s ID: {self.analyza_id}")
 

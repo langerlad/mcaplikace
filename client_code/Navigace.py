@@ -47,7 +47,7 @@ KONFIGURACE_NAVIGACE = {
         'kontrola_rozpracovane': True
     },
     'pridat_analyzu': {
-        'komponenta': Vyber_analyzy_komp,
+        'komponenta': Wizard_komp,
         'vyzaduje_prihlaseni': True,
         'oznaceni_nav': 'pridat',
         'kontrola_rozpracovane': True
