@@ -102,7 +102,7 @@ class Analyza_Row(Analyza_RowTemplate):
             result = alert(
                 content=panel,
                 title="Výběr metody analýzy",
-                large=False,
+                large=True,
                 dismissible=True,
                 buttons=[("Pokračovat", True), ("Zrušit", False)]
             )

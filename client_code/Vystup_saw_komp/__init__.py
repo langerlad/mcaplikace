@@ -99,7 +99,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
 ### {analyza_data['analyza']['nazev']}
 
 #### Základní informace
-- Metoda: {analyza_data['analyza']['zvolena_metoda']}
+- Metoda: SAW
 - Popis: {analyza_data['analyza']['popis'] or 'Bez popisu'}
 
 #### Kritéria
