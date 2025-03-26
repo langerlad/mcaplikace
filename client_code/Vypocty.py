@@ -93,7 +93,7 @@ def vypocitej_vazene_hodnoty(matice, vahy):
 
 def wsm_vypocet(norm_matice, vahy, varianty):
     """
-    Provede výpočet metodou SAW (Simple Additive Weighting).
+    Provede výpočet metodou WSM (Weighted Sum Model).
     
     Args:
         norm_matice: 2D list normalizovaných hodnot
@@ -101,7 +101,7 @@ def wsm_vypocet(norm_matice, vahy, varianty):
         varianty: List názvů variant
     
     Returns:
-        dict: Výsledky analýzy metodou SAW
+        dict: Výsledky analýzy metodou WSM
     """
     vazene_hodnoty = vypocitej_vazene_hodnoty(norm_matice, vahy)
     
