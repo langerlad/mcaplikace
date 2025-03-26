@@ -74,6 +74,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
         Args:
             analyza_data: Slovník s kompletními daty analýzy
         """
+          
         # Zobrazení vstupních dat
         self._zobraz_vstupni_data(analyza_data)
         

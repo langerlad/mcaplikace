@@ -24,6 +24,11 @@ from .Dashboard_uziv_komp import Dashboard_uziv_komp
 from .Ucet_komp import Ucet_komp
 from .Vyber_analyzy_komp import Vyber_analyzy_komp
 from .Vystup_saw_komp import Vystup_saw_komp
+from .Vystup_wsm_komp import Vystup_wsm_komp
+from .Vystup_wpm_komp import Vystup_wpm_komp
+from .Vystup_topsis_komp import Vystup_topsis_komp
+from .Vystup_electre_komp import Vystup_electre_komp
+from .Vystup_mabac_komp import Vystup_mabac_komp
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
@@ -96,8 +101,38 @@ KONFIGURACE_NAVIGACE = {
         'oznaceni_nav': None,
         'kontrola_rozpracovane': False
     },
-    'saw_vystup': {
+    'vystup_saw': {
         'komponenta': Vystup_saw_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'vystup_wsm': {
+        'komponenta': Vystup_wsm_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'vystup_wpm': {
+        'komponenta': Vystup_wpm_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'vystup_topsis': {
+        'komponenta': Vystup_topsis_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'vystup_electre': {
+        'komponenta': Vystup_electre_komp,
+        'vyzaduje_prihlaseni': True,
+        'oznaceni_nav': None,
+        'kontrola_rozpracovane': False
+    },
+    'vystup_mabac': {
+        'komponenta': Vystup_mabac_komp,
         'vyzaduje_prihlaseni': True,
         'oznaceni_nav': None,
         'kontrola_rozpracovane': False

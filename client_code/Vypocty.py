@@ -1,0 +1,133 @@
+# client_code/Vypocty.py - nový modul pro sdílené výpočty
+
+import anvil.server
+import anvil.users
+import anvil.tables as tables
+import anvil.tables.query as q
+from anvil.tables import app_tables
+
+
+def normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria):
+    """
+    Provede min-max normalizaci hodnot matice.
+    
+    Args:
+        matice: 2D list s hodnotami [varianty][kriteria]
+        typy_kriterii: List typů kritérií ("max" nebo "min")
+        varianty: List názvů variant
+        kriteria: List názvů kritérií
+    
+    Returns:
+        dict: Slovník obsahující normalizovanou matici a metadata
+    """
+    norm_matice = []
+    for i in range(len(matice)):
+        norm_radek = []
+        for j in range(len(matice[0])):
+            sloupec = [row[j] for row in matice]
+            min_val = min(sloupec)
+            max_val = max(sloupec)
+            
+            if max_val == min_val:
+                norm_hodnota = 1.0  # Všechny hodnoty jsou stejné
+            else:
+                # Pro MIN kritéria obrátíme normalizaci
+                if typy_kriterii[j].lower() in ("min", "cost"):
+                    norm_hodnota = (max_val - matice[i][j]) / (max_val - min_val)
+                else:
+                    norm_hodnota = (matice[i][j] - min_val) / (max_val - min_val)
+                
+            norm_radek.append(norm_hodnota)
+        norm_matice.append(norm_radek)
+    
+    return {
+        'nazvy_variant': varianty,
+        'nazvy_kriterii': kriteria,
+        'normalizovana_matice': norm_matice
+    }
+
+def vytvor_hodnoty_matici(analyza_data):
+    """
+    Vytvoří matici s hodnotami z dat analýzy.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+    
+    Returns:
+        tuple: (matice, typy_kriterii, varianty, kriteria)
+    """
+    varianty = [v['nazev_varianty'] for v in analyza_data['varianty']]
+    kriteria = [k['nazev_kriteria'] for k in analyza_data['kriteria']]
+    typy_kriterii = [k['typ'] for k in analyza_data['kriteria']]
+    
+    # Vytvoření původní matice
+    matice = []
+    for var in analyza_data['varianty']:
+        radek = []
+        for krit in analyza_data['kriteria']:
+            klic = f"{var['nazev_varianty']}_{krit['nazev_kriteria']}"
+            hodnota = float(analyza_data['hodnoty']['matice_hodnoty'].get(klic, 0))
+            radek.append(hodnota)
+        matice.append(radek)
+    
+    return matice, typy_kriterii, varianty, kriteria
+
+def vypocitej_vazene_hodnoty(matice, vahy):
+    """
+    Vypočítá vážené hodnoty (váhy × normalizované hodnoty).
+    
+    Args:
+        matice: 2D list normalizovaných hodnot
+        vahy: List vah kritérií
+    
+    Returns:
+        2D list vážených hodnot
+    """
+    vazene_matice = []
+    for radek in matice:
+        vazene_radek = [hodnota * vahy[i] for i, hodnota in enumerate(radek)]
+        vazene_matice.append(vazene_radek)
+    return vazene_matice
+
+# Specifické funkce pro jednotlivé metody
+
+def wsm_vypocet(norm_matice, vahy, varianty):
+    """
+    Provede výpočet metodou SAW (Simple Additive Weighting).
+    
+    Args:
+        norm_matice: 2D list normalizovaných hodnot
+        vahy: List vah kritérií
+        varianty: List názvů variant
+    
+    Returns:
+        dict: Výsledky analýzy metodou SAW
+    """
+    vazene_hodnoty = vypocitej_vazene_hodnoty(norm_matice, vahy)
+    
+    # Sečtení řádků (variant) pro získání skóre
+    skore = []
+    for i, vazene_radek in enumerate(vazene_hodnoty):
+        skore.append((varianty[i], sum(vazene_radek)))
+    
+    # Seřazení podle skóre sestupně
+    serazene = sorted(skore, key=lambda x: x[1], reverse=True)
+    
+    # Vytvoření seznamu výsledků s pořadím
+    results = []
+    for poradi, (varianta, hodnota) in enumerate(serazene, 1):
+        results.append((varianta, poradi, hodnota))
+    
+    return {
+        'results': results,
+        'nejlepsi_varianta': results[0][0],
+        'nejlepsi_skore': results[0][2],
+        'nejhorsi_varianta': results[-1][0],
+        'nejhorsi_skore': results[-1][2],
+        'rozdil_skore': results[0][2] - results[-1][2]
+    }
+
+# Zde by následovaly další specifické funkce pro další metody
+# def wpm_vypocet(...):
+# def topsis_vypocet(...):
+# atd.

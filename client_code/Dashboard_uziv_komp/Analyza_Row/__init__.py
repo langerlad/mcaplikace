@@ -60,13 +60,13 @@ class Analyza_Row(Analyza_RowTemplate):
     def button_vypocet_click(self, **event_args):
         """
         Zpracuje požadavek na zobrazení výstupu analýzy.
-        Teď zobrazí dialog pro výběr metody analýzy.
+        Zobrazí dialog pro výběr metody analýzy.
         """
         try:
             # Nastavíme ID aktivní analýzy
             self.spravce.nastav_aktivni_analyzu(self.item['id'], False)
             
-            # Zobrazíme dialog pro výběr metody analýzy
+            # Zobrazí dialog pro výběr metody analýzy
             self.zobraz_dialog_vyberu_metody()
             
         except Exception as e:
@@ -83,10 +83,12 @@ class Analyza_Row(Analyza_RowTemplate):
             
             # Definice dostupných metod
             dostupne_metody = [
-                ("Simple Additive Weighting (SAW)", "SAW"),
-                # Další metody můžete přidat později
-                # ("Weighted Product Model (WPM)", "WPM"),
-                # ("TOPSIS", "TOPSIS"),
+                ("Simple Additive Weighting (SAW/WSM)", "saw"),
+                ("Weighted Sum Model (WSM)", "wsm"),
+                ("Weighted Product Model (WPM)", "wpm"),
+                ("TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)", "topsis"),
+                ("ELECTRE (Elimination Et Choix Traduisant la Réalité)", "electre"),
+                ("MABAC (Multi-Attributive Border Approximation area Comparison)", "mabac")
             ]
             
             # Vytvoření komponenty pro výběr
@@ -114,7 +116,7 @@ class Analyza_Row(Analyza_RowTemplate):
                 
                 if vybrana_metoda:
                     # Přesměrování na správnou výstupní stránku podle zvolené metody
-                    self.prechod_na_vystup(vybrana_metoda)
+                    self.presmeruj_na_vystup_metody(vybrana_metoda)
                 else:
                     alert("Nebyla vybrána žádná metoda.")
             
@@ -122,29 +124,34 @@ class Analyza_Row(Analyza_RowTemplate):
             Utils.zapsat_chybu(f"Chyba při zobrazení dialogu pro výběr metody: {str(e)}")
             alert(f"Chyba při výběru metody: {str(e)}")
             
-    def prechod_na_vystup(self, metoda):
+    def presmeruj_na_vystup_metody(self, metoda_kod):
         """
         Přesměruje na stránku s výstupem podle zvolené metody.
         
         Args:
-            metoda: Kód zvolené metody (např. "SAW")
+            metoda_kod: Kód zvolené metody (např. 'saw', 'wpm', atd.)
         """
         try:
             analyza_id = self.item['id']
             
             # Přesměrování podle metody
-            if metoda == "SAW":
-                Navigace.go('saw_vystup', analyza_id=analyza_id, metoda=metoda)
-            # Další metody můžete přidat později
-            # elif metoda == "WPM":
-            #     Navigace.go('wpm_vystup', analyza_id=analyza_id, metoda=metoda)
-            # elif metoda == "TOPSIS":
-            #     Navigace.go('topsis_vystup', analyza_id=analyza_id, metoda=metoda)
+            if metoda_kod == "saw":
+                Navigace.go('vystup_saw', analyza_id=analyza_id)
+            elif metoda_kod == "wsm":
+                Navigace.go('vystup_wsm', analyza_id=analyza_id)
+            elif metoda_kod == "wpm":
+                Navigace.go('vystup_wpm', analyza_id=analyza_id)
+            elif metoda_kod == "topsis":
+                Navigace.go('vystup_topsis', analyza_id=analyza_id)
+            elif metoda_kod == "electre":
+                Navigace.go('vystup_electre', analyza_id=analyza_id)
+            elif metoda_kod == "mabac":
+                Navigace.go('vystup_mabac', analyza_id=analyza_id)
             else:
-                alert(f"Zvolená metoda '{metoda}' zatím není implementována.")
-            
+                alert(f"Metoda '{metoda_kod}' ještě není implementována")
+                
         except Exception as e:
-            Utils.zapsat_chybu(f"Chyba při přechodu na výstup analýzy: {str(e)}")
+            Utils.zapsat_chybu(f"Chyba při přechodu na výstup metody {metoda_kod}: {str(e)}")
             alert(f"Chyba při zobrazení výstupu analýzy: {str(e)}")
 
 
