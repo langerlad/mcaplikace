@@ -59,7 +59,7 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
         self.rich_text_vstupni_data.content = "Nepřišlo žádné ID analýzy."
         self.rich_text_normalizace.content = "Není co počítat."
         self.rich_text_vysledek.content = "Není co počítat."
-        self.plot_saw_vysledek.visible = False
+        self.plot_wsm_vysledek.visible = False
 
     def _zobraz_kompletni_analyzu(self, analyza_data):
         """
@@ -102,7 +102,7 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
             Utils.zapsat_chybu(f"Chyba při výpočtu WSM výsledků: {str(e)}")
             self.rich_text_normalizace.content = f"Chyba při výpočtu: {str(e)}"
             self.rich_text_vysledek.content = f"Chyba při výpočtu: {str(e)}"
-            self.plot_saw_vysledek.visible = False
+            self.plot_wsm_vysledek.visible = False
 
     def _zobraz_vstupni_data(self, analyza_data):
         """Zobrazí vstupní data analýzy v přehledné formě."""
@@ -162,6 +162,11 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
             vahy: List vah kritérií
         """
         try:
+            # Uloží hodnoty pro použití v grafu skladby
+            self._posledni_normalizacni_vysledky = norm_vysledky
+            self._posledni_vazene_matice = vazene_matice
+            self._posledni_vahy = vahy
+            
             md = "### Normalizace hodnot metodou Min-Max\n\n"
             
             # Normalizační tabulka
@@ -286,13 +291,24 @@ WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednoduš
 """
             self.rich_text_vysledek.content = md
 
-            # Přidání grafu
-            self.plot_saw_vysledek.figure = self._vytvor_graf_vysledku(wsm_vysledky)
-            self.plot_saw_vysledek.visible = True
+            # Přidání základního grafu skóre
+            self.plot_wsm_vysledek.figure = self._vytvor_graf_vysledku(wsm_vysledky)
+            self.plot_wsm_vysledek.visible = True
+
+            # Přidání grafu skladby skóre 
+            if hasattr(self, 'plot_wsm_skladba'):
+                norm_vysledky = self._posledni_normalizacni_vysledky  #
+                vazene_matice = self._posledni_vazene_matice  
+                vahy = self._posledni_vahy  
+                
+                self.plot_wsm_skladba.figure = self._vytvor_graf_skladby_skore(
+                    norm_vysledky, vazene_matice, vahy)
+                self.plot_wsm_skladba.visible = True
+            
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při zobrazování výsledků: {str(e)}")
             self.rich_text_vysledek.content = f"Chyba při zobrazování výsledků: {str(e)}"
-            self.plot_saw_vysledek.visible = False
+            self.plot_wsm_vysledek.visible = False
 
     def _vytvor_graf_vysledku(self, wsm_vysledky):
         """
@@ -357,5 +373,73 @@ WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednoduš
                 'data': [],
                 'layout': {
                     'title': 'Chyba při vytváření grafu'
+                }
+            }
+
+    def _vytvor_graf_skladby_skore(self, norm_vysledky, vazene_matice, vahy):
+        """
+        Vytvoří skládaný sloupcový graf zobrazující příspěvek jednotlivých kritérií k celkovému skóre.
+        
+        Args:
+            norm_vysledky: Výsledky normalizace
+            vazene_matice: 2D list vážených hodnot
+            vahy: List vah kritérií
+        
+        Returns:
+            dict: Plotly figure configuration
+        """
+        try:
+            varianty = norm_vysledky['nazvy_variant']
+            kriteria = norm_vysledky['nazvy_kriterii']
+            
+            # Vytvoření datových sérií pro každé kritérium
+            data = []
+            
+            # Pro každé kritérium vytvoříme jednu sérii dat
+            for j, kriterium in enumerate(kriteria):
+                hodnoty_kriteria = [vazene_matice[i][j] for i in range(len(varianty))]
+                
+                data.append({
+                    'type': 'bar',
+                    'name': kriterium,
+                    'x': varianty,
+                    'y': hodnoty_kriteria,
+                    'text': [f'{h:.3f}' for h in hodnoty_kriteria],
+                    'textposition': 'inside',
+                })
+                
+            # Vytvoření grafu
+            fig = {
+                'data': data,
+                'layout': {
+                    'title': 'Příspěvek jednotlivých kritérií k celkovému skóre',
+                    'barmode': 'stack',  # Skládaný sloupcový graf
+                    'xaxis': {
+                        'title': 'Varianty',
+                        'tickangle': -45 if len(varianty) > 4 else 0
+                    },
+                    'yaxis': {
+                        'title': 'Skóre',
+                    },
+                    'showlegend': True,
+                    'legend': {
+                        'title': 'Kritéria',
+                        'orientation': 'h',  # Horizontální legenda
+                        'y': -0.2,  # Umístění pod grafem
+                        'x': 0.5,
+                        'xanchor': 'center'
+                    },
+                    'margin': {'t': 50, 'b': 150}  # Větší spodní okraj pro legendu
+                }
+            }
+            
+            return fig
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při vytváření grafu složení skóre: {str(e)}")
+            # Vrátíme prázdný graf
+            return {
+                'data': [],
+                'layout': {
+                    'title': 'Chyba při vytváření grafu složení skóre'
                 }
             }

@@ -61,13 +61,22 @@ components:
 - layout_properties: {grid_position: 'OYBLUF,EFBQWM'}
   name: label_analyza_vystup_4
   properties:
+    background: theme:Primary 500
     bold: true
     spacing:
       padding: [null, null, null, '20']
     text: 'Vizualizace dat:'
   type: Label
 - layout_properties: {grid_position: 'NIMODB,AQOPMW'}
-  name: plot_saw_vysledek
+  name: plot_wsm_vysledek
+  properties: {}
+  type: Plot
+- layout_properties: {grid_position: 'ZFEAOK,PUPKLH'}
+  name: spacer_1
+  properties: {height: 32}
+  type: Spacer
+- layout_properties: {grid_position: 'DIFDKB,VSQGRI'}
+  name: plot_wsm_skladba
   properties: {}
   type: Plot
 container:
