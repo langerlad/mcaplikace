@@ -131,3 +131,72 @@ def wsm_vypocet(norm_matice, vahy, varianty):
 # def wpm_vypocet(...):
 # def topsis_vypocet(...):
 # atd.
+
+def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, vyber_kriteria=0, pocet_kroku=9):
+    """
+    Provede analýzu citlivosti změnou váhy vybraného kritéria.
+    
+    Args:
+        norm_matice: 2D list normalizovaných hodnot
+        vahy: List vah kritérií
+        varianty: List názvů variant
+        kriteria: List názvů kritérií
+        vyber_kriteria: Index kritéria, jehož váha se bude měnit (výchozí je první kritérium)
+        pocet_kroku: Počet kroků při změně váhy
+        
+    Returns:
+        dict: Výsledky analýzy citlivosti
+    """
+    try:
+        # Vytvoření rozsahu vah pro analýzu citlivosti
+        vahy_rozsah = []
+        for i in range(pocet_kroku):
+            # Váha od 0.1 do 0.9
+            vahy_rozsah.append(0.1 + (0.8 * i / (pocet_kroku - 1)))
+        
+        citlivost_skore = []    # Bude obsahovat skóre pro každou kombinaci váhy a varianty
+        citlivost_poradi = []   # Bude obsahovat pořadí pro každou kombinaci váhy a varianty
+        
+        # Pro každou váhu v rozsahu
+        for vaha in vahy_rozsah:
+            # Vytvoření nových vah
+            nove_vahy = vahy.copy()
+            nove_vahy[vyber_kriteria] = vaha
+            
+            # Přepočítání vah zbývajících kritérií proporcionálně
+            zbyvajici_vaha = 1 - vaha
+            
+            suma_zbylych_vah = sum(nove_vahy) - nove_vahy[vyber_kriteria]
+            if suma_zbylych_vah > 0:
+                for i in range(len(nove_vahy)):
+                    if i != vyber_kriteria:
+                        nove_vahy[i] = (nove_vahy[i] / suma_zbylych_vah) * zbyvajici_vaha
+            
+            # Výpočet nových skóre
+            skore_variant = []
+            for i in range(len(varianty)):
+                skore = 0
+                for j in range(len(kriteria)):
+                    skore += norm_matice[i][j] * nove_vahy[j]
+                skore_variant.append(skore)
+            
+            # Určení pořadí variant pro tyto váhy
+            serazene_indexy = sorted(range(len(skore_variant)), 
+                                    key=lambda k: skore_variant[k], 
+                                    reverse=True)
+            poradi_variant = [0] * len(varianty)
+            for poradi, idx in enumerate(serazene_indexy, 1):
+                poradi_variant[idx] = poradi
+            
+            citlivost_skore.append(skore_variant)
+            citlivost_poradi.append(poradi_variant)
+        
+        return {
+            'vahy_rozsah': vahy_rozsah,
+            'citlivost_skore': citlivost_skore,
+            'citlivost_poradi': citlivost_poradi,
+            'zvolene_kriterium': kriteria[vyber_kriteria],
+            'zvolene_kriterium_index': vyber_kriteria
+        }
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu analýzy citlivosti: {str(e)}")

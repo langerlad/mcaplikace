@@ -98,11 +98,14 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
             # Zobrazení výsledků
             self._zobraz_normalizaci(norm_vysledky, vazene_matice, vahy)
             self._zobraz_vysledky(wsm_vysledky)
+            self._zobraz_citlivostni_analyzu()
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při výpočtu WSM výsledků: {str(e)}")
             self.rich_text_normalizace.content = f"Chyba při výpočtu: {str(e)}"
             self.rich_text_vysledek.content = f"Chyba při výpočtu: {str(e)}"
             self.plot_wsm_vysledek.visible = False
+            if hasattr(self, 'rich_text_citlivost'):
+                self.rich_text_citlivost.visible = False
 
     def _zobraz_vstupni_data(self, analyza_data):
         """Zobrazí vstupní data analýzy v přehledné formě."""
@@ -441,5 +444,202 @@ WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednoduš
                 'data': [],
                 'layout': {
                     'title': 'Chyba při vytváření grafu složení skóre'
+                }
+            }
+
+    def _zobraz_citlivostni_analyzu(self):
+        """
+        Zobrazí analýzu citlivosti včetně textu a grafů.
+        """
+        try:
+            # Kontrola, zda existují potřebné komponenty
+            if not hasattr(self, 'rich_text_citlivost') or not hasattr(self, 'plot_citlivost_skore') or not hasattr(self, 'plot_citlivost_poradi'):
+                Utils.zapsat_info("Komponenty pro citlivostní analýzu nejsou k dispozici")
+                return
+            
+            # Připravíme popis analýzy citlivosti
+            citlivost_md = """
+### Analýza citlivosti vah kritérií
+
+Analýza citlivosti umožňuje posoudit, jak změna váhy vybraného kritéria ovlivní celkové hodnocení variant. 
+V grafech níže je znázorněno, jak by se změnilo celkové skóre a pořadí variant při různých vahách prvního kritéria. 
+Ostatní váhy jsou vždy proporcionálně upraveny, aby součet všech vah zůstal roven 1.
+
+**Interpretace analýzy citlivosti:**
+- Pokud jsou křivky variant blízko u sebe nebo se protínají, značí to, že výsledky jsou citlivé na malé změny ve vahách.
+- Pokud jsou křivky variant vzájemně vzdálené bez protnutí, výsledek je robustní a méně citlivý na změny vah.
+- Místa, kde se křivky protínají, odpovídají hodnotám vah, při kterých dochází ke změně pořadí variant.
+
+**Praktické využití:** Pomocí analýzy citlivosti můžete identifikovat, jak by se výsledek změnil, pokud byste některému kritériu přikládali větší nebo menší důležitost.
+"""
+            self.rich_text_citlivost.content = citlivost_md
+            
+            # Získáme potřebná data pro výpočet
+            norm_matice = self._posledni_normalizacni_vysledky['normalizovana_matice']
+            varianty = self._posledni_normalizacni_vysledky['nazvy_variant']
+            kriteria = self._posledni_normalizacni_vysledky['nazvy_kriterii']
+            vahy = self._posledni_vahy
+            
+            # Výpočet analýzy citlivosti pro první kritérium
+            analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
+                norm_matice, vahy, varianty, kriteria)
+            
+            # Vytvoření grafů citlivosti
+            self.plot_citlivost_skore.figure = self._vytvor_graf_citlivosti_skore(
+                analyza_citlivosti, varianty)
+            self.plot_citlivost_skore.visible = True
+            
+            self.plot_citlivost_poradi.figure = self._vytvor_graf_citlivosti_poradi(
+                analyza_citlivosti, varianty)
+            self.plot_citlivost_poradi.visible = True
+            
+            Utils.zapsat_info("Citlivostní analýza úspěšně zobrazena")
+            
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při zobrazování analýzy citlivosti: {str(e)}")
+            if hasattr(self, 'rich_text_citlivost'):
+                self.rich_text_citlivost.content = f"Chyba při zobrazování analýzy citlivosti: {str(e)}"
+            if hasattr(self, 'plot_citlivost_skore'):
+                self.plot_citlivost_skore.visible = False
+            if hasattr(self, 'plot_citlivost_poradi'):
+                self.plot_citlivost_poradi.visible = False
+  
+    def _vytvor_graf_citlivosti_skore(self, analyza_citlivosti, varianty):
+        """
+        Vytvoří graf analýzy citlivosti pro celkové skóre.
+        
+        Args:
+            analyza_citlivosti: Výsledky analýzy citlivosti
+            varianty: Seznam názvů variant
+        
+        Returns:
+            dict: Plotly figure configuration
+        """
+        try:
+            vahy_rozsah = analyza_citlivosti['vahy_rozsah']
+            citlivost_skore = analyza_citlivosti['citlivost_skore']
+            zvolene_kriterium = analyza_citlivosti['zvolene_kriterium']
+            
+            # Vytvoření datových sérií pro každou variantu
+            data = []
+            
+            for i, varianta in enumerate(varianty):
+                # Pro každou variantu vytvoříme jednu datovou sérii
+                data.append({
+                    'type': 'scatter',
+                    'mode': 'lines+markers',
+                    'name': varianta,
+                    'x': vahy_rozsah,
+                    'y': [citlivost_skore[j][i] for j in range(len(vahy_rozsah))],
+                    'marker': {
+                        'size': 8
+                    }
+                })
+                
+            # Vytvoření grafu
+            fig = {
+                'data': data,
+                'layout': {
+                    'title': f'Analýza citlivosti - vliv změny váhy kritéria "{zvolene_kriterium}" na celkové skóre',
+                    'xaxis': {
+                        'title': f'Váha kritéria {zvolene_kriterium}',
+                        'tickformat': '.1f'
+                    },
+                    'yaxis': {
+                        'title': 'Celkové skóre WSM',
+                    },
+                    'showlegend': True,
+                    'legend': {
+                        'title': 'Varianty',
+                        'orientation': 'v',
+                    },
+                    'grid': {
+                        'rows': 1, 
+                        'columns': 1
+                    },
+                    'margin': {'t': 50, 'b': 80}
+                }
+            }
+            
+            return fig
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při vytváření grafu citlivosti skóre: {str(e)}")
+            # Vrátíme prázdný graf
+            return {
+                'data': [],
+                'layout': {
+                    'title': 'Chyba při vytváření grafu citlivosti skóre'
+                }
+            }
+    
+    def _vytvor_graf_citlivosti_poradi(self, analyza_citlivosti, varianty):
+        """
+        Vytvoří graf analýzy citlivosti pro pořadí variant.
+        
+        Args:
+            analyza_citlivosti: Výsledky analýzy citlivosti
+            varianty: Seznam názvů variant
+        
+        Returns:
+            dict: Plotly figure configuration
+        """
+        try:
+            vahy_rozsah = analyza_citlivosti['vahy_rozsah']
+            citlivost_poradi = analyza_citlivosti['citlivost_poradi']
+            zvolene_kriterium = analyza_citlivosti['zvolene_kriterium']
+            
+            # Vytvoření datových sérií pro každou variantu
+            data = []
+            
+            for i, varianta in enumerate(varianty):
+                # Pro každou variantu vytvoříme jednu datovou sérii
+                data.append({
+                    'type': 'scatter',
+                    'mode': 'lines+markers',
+                    'name': varianta,
+                    'x': vahy_rozsah,
+                    'y': [citlivost_poradi[j][i] for j in range(len(vahy_rozsah))],
+                    'marker': {
+                        'size': 8
+                    }
+                })
+                
+            # Vytvoření grafu
+            fig = {
+                'data': data,
+                'layout': {
+                    'title': f'Analýza citlivosti - vliv změny váhy kritéria "{zvolene_kriterium}" na pořadí variant',
+                    'xaxis': {
+                        'title': f'Váha kritéria {zvolene_kriterium}',
+                        'tickformat': '.1f'
+                    },
+                    'yaxis': {
+                        'title': 'Pořadí',
+                        'tickmode': 'linear',
+                        'tick0': 1,
+                        'dtick': 1,
+                        'autorange': 'reversed'  # Obrácené pořadí (1 je nahoře)
+                    },
+                    'showlegend': True,
+                    'legend': {
+                        'title': 'Varianty',
+                        'orientation': 'v',
+                    },
+                    'grid': {
+                        'rows': 1, 
+                        'columns': 1
+                    },
+                    'margin': {'t': 50, 'b': 80}
+                }
+            }
+            
+            return fig
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při vytváření grafu citlivosti pořadí: {str(e)}")
+            # Vrátíme prázdný graf
+            return {
+                'data': [],
+                'layout': {
+                    'title': 'Chyba při vytváření grafu citlivosti pořadí'
                 }
             }
