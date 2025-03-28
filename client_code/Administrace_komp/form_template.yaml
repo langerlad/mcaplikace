@@ -55,7 +55,6 @@ components:
     - {data_key: column_1, expand: false, id: JKSDUP, title: Akce, width: 107}
     - {data_key: column_2, id: VJQQOR, title: Název analýzy}
     - {data_key: column_3, id: OJLQEN, title: Popis}
-    - {data_key: column_3, id: JBZGBE, title: Metoda}
     - {data_key: column_1, id: QMVGNK, title: Vytvořeno}
     - {data_key: column_2, id: UKZPVR, title: Naposledy upraveno}
   type: DataGrid

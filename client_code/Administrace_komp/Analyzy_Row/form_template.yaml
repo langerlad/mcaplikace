@@ -2,7 +2,7 @@ components:
 - event_bindings: {click: link_zoom_click}
   layout_properties: {column: JKSDUP}
   name: link_zoom
-  properties: {icon: 'fa:search', text: Deatail}
+  properties: {icon: 'fa:search', text: Detail}
   type: Link
 - data_bindings:
   - {code: 'self.item[''nazev'']', property: text, writeback: false}
@@ -14,12 +14,6 @@ components:
   - {code: 'self.item[''popis'']', property: text, writeback: false}
   layout_properties: {column: OJLQEN}
   name: label_popis
-  properties: {}
-  type: Label
-- data_bindings:
-  - {code: 'self.item[''zvolena_metoda'']', property: text, writeback: false}
-  layout_properties: {column: JBZGBE}
-  name: label_metoda
   properties: {}
   type: Label
 - data_bindings:

@@ -102,8 +102,7 @@ class Administrace_komp(Administrace_kompTemplate):
                     'nazev': a['nazev'],
                     'popis': a['popis'],
                     'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else '',
-                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else '',
-                    'zvolena_metoda': a['zvolena_metoda']
+                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else ''
                 }
                 for a in analyzy
             ]
