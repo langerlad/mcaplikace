@@ -15,9 +15,6 @@ class Analyzy_Row(Analyzy_RowTemplate):
         self.init_components(**properties)
         self.spravce = Spravce_stavu.Spravce_stavu()
 
-        # Zoom link zobrazíme pouze pro SAW analýzy
-        self.link_zoom.visible = (self.item['zvolena_metoda'] == 'SAW')
-
     def link_zoom_click(self, **event_args):
         """Otevře výstup analýzy po kliknutí na zoom."""
         # Zkontrolujeme, zda máme k dispozici ID analýzy

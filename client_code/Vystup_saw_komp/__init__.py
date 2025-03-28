@@ -18,13 +18,19 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
     - vážených hodnot
     - finálních výsledků
     """
-    def __init__(self, analyza_id=None, **properties):
+    def __init__(self, analyza_id=None, metoda=None, **properties):
         self.init_components(**properties)
         # Inicializace správce stavu
         self.spravce = Spravce_stavu.Spravce_stavu()
         
         # Použijeme ID z parametrů nebo z aktivní analýzy ve správci
         self.analyza_id = analyza_id or self.spravce.ziskej_aktivni_analyzu()
+
+        # Uložíme zvolenou metodu
+        self.metoda = metoda or "SAW"  # Výchozí metoda je SAW
+    
+        # Aktualizujeme titulek podle zvolené metody
+        self.headline_1.text = f"Analýza metodou {self.metoda}"
         
     def form_show(self, **event_args):
         """Načte a zobrazí data analýzy při zobrazení formuláře."""
@@ -68,6 +74,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
         Args:
             analyza_data: Slovník s kompletními daty analýzy
         """
+          
         # Zobrazení vstupních dat
         self._zobraz_vstupni_data(analyza_data)
         
@@ -93,7 +100,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
 ### {analyza_data['analyza']['nazev']}
 
 #### Základní informace
-- Metoda: {analyza_data['analyza']['zvolena_metoda']}
+- Metoda: SAW
 - Popis: {analyza_data['analyza']['popis'] or 'Bez popisu'}
 
 #### Kritéria

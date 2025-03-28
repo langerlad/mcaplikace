@@ -1,4 +1,3 @@
-import anvil.secrets
 # -------------------------------------------------------
 # Modul: Sluzby_serveru
 #
@@ -167,14 +166,13 @@ def _uloz_hodnoty(analyza: Any, hodnoty: Dict) -> None:
 
 @anvil.server.callable
 @handle_errors
-def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
+def pridej_analyzu(nazev: str, popis: str) -> str:
     """
     Vytvoří novou analýzu.
     
     Args:
         nazev: Název nové analýzy
         popis: Popis analýzy
-        zvolena_metoda: Typ zvolené metody pro analýzu
         
     Returns:
         str: ID nově vytvořené analýzy
@@ -193,7 +191,6 @@ def pridej_analyzu(nazev: str, popis: str, zvolena_metoda: str) -> str:
             nazev=nazev,
             popis=popis,
             datum_vytvoreni=datetime.datetime.now(),
-            zvolena_metoda=zvolena_metoda,
             uzivatel=uzivatel,
             datum_upravy=None,
             stav=None
@@ -223,7 +220,6 @@ def nacti_analyzu(analyza_id: str) -> Dict:
         return {
             'nazev': analyza['nazev'],
             'popis': analyza['popis'],
-            'zvolena_metoda': analyza['zvolena_metoda'],
             'datum_vytvoreni': analyza['datum_vytvoreni']
         }
     except Exception as e:
@@ -333,7 +329,7 @@ def nacti_hodnoty(analyza_id: str) -> Dict:
 
 @anvil.server.callable
 @handle_errors
-def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) -> None:
+def uprav_analyzu(analyza_id: str, nazev: str, popis: str) -> None:
     """
     Upraví základní údaje analýzy.
     
@@ -341,7 +337,6 @@ def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) 
         analyza_id: ID analýzy
         nazev: Nový název
         popis: Nový popis
-        zvolena_metoda: Nová zvolená metoda
     """
     try:
         analyza = app_tables.analyza.get_by_id(analyza_id)
@@ -353,7 +348,6 @@ def uprav_analyzu(analyza_id: str, nazev: str, popis: str, zvolena_metoda: str) 
         analyza.update(
             nazev=nazev,
             popis=popis,
-            zvolena_metoda=zvolena_metoda,
             datum_upravy=datetime.datetime.now()
         )
     except Exception as e:
@@ -560,7 +554,7 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
 
     Returns:
         Dict obsahující klíče:
-            'analyza': dict s klíči 'id', 'nazev', 'popis', 'zvolena_metoda', 'datum_vytvoreni', 'datum_upravy', 'stav'
+            'analyza': dict s klíči 'id', 'nazev', 'popis', 'datum_vytvoreni', 'datum_upravy', 'stav'
             'kriteria': list slovníků s klíči 'nazev_kriteria', 'typ', 'vaha'
             'varianty': list slovníků s klíči 'nazev_varianty', 'popis_varianty'
             'hodnoty': dict, kde 'matice_hodnoty' je dict klíč = "{nazev_varianty}_{nazev_kriteria}", hodnota = float
@@ -573,7 +567,6 @@ def nacti_kompletni_analyzu(analyza_id: str) -> Dict:
         'id': analyza.get_id(),
         'nazev': analyza['nazev'],
         'popis': analyza['popis'],
-        'zvolena_metoda': analyza['zvolena_metoda'],
         'datum_vytvoreni': analyza['datum_vytvoreni'],
         'datum_upravy': analyza['datum_upravy'],
         'stav': analyza['stav']

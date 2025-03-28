@@ -57,7 +57,6 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
                     'popis': a['popis'],
                     'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else "",
                     'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else "",
-                    'zvolena_metoda': a['zvolena_metoda']
                 } for a in analyzy
             ]
             
@@ -67,12 +66,24 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
             Utils.zapsat_chybu(f"Chyba při načítání analýz: {str(e)}")
             alert(f"Chyba při načítání analýz: {str(e)}")
 
+    # def button_pridat_analyzu_click(self, **event_args):
+    #     """
+    #     Přechod na stránku pro přidání nové analýzy.
+    #     """
+    #     # Vyčistíme předchozí stav analýzy před vytvořením nové
+    #     self.spravce.vycisti_data_analyzy()
+        
+    #     # Přejdeme na stránku pro přidání analýzy
+    #     Navigace.go('pridat_analyzu')
+
+
     def button_pridat_analyzu_click(self, **event_args):
         """
         Přechod na stránku pro přidání nové analýzy.
+        Nyní přeskakuje výběr metody a směřuje přímo na formulář pro zadání dat Wizard_komp.
         """
         # Vyčistíme předchozí stav analýzy před vytvořením nové
         self.spravce.vycisti_data_analyzy()
         
-        # Přejdeme na stránku pro přidání analýzy
-        Navigace.go('pridat_analyzu')
+        # Přejdeme přímo na stránku pro zadání dat analýzy
+        Navigace.go('saw_vstup')  # Stále používáme 'saw_vstup', ale později to změníme
