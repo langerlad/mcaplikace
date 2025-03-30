@@ -16,10 +16,10 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
         self.spravce = Spravce_stavu.Spravce_stavu()
         
         # Nastavení handleru pro aktualizaci seznamu analýz
-        self.repeating_panel_dashboard.set_event_handler('x-refresh', self.load_analyzy)
+        self.repeating_panel_dashboard.set_event_handler('x-refresh', self.nahraj_analyzy)
         
         # Načtení analýz při startu
-        self.load_analyzy()
+        self.nahraj_analyzy()
     
     def form_show(self, **event_args):
         """
@@ -27,15 +27,15 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
         """
         # Ujistíme se, že máme aktuálního uživatele
         self.spravce.nacti_uzivatele()
-        self.load_analyzy()
+        self.nahraj_analyzy()
     
-    def load_analyzy(self, **event_args):
+    def nahraj_analyzy(self, **event_args):
         """
         Načte seznam analýz ze serveru a zobrazí je v UI.
         """
         Utils.zapsat_info("Načítám seznam analýz")
         try:
-            # Načtení analýz z serveru
+            # Načtení analýz z nového serverového modulu
             analyzy = anvil.server.call('nacti_analyzy_uzivatele')
             
             if not analyzy:
@@ -52,11 +52,11 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
             # Formátování dat pro repeating panel
             self.repeating_panel_dashboard.items = [
                 {
-                    'id': a.get_id(),
+                    'id': a['id'],
                     'nazev': a['nazev'],
-                    'popis': a['popis'],
+                    'popis': a.get('popis', ''),
                     'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else "",
-                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else "",
+                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else ""
                 } for a in analyzy
             ]
             
@@ -66,24 +66,12 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
             Utils.zapsat_chybu(f"Chyba při načítání analýz: {str(e)}")
             alert(f"Chyba při načítání analýz: {str(e)}")
 
-    # def button_pridat_analyzu_click(self, **event_args):
-    #     """
-    #     Přechod na stránku pro přidání nové analýzy.
-    #     """
-    #     # Vyčistíme předchozí stav analýzy před vytvořením nové
-    #     self.spravce.vycisti_data_analyzy()
-        
-    #     # Přejdeme na stránku pro přidání analýzy
-    #     Navigace.go('pridat_analyzu')
-
-
     def button_pridat_analyzu_click(self, **event_args):
         """
         Přechod na stránku pro přidání nové analýzy.
-        Nyní přeskakuje výběr metody a směřuje přímo na formulář pro zadání dat Wizard_komp.
         """
         # Vyčistíme předchozí stav analýzy před vytvořením nové
         self.spravce.vycisti_data_analyzy()
         
-        # Přejdeme přímo na stránku pro zadání dat analýzy
-        Navigace.go('saw_vstup')  # Stále používáme 'saw_vstup', ale později to změníme
+        # Přejdeme na stránku pro zadání dat analýzy
+        Navigace.go('pridat_analyzu')
