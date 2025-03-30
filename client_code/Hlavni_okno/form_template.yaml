@@ -62,7 +62,7 @@ components:
   - event_bindings: {click: link_administrace_click}
     layout_properties: {grid_position: 'TVRFCW,VPIVOW'}
     name: link_administrace
-    properties: {icon: 'fa:group', text: Administrace}
+    properties: {border: '', icon: 'fa:group', text: Administrace}
     type: Link
   layout_properties: {slot: left-nav}
   name: levy_panel

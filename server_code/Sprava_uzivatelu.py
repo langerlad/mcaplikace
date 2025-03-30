@@ -396,5 +396,12 @@ def over_admin_prava():
     if not uzivatel:
         raise ValueError("Pro tuto operaci musíte být přihlášen.")
     
-    if uzivatel.get('role') != 'admin':
+    # Match the logic in Spravce_stavu.py
+    try:
+        je_admin = uzivatel['role'] == 'admin'
+    except KeyError:
+        # Handle case where 'role' key doesn't exist
+        je_admin = False
+    
+    if not je_admin:
         raise ValueError("Pro tuto operaci potřebujete administrátorská práva.")

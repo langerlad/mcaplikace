@@ -20,9 +20,9 @@ class Administrace_komp(Administrace_kompTemplate):
         self.zvoleny_uzivatel = None
         
         # Nastavení handleru pro události z x_Row
-        self.repeating_panel_uzvatele.set_event_handler('x-uzivatel-zvolen', self.nacti_analyzy_uzivatele)
-        self.repeating_panel_uzvatele.set_event_handler('x-refresh', self.nacti_uzivatele)
-        self.repeating_panel_uzvatele.set_event_handler('x-vycisti-analyzy', self.vycisti_analyzy)
+        self.repeating_panel_uzivatele.set_event_handler('x-uzivatel-zvolen', self.nacti_analyzy_uzivatele)
+        self.repeating_panel_uzivatele.set_event_handler('x-refresh', self.nacti_uzivatele)
+        self.repeating_panel_uzivatele.set_event_handler('x-vycisti-analyzy', self.vycisti_analyzy)
         self.repeating_panel_analyzy.set_event_handler('x-zobraz-vystup', self.zobraz_vystup_analyzy)
         
         # Inicializace stavu analýz - na začátku není vybrán žádný uživatel
@@ -55,7 +55,7 @@ class Administrace_komp(Administrace_kompTemplate):
             self.data_grid_uzivatele.visible = True
             
             # Formátování dat pro repeating panel
-            self.repeating_panel_uzvatele.items = [
+            self.repeating_panel_uzivatele.items = [
                 {
                     'id': u.get_id(),
                     'email': u['email'],
@@ -80,7 +80,7 @@ class Administrace_komp(Administrace_kompTemplate):
             
             # Předáváme pouze email místo celého objektu uživatele
             analyzy = anvil.server.call('nacti_analyzy_uzivatele_admin', uzivatel['email'])
-
+    
             # Aktualizace UI - skrytí zprávy o nutnosti výběru uživatele
             self.label_vyberte_ucet.visible = False
             
@@ -98,7 +98,7 @@ class Administrace_komp(Administrace_kompTemplate):
         
             self.repeating_panel_analyzy.items = [
                 {
-                    'id': a.get_id(),
+                    'id': a['id'],  # UPDATED: Changed a.get_id() to a['id']
                     'nazev': a['nazev'],
                     'popis': a['popis'],
                     'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else '',
