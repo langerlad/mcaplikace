@@ -23,7 +23,7 @@ class Vystup_saw_komp(Vystup_saw_kompTemplate):
         self.init_components(**properties)
         # Inicializace správce stavu
         self.spravce = Spravce_stavu.Spravce_stavu()
-        
+      
         # Použijeme ID z parametrů nebo z aktivní analýzy ve správci
         self.analyza_id = analyza_id or self.spravce.ziskej_aktivni_analyzu()
 
@@ -334,3 +334,8 @@ Kde:
 3. **Součet vážených hodnot** představuje konečné skóre varianty a slouží pro určení pořadí variant.
 4. Čím vyšší je skóre, tím lépe varianta splňuje požadavky definované kritérii a jejich vahami.
 """
+
+
+
+
+

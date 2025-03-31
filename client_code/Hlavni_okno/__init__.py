@@ -16,7 +16,7 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     self.spravce = Spravce_stavu.Spravce_stavu()
     uzivatel = self.spravce.nacti_uzivatele()
     self.nastav_ucet(uzivatel)
-    
+
     Navigace.go('domu')
 
   # Odkazy z levého panelu a navbaru - řeší modul Navigace
