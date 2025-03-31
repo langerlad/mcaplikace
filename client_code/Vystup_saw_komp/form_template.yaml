@@ -52,6 +52,7 @@ components:
   properties: {}
   type: Plot
 container:
+  data_bindings: []
   event_bindings: {show: form_show}
   type: ColumnPanel
 is_package: true

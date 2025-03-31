@@ -26,19 +26,14 @@ components:
     name: button_smazat
     properties: {align: left, icon: 'fa:trash-o', role: primary-color, text: ''}
     type: Button
-  - layout_properties: {grid_position: 'KONRHK,ZPLMIT'}
-    name: label_2
-    properties: {text: 'Metoda:'}
-    type: Label
-  - data_bindings:
-    - {code: 'self.item[''zvolena_metoda'']', property: text, writeback: false}
-    layout_properties: {grid_position: 'KONRHK,ISPXCO'}
-    name: label_zvolena_metoda
-    properties: {}
-    type: Label
+  - event_bindings: {click: link_zoom_edit_click}
+    layout_properties: {grid_position: 'KONRHK,EPMXLO'}
+    name: link_zoom_edit
+    properties: {align: left, icon: 'fa:arrows-alt', text: JSON detail}
+    type: Link
   - layout_properties: {grid_position: 'KONRHK,EEHTOB'}
     name: label_1
-    properties: {text: 'Vytvořeno:'}
+    properties: {align: left, text: 'Vytvořeno:'}
     type: Label
   - data_bindings:
     - {code: 'self.item[''datum_vytvoreni'']', property: text, writeback: false}
@@ -48,7 +43,7 @@ components:
     type: Label
   - layout_properties: {grid_position: 'KONRHK,YIRKAY'}
     name: label_5
-    properties: {text: 'Naposledy upraveno:'}
+    properties: {align: left, text: 'Naposledy upraveno:'}
     type: Label
   - data_bindings:
     - {code: 'self.item[''datum_upravy'']', property: text, writeback: false}
@@ -56,19 +51,9 @@ components:
     name: label_upraveno
     properties: {}
     type: Label
-  - layout_properties: {grid_position: 'XVNFXK,IVYVCC'}
-    name: label_3
-    properties: {text: 'Popis analýzy:'}
-    type: Label
-  - data_bindings:
-    - {code: 'self.item[''popis'']', property: text, writeback: false}
-    layout_properties: {grid_position: 'XVNFXK,ZXFZZG'}
-    name: label_popis
-    properties: {}
-    type: Label
   layout_properties: {grid_position: 'XBCGQH,EGBQBF'}
   name: card_1
-  properties: {col_widths: '{"EEHTOB":10,"BBHAXF":15,"JMYEDJ":60,"ZPLMIT":10,"ISPXCO":20,"YIRKAY":15,"TAWGSN":12,"HJZWGM":9,"QJGUTW":7,"HLTDBX":10,"CUIMWE":20,"IVYVCC":10,"ZXFZZG":50}', role: card}
+  properties: {col_widths: '{"EEHTOB":10,"BBHAXF":21,"JMYEDJ":60,"YIRKAY":14,"TAWGSN":17,"HJZWGM":9,"QJGUTW":7,"HLTDBX":10,"CUIMWE":20,"EPMXLO":10}', role: card}
   type: ColumnPanel
 container:
   properties: {tooltip: Odstranit analýzu}
