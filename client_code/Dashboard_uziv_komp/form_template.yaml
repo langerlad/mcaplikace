@@ -1,5 +1,5 @@
 components:
-- layout_properties: {grid_position: 'RGDYSJ,ERROZQ'}
+- layout_properties: {grid_position: 'AVWDOK,JMMVBS'}
   name: headline_1
   properties: {bold: true, role: headline, text: Přehled analýz}
   type: Label
@@ -17,6 +17,6 @@ components:
   properties: {item_template: Dashboard_uziv_komp.Analyza_Row}
   type: RepeatingPanel
 container:
-  properties: {col_widths: '{"QWOBMY":45,"VUFSKI":15}'}
+  properties: {col_widths: '{"QWOBMY":30,"VUFSKI":30,"JMMVBS":20}'}
   type: ColumnPanel
 is_package: true

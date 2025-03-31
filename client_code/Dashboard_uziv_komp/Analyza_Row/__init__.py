@@ -147,3 +147,96 @@ class Analyza_Row(Analyza_RowTemplate):
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při přechodu na výstup metody {metoda_kod}: {str(e)}")
             alert(f"Chyba při zobrazení výstupu analýzy: {str(e)}")
+
+    def link_zoom_edit_click(self, **event_args):
+      """
+      Zobrazí a umožní editaci JSON dat analýzy.
+      """
+      # Zkontrolujeme, zda máme k dispozici ID analýzy
+      if 'id' not in self.item:
+          Utils.zapsat_chybu("CHYBA: Chybí ID analýzy")
+          return
+          
+      # Získáme ID analýzy
+      analyza_id = self.item['id']
+      Utils.zapsat_info(f"Editace JSON dat pro analýzu: {analyza_id}")
+      
+      try:
+          # Načtení dat analýzy ze serveru
+          analyza_data = anvil.server.call('nacti_analyzu', analyza_id)
+          
+          # Vytvoření bezpečného slovníku pro JSON serializaci
+          import datetime
+          def safe_serialize(obj):
+              if isinstance(obj, dict):
+                  return {k: safe_serialize(v) for k, v in obj.items()}
+              elif isinstance(obj, list):
+                  return [safe_serialize(i) for i in obj]
+              elif isinstance(obj, datetime.datetime):
+                  return obj.strftime('%Y-%m-%d %H:%M:%S')
+              elif isinstance(obj, datetime.date):
+                  return obj.strftime('%Y-%m-%d')
+              else:
+                  return obj
+                  
+          # Konverze dat
+          safe_data = safe_serialize(analyza_data)
+          
+          # Použití standardního JSON
+          import json
+          formatted_text = json.dumps(safe_data, indent=2, ensure_ascii=False)
+          
+          # Vytvoření TextArea pro editaci
+          text_area = TextArea(font="monospace", height=400, text=formatted_text)
+          
+          # Zobrazení dialogu s editorem
+          result = alert(
+              title=f"Editace JSON dat analýzy: {analyza_data.get('nazev', 'Bez názvu')}", 
+              content=text_area,
+              large=True,
+              buttons=[("Uložit změny", True), ("Zrušit", False)]
+          )
+          
+          # Pokud uživatel klikl na Uložit, pokusíme se uložit změny
+          if result:
+              try:
+                  # Parsování upraveného JSON
+                  updated_json = json.loads(text_area.text)
+                  
+                  # Ověření struktury JSON
+                  if not isinstance(updated_json, dict):
+                      raise ValueError("JSON data musí být objekt (slovník)")
+                  
+                  # Získáme původní název analýzy
+                  nazev = analyza_data.get('nazev', '')
+                  
+                  # Pro zachování kompatibility s původní strukturou extrahujeme pouze data_json část
+                  data_json = {
+                      'popis_analyzy': updated_json.get('popis_analyzy', ''),
+                      'kriteria': updated_json.get('kriteria', {}),
+                      'varianty': updated_json.get('varianty', {})
+                  }
+                  
+                  # Validace dat pomocí funkce z Utils
+                  Utils.validuj_data_analyzy(data_json)
+                  
+                  # Uložení změn na server
+                  anvil.server.call('uprav_analyzu', analyza_id, nazev, data_json)
+                  
+                  # Informujeme uživatele o úspěchu
+                  alert("Změny byly úspěšně uloženy.")
+                  
+                  # Obnovení seznamu analýz pro aktualizaci UI
+                  self.parent.raise_event('x-refresh')
+                  
+              except json.JSONDecodeError as e:
+                  alert(f"Neplatný JSON formát: {str(e)}")
+              except ValueError as e:
+                  alert(f"Chyba validace dat: {str(e)}")
+              except Exception as e:
+                  Utils.zapsat_chybu(f"Chyba při ukládání JSON dat: {str(e)}")
+                  alert(f"Chyba při ukládání změn: {str(e)}")
+                
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při načítání dat analýzy: {str(e)}")
+          alert(f"Chyba při načítání dat analýzy: {str(e)}")
