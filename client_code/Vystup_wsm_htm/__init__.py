@@ -91,7 +91,7 @@ class Vystup_wsm_htm(Vystup_wsm_htmTemplate):
                 "WSM"
             )
             
-            # Vložení stylů a skriptů do HTML pomocí modulu mcapp_styly
+            # Vložení stylů do HTML
             self.html_1.html = mcapp_styly.vloz_styly_do_html(html_obsah)
             
             # Vytvoření a nastavení grafů

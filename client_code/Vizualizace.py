@@ -988,22 +988,43 @@ def vytvor_html_vysledek_analyzy(analyza_data, wsm_vysledky, metoda="WSM"):
     return html
 
 # Doplnění modulu Vizualizace.py o pokročilejší generátory HTML obsahu
+#
+#
+#
+#
+#
+#
+#
+#
+################################xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-def vytvor_html_sekci_metodologie(metoda="WSM"):
+# Aktualizované funkce pro modul Vizualizace.py
+# Nahrazuje JavaScript řešení pro skrývání obsahu pomocí čistého CSS
+
+def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
     """
-    Vytvoří HTML sekci s popisem metodologie pro danou metodu analýzy.
+    Vytvoří HTML sekci s popisem metodologie pro danou metodu analýzy, používá CSS místo JavaScriptu.
     
     Args:
         metoda: Kód metody analýzy ("WSM", "WPM", "TOPSIS", atd.)
+        default_open: Zda má být sekce ve výchozím stavu otevřená
         
     Returns:
         str: HTML kód s metodologií
     """
+    # Vytvoření unikátního ID pro tento přepínač
+    toggle_id = f"metodologie-{metoda.lower()}"
+    default_class = "default-open" if default_open else ""
+    
     if metoda.upper() == "WSM":
-        return """
-        <button class="collapsible default-expanded">O metodě WSM (Weighted Sum Model) <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
-        <div class="collapsible-content expanded">
-            <div style="padding: 15px 0;">
+        return f"""
+        <label for="{toggle_id}" class="details-toggle {default_class}">
+            O metodě WSM (Weighted Sum Model) 
+            <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+        </label>
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+        <div class="details-content">
+            <div style="padding: 0;">
                 <p>WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednodušších a nejpoužívanějších metod vícekriteriálního rozhodování. Je založena na lineárním vážení kritérií.</p>
                 
                 <h4>Postup metody WSM/SAW:</h4>
@@ -1032,10 +1053,14 @@ def vytvor_html_sekci_metodologie(metoda="WSM"):
         </div>
         """
     elif metoda.upper() == "WPM":
-        return """
-        <button class="collapsible default-expanded">O metodě WPM (Weighted Product Model) <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
-        <div class="collapsible-content expanded">
-            <div style="padding: 15px 0;">
+        return f"""
+        <label for="{toggle_id}" class="details-toggle {default_class}">
+            O metodě WPM (Weighted Product Model)
+            <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+        </label>
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+        <div class="details-content">
+            <div style="padding: 0;">
                 <p>WPM je metoda vícekriteriálního rozhodování, která na rozdíl od WSM používá násobení místo sčítání.</p>
                 
                 <h4>Postup metody WPM:</h4>
@@ -1064,40 +1089,274 @@ def vytvor_html_sekci_metodologie(metoda="WSM"):
         """
     else:
         return f"""
-        <button class="collapsible default-expanded">O metodě {metoda} <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
-        <div class="collapsible-content expanded">
-            <div style="padding: 15px 0;">
+        <label for="{toggle_id}" class="details-toggle {default_class}">
+            O metodě {metoda}
+            <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+        </label>
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+        <div class="details-content">
+            <div style="padding: 0;">
                 <p>Detailní informace o metodě {metoda}.</p>
             </div>
         </div>
         """
 
-def vytvor_html_sekci_normalizace():
+def vytvor_html_sekci_normalizace(default_open=False):
     """
-    Vytvoří HTML sekci s vysvětlením normalizace hodnot.
+    Vytvoří HTML sekci s vysvětlením normalizace hodnot, používá CSS místo JavaScriptu.
     
+    Args:
+        default_open: Zda má být sekce ve výchozím stavu otevřená
+        
     Returns:
         str: HTML kód s vysvětlením normalizace
     """
-    return """
-    <div class="mcapp-explanation">
-        <h4>Princip metody Min-Max normalizace:</h4>
-        <div class="mcapp-formula-box">
-            <div class="mcapp-formula-row">
-                <span class="mcapp-formula-label">Pro maximalizační kritéria (čím více, tím lépe):</span>
-                <span class="mcapp-formula-content">Normalizovaná hodnota = (hodnota - minimum) / (maximum - minimum)</span>
+    # Vytvoření unikátního ID pro tento přepínač
+    toggle_id = "normalizace-info"
+    default_class = "default-open" if default_open else ""
+    
+    return f"""
+    <label for="{toggle_id}" class="details-toggle {default_class}">
+        Informace o normalizaci hodnot
+        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+    </label>
+    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+    <div class="details-content">
+        <div style="padding: 0;">
+            <div class="mcapp-explanation">
+                <h4>Princip metody Min-Max normalizace:</h4>
+                <div class="mcapp-formula-box">
+                    <div class="mcapp-formula-row">
+                        <span class="mcapp-formula-label">Pro maximalizační kritéria (čím více, tím lépe):</span>
+                        <span class="mcapp-formula-content">Normalizovaná hodnota = (hodnota - minimum) / (maximum - minimum)</span>
+                    </div>
+                    <div class="mcapp-formula-row">
+                        <span class="mcapp-formula-label">Pro minimalizační kritéria (čím méně, tím lépe):</span>
+                        <span class="mcapp-formula-content">Normalizovaná hodnota = (maximum - hodnota) / (maximum - minimum)</span>
+                    </div>
+                </div>
+                <div class="mcapp-note">
+                    <p>Kde minimum je nejmenší hodnota v daném kritériu a maximum je největší hodnota v daném kritériu.</p>
+                    <p>Výsledkem jsou hodnoty v intervalu [0,1], kde 1 je vždy nejlepší hodnota (ať už jde o maximalizační či minimalizační kritérium).</p>
+                </div>
             </div>
-            <div class="mcapp-formula-row">
-                <span class="mcapp-formula-label">Pro minimalizační kritéria (čím méně, tím lépe):</span>
-                <span class="mcapp-formula-content">Normalizovaná hodnota = (maximum - hodnota) / (maximum - minimum)</span>
-            </div>
-        </div>
-        <div class="mcapp-note">
-            <p>Kde minimum je nejmenší hodnota v daném kritériu a maximum je největší hodnota v daném kritériu.</p>
-            <p>Výsledkem jsou hodnoty v intervalu [0,1], kde 1 je vždy nejlepší hodnota (ať už jde o maximalizační či minimalizační kritérium).</p>
         </div>
     </div>
     """
+
+def vytvor_sekci_postupu(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
+    """
+    Vytvoří HTML sekci s postupem výpočtu s použitím CSS místo JavaScriptu.
+    
+    Args:
+        norm_matice: Normalizovaná matice hodnot
+        vazene_matice: Vážená matice hodnot
+        vahy: Seznam vah kritérií
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií (max/min)
+            
+    Returns:
+        str: HTML kód pro sekci postupu výpočtu
+    """
+    # Vysvětlení normalizace pomocí CSS
+    vysvetleni_norm_html = vytvor_html_sekci_normalizace(default_open=False)
+    
+    # Normalizační tabulka
+    normalizace_html = vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
+    
+    # Tabulka vah
+    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    
+    # Tabulka vážených hodnot
+    vazene_html = vytvor_html_tabulku_vazenych_hodnot(vazene_matice, varianty, kriteria)
+
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-process">
+        <h2>Postup zpracování dat</h2>
+        {vysvetleni_norm_html}
+        <div class="mcapp-card">
+            <h3>Krok 1: Normalizace hodnot</h3>
+            {normalizace_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Vážení hodnot a výpočet skóre</h3>
+            {vahy_html}
+            {vazene_html}
+        </div>
+    </div>
+    """
+
+def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
+    """
+    Vytvoří kompletní HTML strukturu pro zobrazení výsledků analýzy s použitím CSS místo JavaScriptu.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy v JSON formátu
+        vysledky_vypoctu: Slovník s výsledky výpočtů
+        metoda: Kód metody analýzy
+        
+    Returns:
+        str: HTML kód pro zobrazení
+    """
+    # Extrakce dat v požadovaném formátu
+    varianty = vysledky_vypoctu['norm_vysledky']['nazvy_variant']
+    kriteria = vysledky_vypoctu['norm_vysledky']['nazvy_kriterii']
+    
+    # Vytvoření částí HTML dokumentu
+    hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
+    metodologie_html = vytvor_html_sekci_metodologie(metoda, default_open=True)
+    vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
+    postup_html = vytvor_sekci_postupu(
+        vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
+        vysledky_vypoctu['vazene_matice'],
+        vysledky_vypoctu['vahy'],
+        varianty,
+        kriteria,
+        vysledky_vypoctu['typy_kriterii']
+    )
+    vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
+    
+    # Sloučení všech částí do jednoho dokumentu
+    html_obsah = f"""
+    <div class="mcapp-wsm-results">
+        {hlavicka_html}
+        <div class="mcapp-card">
+            {metodologie_html}
+        </div>
+        {vstupni_data_html}
+        {postup_html}
+        {vysledky_html}
+    </div>
+    """
+    
+    return html_obsah
+
+
+# Doplnění modulu Vizualizace.py o pokročilejší generátory HTML obsahu
+#
+#
+#
+#
+#
+#
+#
+#
+################################xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+
+
+# def vytvor_html_sekci_metodologie(metoda="WSM"):
+#     """
+#     Vytvoří HTML sekci s popisem metodologie pro danou metodu analýzy.
+    
+#     Args:
+#         metoda: Kód metody analýzy ("WSM", "WPM", "TOPSIS", atd.)
+        
+#     Returns:
+#         str: HTML kód s metodologií
+#     """
+#     if metoda.upper() == "WSM":
+#         return """
+#         <button class="collapsible default-expanded">O metodě WSM (Weighted Sum Model) <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
+#         <div class="collapsible-content expanded">
+#             <div style="padding: 15px 0;">
+#                 <p>WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednodušších a nejpoužívanějších metod vícekriteriálního rozhodování. Je založena na lineárním vážení kritérií.</p>
+                
+#                 <h4>Postup metody WSM/SAW:</h4>
+#                 <ol>
+#                     <li><strong>Sběr dat</strong> - Definice variant, kritérií a hodnocení variant podle kritérií.</li>
+#                     <li><strong>Normalizace hodnot</strong> - Převod různorodých hodnot kritérií na srovnatelnou škálu 0 až 1 pomocí metody Min-Max.</li>
+#                     <li><strong>Vážení hodnot</strong> - Vynásobení normalizovaných hodnot vahami kritérií.</li>
+#                     <li><strong>Výpočet celkového skóre</strong> - Sečtení vážených hodnot pro každou variantu.</li>
+#                     <li><strong>Seřazení variant</strong> - Seřazení variant podle celkového skóre (vyšší je lepší).</li>
+#                 </ol>
+                
+#                 <h4>Výhody metody:</h4>
+#                 <ul>
+#                     <li>Jednoduchá a intuitivní</li>
+#                     <li>Transparentní výpočty a výsledky</li>
+#                     <li>Snadná interpretace</li>
+#                 </ul>
+                
+#                 <h4>Omezení metody:</h4>
+#                 <ul>
+#                     <li>Předpokládá lineární užitek</li>
+#                     <li>Není vhodná pro silně konfliktní kritéria</li>
+#                     <li>Méně robustní vůči extrémním hodnotám než některé pokročilejší metody</li>
+#                 </ul>
+#             </div>
+#         </div>
+#         """
+#     elif metoda.upper() == "WPM":
+#         return """
+#         <button class="collapsible default-expanded">O metodě WPM (Weighted Product Model) <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
+#         <div class="collapsible-content expanded">
+#             <div style="padding: 15px 0;">
+#                 <p>WPM je metoda vícekriteriálního rozhodování, která na rozdíl od WSM používá násobení místo sčítání.</p>
+                
+#                 <h4>Postup metody WPM:</h4>
+#                 <ol>
+#                     <li><strong>Sběr dat</strong> - Definice variant, kritérií a hodnocení variant podle kritérií.</li>
+#                     <li><strong>Určení vah kritérií</strong> - Přiřazení vah jednotlivým kritériím.</li>
+#                     <li><strong>Porovnání variant</strong> - Výpočet poměrů hodnot variant, umocněných na váhy kritérií.</li>
+#                     <li><strong>Výpočet celkového skóre</strong> - Násobení těchto poměrů pro každou variantu.</li>
+#                     <li><strong>Seřazení variant</strong> - Seřazení variant podle celkového skóre.</li>
+#                 </ol>
+                
+#                 <h4>Výhody metody:</h4>
+#                 <ul>
+#                     <li>Eliminuje potřebu normalizace jednotek</li>
+#                     <li>Méně citlivá na extrémní hodnoty</li>
+#                     <li>Výhodnější pro některé typy rozhodovacích problémů</li>
+#                 </ul>
+                
+#                 <h4>Omezení metody:</h4>
+#                 <ul>
+#                     <li>Složitější interpretace výsledků</li>
+#                     <li>Problémy s nulovými hodnotami</li>
+#                 </ul>
+#             </div>
+#         </div>
+#         """
+#     else:
+#         return f"""
+#         <button class="collapsible default-expanded">O metodě {metoda} <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
+#         <div class="collapsible-content expanded">
+#             <div style="padding: 15px 0;">
+#                 <p>Detailní informace o metodě {metoda}.</p>
+#             </div>
+#         </div>
+#         """
+
+# def vytvor_html_sekci_normalizace():
+#     """
+#     Vytvoří HTML sekci s vysvětlením normalizace hodnot.
+    
+#     Returns:
+#         str: HTML kód s vysvětlením normalizace
+#     """
+#     return """
+#     <div class="mcapp-explanation">
+#         <h4>Princip metody Min-Max normalizace:</h4>
+#         <div class="mcapp-formula-box">
+#             <div class="mcapp-formula-row">
+#                 <span class="mcapp-formula-label">Pro maximalizační kritéria (čím více, tím lépe):</span>
+#                 <span class="mcapp-formula-content">Normalizovaná hodnota = (hodnota - minimum) / (maximum - minimum)</span>
+#             </div>
+#             <div class="mcapp-formula-row">
+#                 <span class="mcapp-formula-label">Pro minimalizační kritéria (čím méně, tím lépe):</span>
+#                 <span class="mcapp-formula-content">Normalizovaná hodnota = (maximum - hodnota) / (maximum - minimum)</span>
+#             </div>
+#         </div>
+#         <div class="mcapp-note">
+#             <p>Kde minimum je nejmenší hodnota v daném kritériu a maximum je největší hodnota v daném kritériu.</p>
+#             <p>Výsledkem jsou hodnoty v intervalu [0,1], kde 1 je vždy nejlepší hodnota (ať už jde o maximalizační či minimalizační kritérium).</p>
+#         </div>
+#     </div>
+#     """
 
 def vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria):
     """
@@ -1489,54 +1748,54 @@ def vytvor_hlavicku_analyzy(nazev_analyzy, metoda="WSM"):
     </div>
     """
 
-def vytvor_sekci_postupu(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
-    """
-    Vytvoří HTML sekci s postupem výpočtu.
+# def vytvor_sekci_postupu(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
+#     """
+#     Vytvoří HTML sekci s postupem výpočtu.
     
-    Args:
-        norm_matice: Normalizovaná matice hodnot
-        vazene_matice: Vážená matice hodnot
-        vahy: Seznam vah kritérií
-        varianty: Seznam názvů variant
-        kriteria: Seznam názvů kritérií
-        typy_kriterii: Seznam typů kritérií (max/min)
+#     Args:
+#         norm_matice: Normalizovaná matice hodnot
+#         vazene_matice: Vážená matice hodnot
+#         vahy: Seznam vah kritérií
+#         varianty: Seznam názvů variant
+#         kriteria: Seznam názvů kritérií
+#         typy_kriterii: Seznam typů kritérií (max/min)
             
-    Returns:
-        str: HTML kód pro sekci postupu výpočtu
-    """
-    # Vysvětlení normalizace
-    vysvetleni_norm_html = vytvor_html_sekci_normalizace()
+#     Returns:
+#         str: HTML kód pro sekci postupu výpočtu
+#     """
+#     # Vysvětlení normalizace
+#     vysvetleni_norm_html = vytvor_html_sekci_normalizace()
     
-    # Normalizační tabulka
-    normalizace_html = vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
+#     # Normalizační tabulka
+#     normalizace_html = vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
     
-    # Tabulka vah
-    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+#     # Tabulka vah
+#     vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
     
-    # Tabulka vážených hodnot
-    vazene_html = vytvor_html_tabulku_vazenych_hodnot(vazene_matice, varianty, kriteria)
+#     # Tabulka vážených hodnot
+#     vazene_html = vytvor_html_tabulku_vazenych_hodnot(vazene_matice, varianty, kriteria)
 
-    # Sloučení do sekce
-    return f"""
-    <div class="mcapp-section mcapp-process">
-        <h2>Postup zpracování dat</h2>
-        <button class="collapsible">Informace o normalizaci hodnot <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
-        <div class="collapsible-content">
-            <div style="padding: 15px 0;">
-                {vysvetleni_norm_html}
-            </div>
-        </div>
-        <div class="mcapp-card">
-            <h3>Krok 1: Normalizace hodnot</h3>
-            {normalizace_html}
-        </div>
-        <div class="mcapp-card">
-            <h3>Krok 2: Vážení hodnot a výpočet skóre</h3>
-            {vahy_html}
-            {vazene_html}
-        </div>
-    </div>
-    """
+#     # Sloučení do sekce
+#     return f"""
+#     <div class="mcapp-section mcapp-process">
+#         <h2>Postup zpracování dat</h2>
+#         <button class="collapsible">Informace o normalizaci hodnot <span style="font-size: 12px; color: #757575;">Kliknutím zobrazíte/skryjete</span></button>
+#         <div class="collapsible-content">
+#             <div style="padding: 15px 0;">
+#                 {vysvetleni_norm_html}
+#             </div>
+#         </div>
+#         <div class="mcapp-card">
+#             <h3>Krok 1: Normalizace hodnot</h3>
+#             {normalizace_html}
+#         </div>
+#         <div class="mcapp-card">
+#             <h3>Krok 2: Vážení hodnot a výpočet skóre</h3>
+#             {vahy_html}
+#             {vazene_html}
+#         </div>
+#     </div>
+#     """
 
 def vytvor_sekci_vysledku(wsm_vysledky):
     """
@@ -1565,47 +1824,48 @@ def vytvor_sekci_vysledku(wsm_vysledky):
     </div>
     """
 
-def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
-    """
-    Vytvoří kompletní HTML strukturu pro zobrazení výsledků analýzy.
+# def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
+#     """
+#     Vytvoří kompletní HTML strukturu pro zobrazení výsledků analýzy.
     
-    Args:
-        analyza_data: Slovník s daty analýzy v JSON formátu
-        vysledky_vypoctu: Slovník s výsledky výpočtů
-        metoda: Kód metody analýzy
+#     Args:
+#         analyza_data: Slovník s daty analýzy v JSON formátu
+#         vysledky_vypoctu: Slovník s výsledky výpočtů
+#         metoda: Kód metody analýzy
         
-    Returns:
-        str: HTML kód pro zobrazení
-    """
-    # Extrakce dat v požadovaném formátu
-    varianty = vysledky_vypoctu['norm_vysledky']['nazvy_variant']
-    kriteria = vysledky_vypoctu['norm_vysledky']['nazvy_kriterii']
+#     Returns:
+#         str: HTML kód pro zobrazení
+#     """
+#     # Extrakce dat v požadovaném formátu
+#     varianty = vysledky_vypoctu['norm_vysledky']['nazvy_variant']
+#     kriteria = vysledky_vypoctu['norm_vysledky']['nazvy_kriterii']
     
-    # Vytvoření částí HTML dokumentu
-    hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
-    metodologie_html = vytvor_html_sekci_metodologie(metoda)
-    vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
-    postup_html = vytvor_sekci_postupu(
-        vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
-        vysledky_vypoctu['vazene_matice'],
-        vysledky_vypoctu['vahy'],
-        varianty,
-        kriteria,
-        vysledky_vypoctu['typy_kriterii']
-    )
-    vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
+#     # Vytvoření částí HTML dokumentu
+#     hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
+#     metodologie_html = vytvor_html_sekci_metodologie(metoda)
+#     vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
+#     postup_html = vytvor_sekci_postupu(
+#         vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
+#         vysledky_vypoctu['vazene_matice'],
+#         vysledky_vypoctu['vahy'],
+#         varianty,
+#         kriteria,
+#         vysledky_vypoctu['typy_kriterii']
+#     )
+#     vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
     
-    # Sloučení všech částí do jednoho dokumentu
-    html_obsah = f"""
-    <div class="mcapp-wsm-results">
-        {hlavicka_html}
-        <div class="mcapp-card">
-            {metodologie_html}
-        </div>
-        {vstupni_data_html}
-        {postup_html}
-        {vysledky_html}
-    </div>
-    """
+#     # Sloučení všech částí do jednoho dokumentu
+#     html_obsah = f"""
+#     <div class="mcapp-wsm-results">
+#         {hlavicka_html}
+#         <div class="mcapp-card">
+#             {metodologie_html}
+#         </div>
+#         {vstupni_data_html}
+#         {postup_html}
+#         {vysledky_html}
+#     </div>
+#     """
     
-    return html_obsah
+#     return html_obsah
+
