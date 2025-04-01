@@ -256,6 +256,12 @@ def ziskej_css_styly():
     }
 
     /* CSS řešení pro skrývání/zobrazování obsahu (náhrada za JavaScript) */
+    /* Skryjeme samotný checkbox */
+    .toggle-checkbox {
+      display: none;
+    }
+    
+    /* Styly pro label, který funguje jako tlačítko */
     .details-toggle {
       display: block;
       width: 100%;
@@ -270,17 +276,20 @@ def ziskej_css_styly():
       position: relative;
     }
     
+    /* Hover efekt nad "tlačítkem" */
     .details-toggle:hover {
       background-color: #E0E0E0;
     }
     
-    .details-toggle::after {
+    /* Trojúhelník (dolů) vpravo ve výchozím stavu */
+    .toggle-checkbox + .details-toggle::after {
       content: '▼';
       position: absolute;
       right: 15px;
       transition: transform 0.3s;
     }
     
+    /* Obsah, který se má skrývat/zobrazovat */
     .details-content {
       background-color: white;
       padding: 15px;
@@ -289,40 +298,37 @@ def ziskej_css_styly():
       overflow: hidden;
     }
     
-    /* Skrytý obsah - používá se společně s checkbox */
-    .toggle-checkbox {
+    /* Výchozí stav - obsah je skrytý */
+    .toggle-checkbox + .details-toggle + .details-content {
       display: none;
     }
     
-    /* Výchozí stav - skrytý obsah */
-    .toggle-checkbox + .details-content {
-      display: none;
-    }
-    
-    /* Po kliknutí - zobrazený obsah */
-    .toggle-checkbox:checked + .details-content {
+    /* Po kliknutí (checkbox zaškrtnutý) - zobrazit obsah */
+    .toggle-checkbox:checked + .details-toggle + .details-content {
       display: block;
     }
     
-    /* Rotace šipky při rozbalení */
-    .toggle-checkbox:checked ~ .details-toggle::after {
+    /* Rotace trojúhelníku při rozbalení */
+    .toggle-checkbox:checked + .details-toggle::after {
       transform: rotate(180deg);
     }
     
-    /* Speciální třída pro otevřený obsah ve výchozím stavu */
-    .default-open + .details-content {
-      display: block;
-    }
-    
-    .default-open::after {
-      transform: rotate(180deg);
-    }
-    
-    /* Malý popisek pro rozbalovací prvky */
+    /* Třída pro malé doplňkové popisky */
     .toggle-hint {
       font-size: 12px;
       color: #757575;
       margin-left: 10px;
+    }
+    
+    /* Varianta pro “výchozí stav otevřeno” (volitelné) */
+    .default-open {
+      /* Pokud chcete nějaký styl pro label, když je defaultně rozbalený */
+    }
+    .default-open + .details-content {
+      display: block;
+    }
+    .default-open::after {
+      transform: rotate(180deg);
     }
     """
 

@@ -1018,11 +1018,11 @@ def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
     
     if metoda.upper() == "WSM":
         return f"""
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <label for="{toggle_id}" class="details-toggle {default_class}">
             O metodě WSM (Weighted Sum Model) 
             <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
         </label>
-        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <div class="details-content">
             <div style="padding: 0;">
                 <p>WSM, také známý jako Simple Additive Weighting (SAW), je jedna z nejjednodušších a nejpoužívanějších metod vícekriteriálního rozhodování. Je založena na lineárním vážení kritérií.</p>
@@ -1054,11 +1054,11 @@ def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
         """
     elif metoda.upper() == "WPM":
         return f"""
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <label for="{toggle_id}" class="details-toggle {default_class}">
             O metodě WPM (Weighted Product Model)
             <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
         </label>
-        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <div class="details-content">
             <div style="padding: 0;">
                 <p>WPM je metoda vícekriteriálního rozhodování, která na rozdíl od WSM používá násobení místo sčítání.</p>
@@ -1116,11 +1116,11 @@ def vytvor_html_sekci_normalizace(default_open=False):
     default_class = "default-open" if default_open else ""
     
     return f"""
+    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
     <label for="{toggle_id}" class="details-toggle {default_class}">
         Informace o normalizaci hodnot
         <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
     </label>
-    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
     <div class="details-content">
         <div style="padding: 0;">
             <div class="mcapp-explanation">
