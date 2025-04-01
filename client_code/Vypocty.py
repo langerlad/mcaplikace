@@ -363,3 +363,139 @@ def wpm_vypocet(matice, vahy, typy_kriterii, varianty, kriteria):
         }
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu WPM: {str(e)}")
+
+# Doplnění modulu Vypocty.py o centralizovanou funkci pro výpočty WSM
+
+def vypocitej_wsm_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet WSM analýzy z dat.
+    Provádí všechny kroky WSM analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s normalizovanou maticí, váženými hodnotami a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Normalizace matice pomocí min-max metody
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        
+        # 3. Výpočet vážených hodnot
+        vazene_matice = vypocitej_vazene_hodnoty(
+            norm_vysledky['normalizovana_matice'], 
+            vahy
+        )
+        
+        # 4. Výpočet WSM výsledků
+        wsm_vysledky = wsm_vypocet(
+            norm_vysledky['normalizovana_matice'], 
+            vahy, 
+            varianty
+        )
+        
+        # 5. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,
+            'vazene_matice': vazene_matice,
+            'vahy': vahy,
+            'wsm_vysledky': wsm_vysledky,
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'metoda': 'WSM',
+            'popis_metody': 'Weighted Sum Model'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu WSM analýzy: {str(e)}")
+
+def validuj_vstupni_data_analyzy(analyza_data):
+    """
+    Validuje vstupní data analýzy před výpočtem.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        tuple: (je_validni, chybova_zprava)
+    """
+    # Kontrola povinných klíčů
+    if not isinstance(analyza_data, dict):
+        return False, "Data analýzy musí být slovník"
+    
+    if not all(key in analyza_data for key in ["kriteria", "varianty"]):
+        return False, "Data analýzy musí obsahovat 'kriteria' a 'varianty'"
+    
+    # Kontrola kritérií
+    if not analyza_data["kriteria"]:
+        return False, "Analýza musí obsahovat alespoň jedno kritérium"
+    
+    # Kontrola variant
+    if not analyza_data["varianty"]:
+        return False, "Analýza musí obsahovat alespoň jednu variantu"
+    
+    # Kontrola vah kritérií
+    vahy = [float(k_data['vaha']) for k_data in analyza_data["kriteria"].values()]
+    soucet_vah = sum(vahy)
+    if abs(soucet_vah - 1.0) > 0.001:
+        return False, f"Součet vah musí být 1.0 (aktuálně: {soucet_vah:.3f})"
+    
+    # Kontrola hodnot variant
+    for var_nazev, var_data in analyza_data["varianty"].items():
+        for krit_nazev in analyza_data["kriteria"].keys():
+            if krit_nazev not in var_data and krit_nazev != "popis_varianty":
+                return False, f"Varianta '{var_nazev}' nemá hodnotu pro kritérium '{krit_nazev}'"
+            elif krit_nazev in var_data and krit_nazev != "popis_varianty":
+                # Kontrola, že hodnota je číslo
+                try:
+                    float(var_data[krit_nazev])
+                except (ValueError, TypeError):
+                    return False, f"Hodnota pro variantu '{var_nazev}', kritérium '{krit_nazev}' musí být číslo"
+    
+    return True, ""
+
+def vypocitej_analyzu(analyza_data, metoda="wsm"):
+    """
+    Obecná funkce pro výpočet libovolné metody vícekriteriální analýzy.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy v JSON formátu
+        metoda: Kód metody analýzy ('wsm', 'wpm', 'topsis', 'electre', 'mabac')
+        
+    Returns:
+        dict: Výsledky analýzy ve standardizovaném formátu
+        
+    Raises:
+        ValueError: Pokud metoda není podporována
+    """
+    metoda = metoda.lower()
+    
+    if metoda == "wsm":
+        return vypocitej_wsm_analyzu(analyza_data)
+    elif metoda == "wpm":
+        # Zde by byla implementace pro WPM
+        raise ValueError("Metoda WPM není v této verzi implementována")
+    elif metoda == "topsis":
+        # Zde by byla implementace pro TOPSIS
+        raise ValueError("Metoda TOPSIS není v této verzi implementována")
+    elif metoda == "electre":
+        # Zde by byla implementace pro ELECTRE
+        raise ValueError("Metoda ELECTRE není v této verzi implementována")
+    elif metoda == "mabac":
+        # Zde by byla implementace pro MABAC
+        raise ValueError("Metoda MABAC není v této verzi implementována")
+    else:
+        raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")

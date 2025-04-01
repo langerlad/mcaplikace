@@ -391,3 +391,4 @@ class Spravce_stavu:
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při ukládání analýzy: {str(e)}")
             return False
+

@@ -21,13 +21,11 @@ from .Nastaveni_komp import Nastaveni_komp
 from .HERO_komp import HERO_komp
 from .Dashboard_uziv_komp import Dashboard_uziv_komp
 from .Ucet_komp import Ucet_komp
-from .Vystup_saw_komp import Vystup_saw_komp
 from .Vystup_wsm_komp import Vystup_wsm_komp
 from .Vystup_wpm_komp import Vystup_wpm_komp
 from .Vystup_topsis_komp import Vystup_topsis_komp
 from .Vystup_electre_komp import Vystup_electre_komp
 from .Vystup_mabac_komp import Vystup_mabac_komp
-from .Vystup_wsm_htm import Vystup_wsm_htm
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
@@ -90,12 +88,6 @@ KONFIGURACE_NAVIGACE = {
     },
     'saw_vstup': {
         'komponenta': Wizard_komp,
-        'vyzaduje_prihlaseni': True,
-        'oznaceni_nav': None,
-        'kontrola_rozpracovane': False
-    },
-    'vystup_saw': {
-        'komponenta': Vystup_wsm_htm,
         'vyzaduje_prihlaseni': True,
         'oznaceni_nav': None,
         'kontrola_rozpracovane': False
