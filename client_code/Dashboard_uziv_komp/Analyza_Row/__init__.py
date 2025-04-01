@@ -77,7 +77,6 @@ class Analyza_Row(Analyza_RowTemplate):
         try:
             # Definice dostupných metod
             dostupne_metody = [
-                ("Simple Additive Weighting (SAW/WSM)", "saw"),
                 ("Weighted Sum Model (WSM)", "wsm"),
                 ("Weighted Product Model (WPM)", "wpm"),
                 ("TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)", "topsis"),
@@ -129,9 +128,7 @@ class Analyza_Row(Analyza_RowTemplate):
             analyza_id = self.item['id']
             
             # Přesměrování podle metody
-            if metoda_kod == "saw":
-                Navigace.go('vystup_saw', analyza_id=analyza_id)
-            elif metoda_kod == "wsm":
+            if metoda_kod == "wsm":
                 Navigace.go('vystup_wsm', analyza_id=analyza_id)
             elif metoda_kod == "wpm":
                 Navigace.go('vystup_wpm', analyza_id=analyza_id)
