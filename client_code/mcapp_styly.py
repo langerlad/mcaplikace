@@ -256,12 +256,12 @@ def ziskej_css_styly():
     }
 
     /* CSS řešení pro skrývání/zobrazování obsahu (náhrada za JavaScript) */
-    /* Skryjeme samotný checkbox */
+    /* 1) Skryjeme samotný checkbox, aby uživatel viděl jen label */
     .toggle-checkbox {
       display: none;
     }
     
-    /* Styly pro label, který funguje jako tlačítko */
+    /* 2) Label jako “tlačítko” */
     .details-toggle {
       display: block;
       width: 100%;
@@ -276,20 +276,20 @@ def ziskej_css_styly():
       position: relative;
     }
     
-    /* Hover efekt nad "tlačítkem" */
+    /* Změna pozadí při najetí myší */
     .details-toggle:hover {
       background-color: #E0E0E0;
     }
     
-    /* Trojúhelník (dolů) vpravo ve výchozím stavu */
-    .toggle-checkbox + .details-toggle::after {
+    /* 3) Trojúhelník (dolů) ve výchozím stavu */
+    .details-toggle::after {
       content: '▼';
       position: absolute;
       right: 15px;
       transition: transform 0.3s;
     }
     
-    /* Obsah, který se má skrývat/zobrazovat */
+    /* 4) Samotný obsah, který se má skrývat */
     .details-content {
       background-color: white;
       padding: 15px;
@@ -298,37 +298,26 @@ def ziskej_css_styly():
       overflow: hidden;
     }
     
-    /* Výchozí stav - obsah je skrytý */
+    /* Výchozí stav: skrytý obsah (div je za labelem, který je za inputem) */
     .toggle-checkbox + .details-toggle + .details-content {
       display: none;
     }
     
-    /* Po kliknutí (checkbox zaškrtnutý) - zobrazit obsah */
+    /* Při zaškrtnutí (checkbox:checked) se obsah zobrazí */
     .toggle-checkbox:checked + .details-toggle + .details-content {
       display: block;
     }
     
-    /* Rotace trojúhelníku při rozbalení */
+    /* 5) Rotace šipky (trojúhelníku) při rozbalení */
     .toggle-checkbox:checked + .details-toggle::after {
       transform: rotate(180deg);
     }
     
-    /* Třída pro malé doplňkové popisky */
+    /* Volitelná drobná stylizace popisku */
     .toggle-hint {
       font-size: 12px;
       color: #757575;
       margin-left: 10px;
-    }
-    
-    /* Varianta pro “výchozí stav otevřeno” (volitelné) */
-    .default-open {
-      /* Pokud chcete nějaký styl pro label, když je defaultně rozbalený */
-    }
-    .default-open + .details-content {
-      display: block;
-    }
-    .default-open::after {
-      transform: rotate(180deg);
     }
     """
 
