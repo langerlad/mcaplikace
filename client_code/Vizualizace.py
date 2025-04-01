@@ -1089,11 +1089,11 @@ def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
         """
     else:
         return f"""
+        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <label for="{toggle_id}" class="details-toggle {default_class}">
             O metodě {metoda}
             <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
         </label>
-        <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
         <div class="details-content">
             <div style="padding: 0;">
                 <p>Detailní informace o metodě {metoda}.</p>
