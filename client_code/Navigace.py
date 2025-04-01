@@ -30,15 +30,6 @@ from .Vystup_mabac_komp import Vystup_mabac_komp
 # Komponenta hlavního okna
 komponenta_hl_okna = None
 
-def zapsat_chybu(zprava):
-    """
-    Funkce pro konzolové výpisy chyb v klientském kódu
-    
-    Args:
-        zprava (str): Chybová zpráva k vypsání
-    """
-    print(f"[CHYBA] {zprava}")
-
 # Konfigurace stránek a navigace
 KONFIGURACE_NAVIGACE = {
     'domu': {
@@ -85,12 +76,6 @@ KONFIGURACE_NAVIGACE = {
         'vyzaduje_prihlaseni': True,
         'oznaceni_nav': 'ucet',
         'kontrola_rozpracovane': True
-    },
-    'saw_vstup': {
-        'komponenta': Wizard_komp,
-        'vyzaduje_prihlaseni': True,
-        'oznaceni_nav': None,
-        'kontrola_rozpracovane': False
     },
     'vystup_wsm': {
         'komponenta': Vystup_wsm_komp,

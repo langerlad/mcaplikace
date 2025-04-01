@@ -20,8 +20,11 @@ STAV_ANALYZY = {
 
 # Metody analýzy
 METODA_ANALYZY = {
-    'SAW': 'SAW',
-    'AHP': 'AHP'
+    'WSM': 'WSM',
+    'WPM': 'WPM',
+    'TOPSIS': 'TOPSIS',
+    'ELECTRE': 'ELECTRE',
+    'MABAC': 'MABAC',
 }
 
 # Typy kritérií
