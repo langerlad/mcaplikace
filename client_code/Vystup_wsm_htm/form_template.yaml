@@ -48,5 +48,7 @@ components:
   name: plot_citlivost_poradi
   properties: {}
   type: Plot
-container: {type: ColumnPanel}
+container:
+  event_bindings: {show: form_show}
+  type: ColumnPanel
 is_package: true
