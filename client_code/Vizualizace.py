@@ -362,10 +362,10 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
             'data': [{
                 'type': 'heatmap',
                 'z': pomer_matice,
-                'x': varianty,  # Popisky sloupců
-                'y': varianty,  # Popisky řádků
-                'colorscale': 'YlGnBu',  # Odpovídá cmap="YlGnBu" v seaborn
-                'zmin': 0,     # Odpovídá vmin=0
+                'x': varianty,
+                'y': varianty,
+                'colorscale': 'YlGnBu',
+                'zmin': 0,
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
                           for val in row] for row in pomer_matice],
                 'hoverinfo': 'text',
@@ -378,12 +378,12 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'title': f'Poměry variant (R(A_i/A_j)) - {nazev_metody}',
                 'xaxis': {
                     'title': 'Varianta j',
-                    'side': 'top'
+                    'side': 'bottom'  # Přesun popisku na spodní okraj
                 },
                 'yaxis': {
                     'title': 'Varianta i'
                 },
-                'margin': {'t': 50, 'b': 50, 'l': 100, 'r': 50}
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
             }
         }
         
