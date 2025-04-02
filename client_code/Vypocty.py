@@ -5,6 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from . import Utils
 
 
 def normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria):
@@ -169,17 +170,18 @@ def priprav_data_z_json(analyza_data):
     except Exception as e:
         raise ValueError(f"Chyba při přípravě dat pro výpočet: {str(e)}")
 
-def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kriterii=None, metoda="wsm", vyber_kriteria=0, pocet_kroku=9):
+def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="wsm", typy_kriterii=None, vyber_kriteria=0, pocet_kroku=9):
     """
     Provede analýzu citlivosti změnou váhy vybraného kritéria.
+    Podporuje metody WSM a WPM.
     
     Args:
-        matrix_data: 2D list hodnot (normalizovaných pro WSM, původních pro WPM)
+        norm_matice: 2D list - pro WSM normalizované hodnoty, pro WPM původní hodnoty
         vahy: List vah kritérií
         varianty: List názvů variant
         kriteria: List názvů kritérií
-        typy_kriterii: List typů kritérií (povinný pro WPM metodu)
-        metoda: Použitá metoda analýzy ("wsm" nebo "wpm")
+        metoda: Metoda analýzy ("wsm" nebo "wpm")
+        typy_kriterii: List typů kritérií (povinný pro WPM)
         vyber_kriteria: Index kritéria, jehož váha se bude měnit (výchozí je první kritérium)
         pocet_kroku: Počet kroků při změně váhy
         
@@ -187,6 +189,33 @@ def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kri
         dict: Výsledky analýzy citlivosti
     """
     try:
+        # Kontrola vstupních dat
+        if not kriteria or len(kriteria) == 0:
+            raise ValueError("Seznam kritérií je prázdný")
+            
+        if not varianty or len(varianty) == 0:
+            raise ValueError("Seznam variant je prázdný")
+            
+        if not vahy or len(vahy) != len(kriteria):
+            raise ValueError(f"Seznam vah má nesprávnou délku: {len(vahy) if vahy else 0}, očekáváno: {len(kriteria)}")
+            
+        # Kontrola matice a jejích rozměrů
+        if not norm_matice or len(norm_matice) == 0:
+            raise ValueError("Matice hodnot je prázdná")
+            
+        for i, radek in enumerate(norm_matice):
+            if len(radek) != len(kriteria):
+                raise ValueError(f"Řádek {i} matice má nesprávnou délku: {len(radek)}, očekáváno: {len(kriteria)}")
+                
+        # Kontrola indexu vybraného kritéria
+        if vyber_kriteria < 0 or vyber_kriteria >= len(kriteria):
+            vyber_kriteria = 0
+            
+        # Pro WPM je nutné mít typy kritérií
+        if metoda.lower() == "wpm":
+            if not typy_kriterii or len(typy_kriterii) != len(kriteria):
+                raise ValueError("Pro metodu WPM je nutné specifikovat typy kritérií")
+        
         # Vytvoření rozsahu vah pro analýzu citlivosti
         vahy_rozsah = []
         for i in range(pocet_kroku):
@@ -205,7 +234,7 @@ def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kri
             # Přepočítání vah zbývajících kritérií proporcionálně
             zbyvajici_vaha = 1 - vaha
             
-            suma_zbylych_vah = sum(nove_vahy) - nove_vahy[vyber_kriteria]
+            suma_zbylych_vah = sum([nove_vahy[i] for i in range(len(nove_vahy)) if i != vyber_kriteria])
             if suma_zbylych_vah > 0:
                 for i in range(len(nove_vahy)):
                     if i != vyber_kriteria:
@@ -218,19 +247,16 @@ def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kri
                 for i in range(len(varianty)):
                     skore = 0
                     for j in range(len(kriteria)):
-                        skore += matrix_data[i][j] * nove_vahy[j]
+                        skore += norm_matice[i][j] * nove_vahy[j]
                     skore_variant.append(skore)
             
             elif metoda.lower() == "wpm":
                 # WPM metoda - násobení hodnot umocněných na váhy
-                if typy_kriterii is None:
-                    raise ValueError("Pro metodu WPM je nutné specifikovat typy kritérií")
-                    
                 skore_variant = []
                 for i in range(len(varianty)):
                     skore = 1.0  # Inicializace na 1 pro násobení
                     for j in range(len(kriteria)):
-                        hodnota = matrix_data[i][j]
+                        hodnota = norm_matice[i][j]
                         
                         # Kontrola, že hodnoty nejsou nulové nebo záporné
                         if hodnota <= 0:
@@ -245,12 +271,12 @@ def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kri
                         
                     skore_variant.append(skore)
             else:
-                raise ValueError(f"Nepodporovaná metoda: {metoda}")
+                raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")
             
             # Určení pořadí variant pro tyto váhy
             serazene_indexy = sorted(range(len(skore_variant)), 
-                                    key=lambda k: skore_variant[k], 
-                                    reverse=True)
+                                   key=lambda k: skore_variant[k], 
+                                   reverse=True)
             poradi_variant = [0] * len(varianty)
             for poradi, idx in enumerate(serazene_indexy, 1):
                 poradi_variant[idx] = poradi
@@ -539,7 +565,7 @@ def vypocitej_wpm_analyzu(analyza_data):
         analyza_data: Slovník s daty analýzy
         
     Returns:
-        dict: Strukturovaný výsledek s normalizovanou maticí, váženými hodnotami a výsledky
+        dict: Strukturovaný výsledek s normalizovanou maticí, produktovými příspěvky a výsledky
         
     Raises:
         ValueError: Pokud data nejsou validní nebo nelze provést výpočet
@@ -553,7 +579,9 @@ def vypocitej_wpm_analyzu(analyza_data):
         # 1. Příprava dat z JSON formátu
         matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
         
-        # 2. Normalizace matice pomocí min-max metody
+        # 2. Normalizace matice pomocí min-max metody pro vizualizaci
+        # (pro samotný výpočet WPM není normalizace nutná,
+        # ale pro konzistenci s WSM ji zahrnujeme do výstupu)
         norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
         
         # 3. Výpočet WPM výsledků
@@ -565,7 +593,7 @@ def vypocitej_wpm_analyzu(analyza_data):
             kriteria
         )
         
-        # 4. Výpočet produktového příspěvku (pro vizualizaci) - transformované hodnoty umocněné na váhy
+        # 4. Výpočet produktového příspěvku (pro vizualizaci)
         produktovy_prispevek = vypocitej_produktovy_prispevek(matice, vahy, typy_kriterii)
         
         # 5. Sestavení strukturovaného výsledku

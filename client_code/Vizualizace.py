@@ -346,56 +346,80 @@ def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
 
 def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
     """
-    Vytvoří teplotní mapu zobrazující vztahy mezi variantami a kritérii.
+    Vytvoří teplotní mapu zobrazující vztahy mezi variantami a kritérii
+    s použitím barevné škály YlGnBu a dynamickým nastavením rozsahu barev.
     
     Args:
-        varianty: Seznam názvů variant
-        kriteria: Seznam názvů kritérií
+        varianty: Seznam názvů variant (řádky)
+        kriteria: Seznam názvů kritérií (sloupce)
         hodnoty: 2D list hodnot [varianty][kriteria]
-        nazev_metody: Název metody pro titulek
+        nazev_metody: Název metody pro titulek (volitelný)
         
     Returns:
-        dict: Plotly figure configuration
+        dict: Konfigurace Plotly figure
     """
     try:
-        # Vytvoření grafu
+        # Získání všech hodnot a výpočet minimální a maximální hodnoty
+        all_values = [val for row in hodnoty for val in row]
+        z_min = min(all_values)
+        z_max = max(all_values)
+        
         fig = {
             'data': [{
                 'type': 'heatmap',
                 'z': hodnoty,
                 'x': kriteria,
                 'y': varianty,
-                'colorscale': 'Blues',
-                'text': [[f'{hodnoty[i][j]:.3f}' for j in range(len(kriteria))] for i in range(len(varianty))],
+                'colorscale': 'YlGnBu',  # Použití požadované barevné škály
+                'zmin': z_min,
+                'zmax': z_max,
+                # Přidání anotací s hodnotami do každé buňky
+                'text': [[f'{hodnoty[i][j]:.3f}' for j in range(len(kriteria))]
+                         for i in range(len(varianty))],
                 'hoverinfo': 'text',
                 'showscale': True,
                 'colorbar': {
-                    'title': 'Hodnota'
+                    'title': 'Hodnota',
+                    'titleside': 'right',
+                    'tickformat': '.3f',
                 },
             }],
             'layout': {
-                'title': f'Teplotní mapa hodnot{f" - {nazev_metody}" if nazev_metody else ""}',
+                'title': {
+                    'text': f'Teplotní mapa hodnot{f" - {nazev_metody}" if nazev_metody else ""}',
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
                 'xaxis': {
                     'title': 'Kritéria',
-                    'side': 'top',
+                    'side': 'bottom',  # Umístění popisku osy X pod grafem
+                    'automargin': True
                 },
                 'yaxis': {
                     'title': 'Varianty',
+                    'automargin': True,
+                    'tickmode': 'array',          # Zajistí, že se zobrazí všechny varianty
+                    'tickvals': list(range(len(varianty))),
+                    'ticktext': varianty
                 },
-                'margin': {'t': 50, 'b': 50, 'l': 100, 'r': 50}
+                'margin': {'t': 60, 'b': 80, 'l': 80, 'r': 80},
+                'template': 'plotly_white',
+                'width': 800,   # Velikost grafu odpovídající figsize=(8,6)
+                'height': 600,
             }
         }
         
         return fig
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při vytváření teplotní mapy: {str(e)}")
-        # Vrátíme prázdný graf
         return {
             'data': [],
             'layout': {
                 'title': 'Chyba při vytváření teplotní mapy'
             }
         }
+
+
 
 def vytvor_histogram_vah(kriteria, vahy):
     """

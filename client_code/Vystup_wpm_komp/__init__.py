@@ -39,7 +39,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       return
 
     try:
-      Utils.zapsat_info(f"Načítám data analýzy ID: {self.analyza_id} pro WPM")
+      Utils.zapsat_info(f"Načítám data analýzy ID: {self.analyza_id}")
 
       # Načtení dat analýzy z JSON struktury
       self.analyza_data = anvil.server.call("nacti_analyzu", self.analyza_id)
@@ -53,9 +53,9 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       Utils.zapsat_info("Výsledky WPM analýzy úspěšně zobrazeny")
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při načítání WPM analýzy: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při načítání analýzy: {str(e)}")
       self._zobraz_chybovou_zpravu(str(e))
-      alert(f"Chyba při načítání WPM analýzy: {str(e)}")
+      alert(f"Chyba při načítání analýzy: {str(e)}")
 
   def _zobraz_prazdny_formular(self):
     """Zobrazí prázdný formulář s informací o chybějících datech."""
@@ -74,7 +74,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     chyba_html = f"""
         <div class="mcapp-error-message">
             <div class="mcapp-error-icon"><i class="fa fa-exclamation-circle"></i></div>
-            <div class="mcapp-error-text">Chyba při zpracování WPM: {zprava}</div>
+            <div class="mcapp-error-text">Chyba při zpracování: {zprava}</div>
         </div>
         """
     self.html_1.html = mcapp_styly.vloz_styly_do_html(chyba_html)
@@ -95,7 +95,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       self._vytvor_a_nastav_grafy()
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při zobrazování výsledků WPM: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při zobrazování výsledků: {str(e)}")
       self._zobraz_chybovou_zpravu(str(e))
       self._skryj_grafy()
 
@@ -111,17 +111,14 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       )
       self.plot_wpm_vysledek.visible = True
 
-      # Graf skladby skóre - WPM používá násobení, proto zde nepoužíváme skládaný graf
-      if "produktovy_prispevek" in self.vysledky_vypoctu:
-        self.plot_wpm_skladba.figure = Vizualizace.vytvor_heat_mapu(
-          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-          self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-          self.vysledky_vypoctu["produktovy_prispevek"],
-          "WPM - příspěvek kritérií (umocněné hodnoty)"
-        )
-        self.plot_wpm_skladba.visible = True
-      else:
-        self.plot_wpm_skladba.visible = False
+      # Graf skladby skóre - WPM používá teplotní mapu místo skládaného grafu
+      self.plot_wpm_heat_mapa.figure = Vizualizace.vytvor_heat_mapu(
+        self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+        self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
+        self.vysledky_vypoctu["produktovy_prispevek"],
+        "WPM - příspěvek kritérií (umocněné hodnoty)"
+      )
+      self.plot_wpm_heat_mapa.visible = True
 
       # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
       kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
@@ -130,20 +127,22 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
         analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
           self.vysledky_vypoctu["matice"],
           self.vysledky_vypoctu["vahy"],
-          self.vysledky_vypoctu["typy_kriterii"],
           self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
           kriteria,
-          metoda="wpm"  # Parametr určující metodu
+          metoda="wpm",
+          typy_kriterii=self.vysledky_vypoctu["typy_kriterii"]
         )
 
         # Grafy citlivosti
         self.plot_citlivost_skore.figure = Vizualizace.vytvor_graf_citlivosti_skore(
-          analyza_citlivosti, self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+          analyza_citlivosti, 
+          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
         )
         self.plot_citlivost_skore.visible = True
 
         self.plot_citlivost_poradi.figure = Vizualizace.vytvor_graf_citlivosti_poradi(
-          analyza_citlivosti, self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+          analyza_citlivosti, 
+          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
         )
         self.plot_citlivost_poradi.visible = True
       else:
@@ -152,12 +151,12 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
         self.plot_citlivost_poradi.visible = False
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při vytváření grafů WPM: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
       self._skryj_grafy()
 
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""
     self.plot_wpm_vysledek.visible = False
-    self.plot_wpm_skladba.visible = False
+    self.plot_wpm_heat_mapa.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False
