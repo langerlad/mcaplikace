@@ -525,6 +525,296 @@ def vytvor_histogram_vah(kriteria, vahy):
             }
         }
 
+def vytvor_graf_vzdalenosti_topsis(topsis_vysledky, varianty):
+    """
+    Vytvoří sloupcový graf vzdáleností od ideálního a anti-ideálního řešení.
+    
+    Args:
+        topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Extrakce dat pro vzdálenosti
+        dist_ideal = topsis_vysledky.get('dist_ideal', [])
+        dist_anti_ideal = topsis_vysledky.get('dist_anti_ideal', [])
+        
+        if not dist_ideal or not dist_anti_ideal:
+            return vytvor_prazdny_graf("Chybí data o vzdálenostech od ideálního řešení")
+        
+        # Vytvoření grafu
+        fig = {
+            'data': [
+                {
+                    'type': 'bar',
+                    'x': varianty,
+                    'y': dist_ideal,
+                    'name': 'Vzdálenost od ideálního řešení (S*)',
+                    'marker': {
+                        'color': '#e74c3c',  # červená pro vzdálenost od ideálního (menší je lepší)
+                    },
+                    'text': [f'{val:.3f}' for val in dist_ideal],
+                    'textposition': 'auto',
+                },
+                {
+                    'type': 'bar',
+                    'x': varianty,
+                    'y': dist_anti_ideal,
+                    'name': 'Vzdálenost od anti-ideálního řešení (S-)',
+                    'marker': {
+                        'color': '#2ecc71',  # zelená pro vzdálenost od anti-ideálního (větší je lepší)
+                    },
+                    'text': [f'{val:.3f}' for val in dist_anti_ideal],
+                    'textposition': 'auto',
+                }
+            ],
+            'layout': {
+                'title': 'Vzdálenosti od ideálního a anti-ideálního řešení',
+                'xaxis': {
+                    'title': 'Varianty',
+                    'tickangle': -45 if len(varianty) > 4 else 0
+                },
+                'yaxis': {
+                    'title': 'Vzdálenost',
+                },
+                'barmode': 'group',
+                'showlegend': True,
+                'legend': {
+                    'orientation': 'h',
+                    'y': -0.2,
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
+                'margin': {'t': 50, 'b': 100}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu vzdáleností TOPSIS: {str(e)}")
+        return vytvor_prazdny_graf("Chyba při vytváření grafu vzdáleností")
+
+def vytvor_radar_graf_topsis(topsis_vysledky, varianty, kriteria):
+    """
+    Vytvoří radarový graf porovnávající varianty s ideálním a anti-ideálním řešením.
+    
+    Args:
+        topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Extrakce dat
+        vazena_matice = topsis_vysledky.get('vazena_matice', [])
+        ideal = topsis_vysledky.get('ideal', [])
+        anti_ideal = topsis_vysledky.get('anti_ideal', [])
+        
+        if not vazena_matice or not ideal or not anti_ideal:
+            return vytvor_prazdny_graf("Chybí data pro radarový graf")
+        
+        # Vytvoření dat pro radarový graf
+        data = []
+        
+        # Přidání dat pro ideální řešení
+        data.append({
+            'type': 'scatterpolar',
+            'r': ideal + [ideal[0]],  # Pro uzavření křivky opakujeme první hodnotu
+            'theta': kriteria + [kriteria[0]],  # Pro uzavření křivky opakujeme první hodnotu
+            'fill': 'none',
+            'name': 'Ideální řešení',
+            'line': {
+                'color': 'black',
+                'width': 2
+            }
+        })
+        
+        # Přidání dat pro anti-ideální řešení
+        data.append({
+            'type': 'scatterpolar',
+            'r': anti_ideal + [anti_ideal[0]],
+            'theta': kriteria + [kriteria[0]],
+            'fill': 'none',
+            'name': 'Anti-ideální řešení',
+            'line': {
+                'color': 'gray',
+                'width': 2,
+                'dash': 'dash'
+            }
+        })
+        
+        # Přidání dat pro každou variantu
+        colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6']
+        for i, varianta in enumerate(varianty):
+            color_idx = i % len(colors)  # Cyklické použití barev
+            
+            if i >= len(vazena_matice):
+                continue  # Ochrana proti nedostatku dat
+                
+            # Pro radarový graf musíme uzavřít křivku tak, že opakujeme první hodnotu na konci
+            hodnoty = vazena_matice[i] + [vazena_matice[i][0]]
+            labels = kriteria + [kriteria[0]]
+            
+            data.append({
+                'type': 'scatterpolar',
+                'r': hodnoty,
+                'theta': labels,
+                'fill': 'toself',
+                'name': varianta,
+                'line': {
+                    'color': colors[color_idx]
+                },
+                'fillcolor': colors[color_idx],
+                'opacity': 0.1
+            })
+        
+        # Vytvoření grafu
+        fig = {
+            'data': data,
+            'layout': {
+                'title': 'Porovnání variant s ideálním a anti-ideálním řešením',
+                'polar': {
+                    'radialaxis': {
+                        'visible': True
+                    }
+                },
+                'showlegend': True,
+                'legend': {
+                    'orientation': 'h',
+                    'y': -0.2,
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
+                'margin': {'t': 50, 'b': 100}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření radarového grafu TOPSIS: {str(e)}")
+        return vytvor_prazdny_graf("Chyba při vytváření radarového grafu")
+
+def vytvor_2d_graf_vzdalenosti_topsis(topsis_vysledky, varianty):
+    """
+    Vytvoří 2D rozptylový graf vzdáleností od ideálního a anti-ideálního řešení.
+    
+    Args:
+        topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Extrakce dat
+        dist_ideal = topsis_vysledky.get('dist_ideal', [])
+        dist_anti_ideal = topsis_vysledky.get('dist_anti_ideal', [])
+        relativni_blizkost = []
+        
+        # Výpočet relativní blízkosti pro barevnou škálu, pokud chybí
+        if 'relativni_blizkost' in topsis_vysledky:
+            relativni_blizkost = topsis_vysledky['relativni_blizkost']
+        else:
+            for i in range(len(dist_ideal)):
+                suma = dist_ideal[i] + dist_anti_ideal[i]
+                if suma == 0:
+                    relativni_blizkost.append(0)
+                else:
+                    relativni_blizkost.append(dist_anti_ideal[i] / suma)
+        
+        if not dist_ideal or not dist_anti_ideal:
+            return vytvor_prazdny_graf("Chybí data o vzdálenostech od ideálního řešení")
+        
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'scatter',
+                'x': dist_ideal,
+                'y': dist_anti_ideal,
+                'mode': 'markers+text',
+                'marker': {
+                    'size': 12,
+                    'color': relativni_blizkost,
+                    'colorscale': 'Viridis',
+                    'colorbar': {
+                        'title': 'Relativní blízkost (C*)',
+                        'titleside': 'right'
+                    }
+                },
+                'text': varianty,
+                'textposition': 'top center',
+                'textfont': {
+                    'size': 10
+                },
+                'hovertemplate': '%{text}<br>S*: %{x:.3f}<br>S-: %{y:.3f}<extra></extra>'
+            }],
+            'layout': {
+                'title': '2D vizualizace vzdáleností - čím více vpravo dole, tím lépe',
+                'xaxis': {
+                    'title': 'Vzdálenost od ideálního řešení (S*)'
+                },
+                'yaxis': {
+                    'title': 'Vzdálenost od anti-ideálního řešení (S-)',
+                },
+                'hovermode': 'closest',
+                'showlegend': False,
+                'annotations': [
+                    {
+                        'x': 0.02,
+                        'y': 0.98,
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'text': 'Lepší řešení',
+                        'showarrow': True,
+                        'arrowhead': 2,
+                        'ax': 40,
+                        'ay': -40
+                    }
+                ],
+                'grid': {
+                    'rows': 1, 
+                    'columns': 1
+                },
+                'margin': {'t': 50, 'b': 80}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření 2D grafu vzdáleností TOPSIS: {str(e)}")
+        return vytvor_prazdny_graf("Chyba při vytváření 2D grafu vzdáleností")
+
+def vytvor_prazdny_graf(text="Žádná data k zobrazení"):
+    """
+    Vytvoří prázdný graf s informační zprávou.
+    
+    Args:
+        text: Text k zobrazení ve středu grafu
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    return {
+        'data': [],
+        'layout': {
+            'xaxis': {'visible': False},
+            'yaxis': {'visible': False},
+            'annotations': [{
+                'text': text,
+                'xref': 'paper',
+                'yref': 'paper',
+                'showarrow': False,
+                'font': {
+                    'size': 16
+                }
+            }]
+        }
+    }
+
 # Pokročilejší generátory HTML obsahu
 
 def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
@@ -743,11 +1033,11 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
     
     # Vytvoření částí HTML dokumentu
     hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
-    metodologie_html = vytvor_html_sekci_metodologie(metoda, default_open=True)
     vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
     
     # Rozdílný postup podle metody
     if metoda.upper() == "WSM":
+        metodologie_html = vytvor_html_sekci_metodologie(metoda, default_open=True)
         postup_html = vytvor_sekci_postupu_wsm(
             vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
             vysledky_vypoctu['vazene_matice'],
@@ -758,6 +1048,7 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
         )
         vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
     elif metoda.upper() == "WPM":
+        metodologie_html = vytvor_html_sekci_metodologie(metoda, default_open=True)
         postup_html = vytvor_sekci_postupu_wpm(
             vysledky_vypoctu['matice'],
             vysledky_vypoctu['produktovy_prispevek'],
@@ -767,8 +1058,39 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
             vysledky_vypoctu['typy_kriterii']
         )
         vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wpm_vysledky'])
+    elif metoda.upper() == "TOPSIS":
+        metodologie_html = vytvor_html_sekci_metodologie_topsis(default_open=True)
+        
+        # Extrakce dat specifických pro TOPSIS
+        topsis_results = vysledky_vypoctu['topsis_vysledky']
+        ideal = topsis_results.get('ideal', [0] * len(kriteria))
+        anti_ideal = topsis_results.get('anti_ideal', [0] * len(kriteria))
+        vazena_matice = topsis_results.get('vazena_matice', [[0] * len(kriteria) for _ in range(len(varianty))])
+        
+        # Vzdálenosti od ideálního a anti-ideálního řešení
+        dist_ideal = topsis_results.get('dist_ideal', [0] * len(varianty))
+        dist_anti_ideal = topsis_results.get('dist_anti_ideal', [0] * len(varianty))
+        
+        # Relativní blízkost k ideálnímu řešení
+        relativni_blizkost = topsis_results.get('relativni_blizkost', [0] * len(varianty))
+        
+        postup_html = vytvor_sekci_postupu_topsis(
+            vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
+            vazena_matice,
+            vysledky_vypoctu['vahy'],
+            ideal,
+            anti_ideal,
+            dist_ideal,
+            dist_anti_ideal,
+            relativni_blizkost,
+            varianty,
+            kriteria,
+            vysledky_vypoctu['typy_kriterii']
+        )
+        vysledky_html = vytvor_sekci_vysledku_topsis(vysledky_vypoctu['topsis_vysledky'])
     else:
         # Pro ostatní metody (budoucí implementace)
+        metodologie_html = f"<div class='mcapp-card'><h2>Metodologie</h2><p>Metodologie pro metodu {metoda}</p></div>"
         postup_html = f"<div class='mcapp-section'><h2>Postup zpracování dat</h2><p>Postup zpracování dat metodou {metoda}</p></div>"
         vysledky_html = f"<div class='mcapp-section'><h2>Výsledky analýzy</h2><p>Výsledky analýzy metodou {metoda}</p></div>"
     
@@ -1278,115 +1600,473 @@ def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria
     Returns:
         str: HTML kód pro sekci postupu výpočtu
     """
-    # Vysvětlení WPM metody
-    vysvetleni_wpm_html = """
-    <div class="mcapp-explanation">
-        <h4>Princip výpočtu WPM metody:</h4>
-        <p>
-            Metoda WPM (Weighted Product Model) se od WSM (Weighted Sum Model) liší tím, že místo sčítání 
-            používá násobení hodnot umocněných na váhy kritérií.
-        </p>
-        <div class="mcapp-formula-box">
-            <div class="mcapp-formula-row">
-                <span class="mcapp-formula-label">Vzorec výpočtu:</span>
-                <span class="mcapp-formula-content">P(A<sub>i</sub>) = ∏<sub>j=1</sub><sup>n</sup> (x<sub>ij</sub>)<sup>w<sub>j</sub></sup></span>
-            </div>
-        </div>
-        <div class="mcapp-note">
-            <p>kde:</p>
-            <ul>
-                <li>P(A<sub>i</sub>) je výsledné skóre i-té varianty</li>
-                <li>x<sub>ij</sub> je hodnota i-té varianty podle j-tého kritéria</li>
-                <li>w<sub>j</sub> je váha j-tého kritéria</li>
-                <li>Pro minimalizační kritéria se hodnoty převádí na 1/x<sub>ij</sub></li>
-            </ul>
-        </div>
-    </div>
-    """
+    # Vytvoření normalizované matice (převrácené hodnoty pro min kritéria)
+    norm_matice = []
+    for i in range(len(matice)):
+        radek = []
+        for j in range(len(matice[0])):
+            hodnota = matice[i][j]
+            if hodnota <= 0:
+                hodnota = 0.001  # Ochrana proti nule
+                
+            # Pro minimalizační kritéria použijeme převrácenou hodnotu
+            if typy_kriterii[j].lower() in ("min", "cost"):
+                norm_hodnota = 1.0 / hodnota
+            else:
+                norm_hodnota = hodnota
+                
+            radek.append(norm_hodnota)
+        norm_matice.append(radek)
     
-    # Tabulka původních hodnot
-    puvodni_hodnoty_html = """
-    <h3>Původní hodnoty</h3>
+    # Tabulka normalizovaných hodnot
+    normalizace_html = """
+    <h3>Normalizovaná rozhodovací matice</h3>
+    <p>Pro metodu WPM normalizujeme hodnoty tak, aby všechna kritéria byla maximalizační:</p>
+    <ul>
+        <li>Pro maximalizační kritéria použijeme původní hodnoty</li>
+        <li>Pro minimalizační kritéria použijeme převrácené hodnoty (1/hodnota)</li>
+    </ul>
+    
     <div class="mcapp-table-container">
-        <table class="mcapp-table mcapp-original-table">
+        <table class="mcapp-table mcapp-normalized-table">
             <thead>
                 <tr>
                     <th>Varianta / Kritérium</th>
     """
     
-    for krit in kriteria:
-        puvodni_hodnoty_html += f"<th>{krit}</th>"
+    for i, krit in enumerate(kriteria):
+        typ = typy_kriterii[i].upper()
+        normalizace_html += f"<th>{krit} ({typ})</th>"
     
-    puvodni_hodnoty_html += """
+    normalizace_html += """
                 </tr>
             </thead>
             <tbody>
     """
     
     for i, var in enumerate(varianty):
-        puvodni_hodnoty_html += f"<tr><td>{var}</td>"
+        normalizace_html += f"<tr><td><strong>{var}</strong></td>"
         for j in range(len(kriteria)):
-            hodnota = matice[i][j]
-            puvodni_hodnoty_html += f"<td>{hodnota:.3f}</td>"
-        puvodni_hodnoty_html += "</tr>"
+            hodnota = norm_matice[i][j]
+            normalizace_html += f"<td>{hodnota:.6f}</td>"
+        normalizace_html += "</tr>"
     
-    puvodni_hodnoty_html += """
+    normalizace_html += """
             </tbody>
         </table>
     </div>
     """
     
-    # Tabulka vah
-    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    # Alternativní přístup - přidání sekce o poměrech
+    alternativni_pristup_html = """
+    <h3>Alternativní přístup - poměry mezi variantami</h3>
+    <p>Další způsob analýzy WPM je vypočítat poměry mezi variantami:</p>
+    <div class="mcapp-formula-box">
+        <div class="mcapp-formula-row">
+            <span class="mcapp-formula-content">R(A<sub>i</sub>/A<sub>j</sub>) = ∏<sub>k=1</sub><sup>n</sup>(x<sub>ik</sub>/x<sub>jk</sub>)<sup>w<sub>k</sub></sup></span>
+        </div>
+    </div>
+    <p>Pokud R(A<sub>i</sub>/A<sub>j</sub>) ≥ 1, pak varianta A<sub>i</sub> je lepší nebo stejně dobrá jako varianta A<sub>j</sub>.</p>
+    """
     
-    # Tabulka typů kritérií
-    typy_html = """
-    <h3>Typy kritérií</h3>
+    # Tabulka vah
+    vahy_html = """
+    <h3>Váhy kritérií</h3>
     <div class="mcapp-table-container">
-        <table class="mcapp-table mcapp-types-table">
+        <table class="mcapp-table mcapp-weights-table">
             <thead>
                 <tr>
                     <th>Kritérium</th>
     """
     
     for krit in kriteria:
-        typy_html += f"<th>{krit}</th>"
+        vahy_html += f"<th>{krit}</th>"
     
-    typy_html += """
+    vahy_html += """
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Typ</td>
+                    <td>Váha</td>
     """
     
-    for i, typ in enumerate(typy_kriterii):
-        typy_html += f"<td>{typ.upper()}</td>"
-    
-    typy_html += """
+    for i, vaha in enumerate(vahy):
+        vahy_html += f"<td style='text-align: right;'>{vaha:.3f}</td>"
+        
+    vahy_html += """
                 </tr>
             </tbody>
         </table>
     </div>
     """
     
-    # Tabulka produktových příspěvků
-    produkty_html = vytvor_html_produktovou_tabulku(produkt_prispevek, varianty, kriteria)
+    # Tabulka produktových příspěvků (bez popisu)
+    produkty_html = """
+    <h3>Hodnoty umocněné na váhy kritérií</h3>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-product-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        produkty_html += f"<th>{krit}</th>"
+    
+    # Přidáme sloupec součinu
+    produkty_html += "<th style='background-color:#f0f0f0; font-weight:bold;'>Celkové skóre</th>"
+    
+    produkty_html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        produkty_html += f"<tr><td>{var}</td>"
+        
+        soucin = 1.0
+        for j in range(len(kriteria)):
+            hodnota = produkt_prispevek[i][j]
+            soucin *= hodnota
+            produkty_html += f"<td>{hodnota:.6f}</td>"
+            
+        # Přidáme buňku s celkovým skóre
+        produkty_html += f"<td style='background-color:#f0f0f0; font-weight:bold; text-align:right;'>{soucin:.6f}</td>"
+        
+        produkty_html += "</tr>"
+    
+    produkty_html += """
+            </tbody>
+        </table>
+    </div>
+    """
 
     # Sloučení do sekce
     return f"""
     <div class="mcapp-section mcapp-process">
         <h2>Postup zpracování dat</h2>
-        {vysvetleni_wpm_html}
         <div class="mcapp-card">
-            <h3>Krok 1: Původní data</h3>
-            {puvodni_hodnoty_html}
-            {vahy_html}
-            {typy_html}
+            <h3>Krok 1: Normalizace rozhodovací matice</h3>
+            {normalizace_html}
+            {alternativni_pristup_html}
         </div>
         <div class="mcapp-card">
             <h3>Krok 2: Výpočet metodou WPM</h3>
+            {vahy_html}
             {produkty_html}
+        </div>
+    </div>
+    """
+
+def vytvor_html_sekci_metodologie_topsis(default_open=True):
+    """
+    Vytvoří HTML sekci s popisem metodologie pro metodu TOPSIS, používá CSS místo JavaScriptu.
+    
+    Args:
+        default_open: Zda má být sekce ve výchozím stavu otevřená
+        
+    Returns:
+        str: HTML kód s metodologií
+    """
+    # Vytvoření unikátního ID pro tento přepínač
+    toggle_id = "metodologie-topsis"
+    default_class = "default-open" if default_open else ""
+    
+    return f"""
+    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+    <label for="{toggle_id}" class="details-toggle {default_class}">
+        O metodě TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)
+        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+    </label>
+    <div class="details-content">
+        <div style="padding: 0;">
+            <p>TOPSIS je metoda vícekriteriálního rozhodování založená na konceptu, že vybraná alternativa by měla mít nejkratší vzdálenost od ideálního řešení a nejdelší vzdálenost od negativního ideálního řešení.</p>
+            
+            <h4>Postup metody TOPSIS:</h4>
+            <ol>
+                <li><strong>Sběr dat</strong> - Definice variant, kritérií a hodnocení variant podle kritérií.</li>
+                <li><strong>Normalizace hodnot</strong> - Převod různorodých hodnot kritérií na srovnatelnou škálu.</li>
+                <li><strong>Vážení hodnot</strong> - Vynásobení normalizovaných hodnot vahami kritérií.</li>
+                <li><strong>Určení ideálního a anti-ideálního řešení</strong> - Pro každé kritérium se určí ideální (nejlepší možná) a anti-ideální (nejhorší možná) hodnota.</li>
+                <li><strong>Výpočet vzdáleností</strong> - Pro každou variantu se vypočítá vzdálenost od ideálního a anti-ideálního řešení.</li>
+                <li><strong>Výpočet relativní blízkosti k ideálnímu řešení</strong> - Kombinace obou vzdáleností do jednoho ukazatele.</li>
+                <li><strong>Seřazení variant</strong> - Varianty jsou seřazeny podle relativní blízkosti k ideálnímu řešení (vyšší hodnota znamená lepší variantu).</li>
+            </ol>
+            
+            <h4>Výhody metody:</h4>
+            <ul>
+                <li>Zohledňuje nejlepší i nejhorší možné řešení</li>
+                <li>Jednoduchá interpretace výsledků - čím blíže k 1, tím lépe</li>
+                <li>Robustní vůči změnám v datech</li>
+                <li>Vhodná pro velký počet kritérií a variant</li>
+            </ul>
+            
+            <h4>Omezení metody:</h4>
+            <ul>
+                <li>Může být citlivá na extrémní hodnoty</li>
+                <li>Výsledek závisí na volbě způsobu normalizace</li>
+                <li>Potenciál "rank reversal" - přidání nové varianty může změnit pořadí stávajících variant</li>
+            </ul>
+        </div>
+    </div>
+    """
+
+def vytvor_sekci_postupu_topsis(norm_matice, vazena_matice, vahy, ideal, anti_ideal, dist_ideal, dist_anti_ideal, relativni_blizkost, varianty, kriteria, typy_kriterii):
+    """
+    Vytvoří HTML sekci s postupem výpočtu TOPSIS.
+    
+    Args:
+        norm_matice: Normalizovaná matice hodnot
+        vazena_matice: Vážená matice hodnot
+        vahy: Seznam vah kritérií
+        ideal: Seznam ideálních hodnot pro každé kritérium
+        anti_ideal: Seznam anti-ideálních hodnot pro každé kritérium
+        dist_ideal: Seznam vzdáleností od ideálního řešení
+        dist_anti_ideal: Seznam vzdáleností od anti-ideálního řešení
+        relativni_blizkost: Seznam relativních blízkostí k ideálnímu řešení
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií (max/min)
+            
+    Returns:
+        str: HTML kód pro sekci postupu výpočtu
+    """
+    # Vysvětlení normalizace pomocí CSS
+    vysvetleni_norm_html = vytvor_html_sekci_normalizace(default_open=False)
+    
+    # Normalizační tabulka
+    normalizace_html = vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
+    
+    # Tabulka vah
+    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    
+    # Tabulka vážených hodnot
+    vazene_html = vytvor_html_tabulku_vazenych_hodnot_topsis(vazena_matice, ideal, anti_ideal, varianty, kriteria)
+    
+    # Tabulka vzdáleností a relativní blízkosti
+    vzdalenosti_html = vytvor_html_tabulku_vzdalenosti_topsis(dist_ideal, dist_anti_ideal, relativni_blizkost, varianty)
+
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-process">
+        <h2>Postup zpracování dat</h2>
+        {vysvetleni_norm_html}
+        <div class="mcapp-card">
+            <h3>Krok 1: Normalizace hodnot</h3>
+            {normalizace_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Vážení hodnot a určení ideálního a anti-ideálního řešení</h3>
+            {vahy_html}
+            {vazene_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 3: Výpočet vzdáleností a relativní blízkosti k ideálnímu řešení</h3>
+            {vzdalenosti_html}
+        </div>
+    </div>
+    """
+
+def vytvor_html_tabulku_vazenych_hodnot_topsis(vazena_matice, ideal, anti_ideal, varianty, kriteria):
+    """
+    Vytvoří HTML tabulku s váženými hodnotami a ideálním/anti-ideálním řešením.
+    
+    Args:
+        vazena_matice: 2D list s váženými hodnotami [varianty][kriteria]
+        ideal: Seznam ideálních hodnot pro každé kritérium
+        anti_ideal: Seznam anti-ideálních hodnot pro každé kritérium
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        str: HTML kód tabulky s váženými hodnotami
+    """
+    html = """
+    <h3>Vážené hodnoty a ideální/anti-ideální řešení</h3>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-weighted-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        html += f"<th>{krit}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td>{var}</td>"
+        
+        for j in range(len(kriteria)):
+            hodnota = vazena_matice[i][j]
+            html += f"<td>{hodnota:.3f}</td>"
+            
+        html += "</tr>"
+    
+    # Přidáme řádek pro ideální řešení
+    html += "<tr style='background-color:#E0F7FA; font-weight:bold;'><td>Ideální řešení</td>"
+    for j in range(len(kriteria)):
+        html += f"<td>{ideal[j]:.3f}</td>"
+    html += "</tr>"
+    
+    # Přidáme řádek pro anti-ideální řešení
+    html += "<tr style='background-color:#FFEBEE; font-weight:bold;'><td>Anti-ideální řešení</td>"
+    for j in range(len(kriteria)):
+        html += f"<td>{anti_ideal[j]:.3f}</td>"
+    html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    <p class="mcapp-note">
+        Pro každé kritérium je <span style="color:#2196F3; font-weight:bold;">ideální hodnota</span> maximum z vážených hodnot,
+        <span style="color:#F44336; font-weight:bold;">anti-ideální hodnota</span> je minimum.
+    </p>
+    """
+    
+    return html
+
+def vytvor_html_tabulku_vzdalenosti_topsis(dist_ideal, dist_anti_ideal, relativni_blizkost, varianty):
+    """
+    Vytvoří HTML tabulku se vzdálenostmi a relativní blízkostí k ideálnímu řešení.
+    
+    Args:
+        dist_ideal: Seznam vzdáleností od ideálního řešení
+        dist_anti_ideal: Seznam vzdáleností od anti-ideálního řešení
+        relativni_blizkost: Seznam relativních blízkostí k ideálnímu řešení
+        varianty: Seznam názvů variant
+        
+    Returns:
+        str: HTML kód tabulky se vzdálenostmi
+    """
+    html = """
+    <div class="mcapp-explanation">
+        <h4>Výpočet vzdáleností a relativní blízkosti k ideálnímu řešení:</h4>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Vzdálenost od ideálního řešení (S*):</span>
+                <span class="mcapp-formula-content">S*<sub>i</sub> = √(∑<sub>j=1</sub><sup>n</sup> (v<sub>ij</sub> - v<sub>j</sub><sup>+</sup>)<sup>2</sup>)</span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Vzdálenost od anti-ideálního řešení (S-):</span>
+                <span class="mcapp-formula-content">S-<sub>i</sub> = √(∑<sub>j=1</sub><sup>n</sup> (v<sub>ij</sub> - v<sub>j</sub><sup>-</sup>)<sup>2</sup>)</span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Relativní blízkost k ideálnímu řešení (C*):</span>
+                <span class="mcapp-formula-content">C*<sub>i</sub> = S-<sub>i</sub> / (S*<sub>i</sub> + S-<sub>i</sub>)</span>
+            </div>
+        </div>
+        <div class="mcapp-note">
+            <p>kde v<sub>ij</sub> je vážená hodnota i-té varianty pro j-té kritérium,
+            v<sub>j</sub><sup>+</sup> je ideální hodnota pro j-té kritérium a
+            v<sub>j</sub><sup>-</sup> je anti-ideální hodnota.</p>
+            <p>Relativní blízkost C*<sub>i</sub> nabývá hodnot v intervalu [0,1], kde hodnota blížící se 1 znamená ideální řešení
+            a hodnota blížící se 0 znamená anti-ideální řešení.</p>
+        </div>
+    </div>
+    
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-distances-table">
+            <thead>
+                <tr>
+                    <th>Varianta</th>
+                    <th>Vzdálenost od ideálního řešení (S*)</th>
+                    <th>Vzdálenost od anti-ideálního řešení (S-)</th>
+                    <th>Relativní blízkost k ideálnímu řešení (C*)</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"""
+            <tr>
+                <td>{var}</td>
+                <td style="text-align: right;">{dist_ideal[i]:.3f}</td>
+                <td style="text-align: right;">{dist_anti_ideal[i]:.3f}</td>
+                <td style="text-align: right; font-weight: bold;">{relativni_blizkost[i]:.3f}</td>
+            </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    <p class="mcapp-note">
+        Varianty jsou následně seřazeny podle hodnoty relativní blízkosti k ideálnímu řešení (C*) sestupně.
+        Varianta s nejvyšší hodnotou C* je považována za nejlepší.
+    </p>
+    """
+    
+    return html
+
+def vytvor_html_shrnuti_vysledku_topsis(topsis_vysledky):
+    """
+    Vytvoří HTML shrnutí výsledků TOPSIS analýzy s dodatečnými informacemi.
+    
+    Args:
+        topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+        
+    Returns:
+        str: HTML kód se shrnutím výsledků
+    """
+    # Extrakce dat
+    nejlepsi_varianta = topsis_vysledky.get('nejlepsi_varianta', 'N/A')
+    nejlepsi_skore = topsis_vysledky.get('nejlepsi_skore', 0)
+    nejhorsi_varianta = topsis_vysledky.get('nejhorsi_varianta', 'N/A')
+    nejhorsi_skore = topsis_vysledky.get('nejhorsi_skore', 0)
+    
+    # Vypočítáme procento nejhoršího z maxima
+    procento = (nejhorsi_skore / nejlepsi_skore * 100) if nejlepsi_skore > 0 else 0
+    
+    html = f"""
+    <div style="margin-top: 20px;">
+        <h3>Shrnutí výsledků</h3>
+        <ul style="list-style: none; padding-left: 5px;">
+            <li><strong>Nejlepší varianta:</strong> {nejlepsi_varianta} (relativní blízkost: {nejlepsi_skore:.3f})</li>
+            <li><strong>Nejhorší varianta:</strong> {nejhorsi_varianta} (relativní blízkost: {nejhorsi_skore:.3f})</li>
+            <li><strong>Rozdíl nejlepší-nejhorší:</strong> {nejlepsi_skore - nejhorsi_skore:.3f}</li>
+            <li><strong>Poměr nejhorší/nejlepší:</strong> {procento:.1f}% z maxima</li>
+        </ul>
+        <p>
+            Relativní blízkost k ideálnímu řešení (C*) nabývá hodnot v intervalu [0,1], kde hodnota blížící se 1 znamená ideální řešení.
+            Vyšší hodnota C* indikuje lepší variantu.
+        </p>
+    </div>
+    """
+    
+    return html
+
+def vytvor_sekci_vysledku_topsis(topsis_vysledky):
+    """
+    Vytvoří HTML sekci s výsledky TOPSIS analýzy.
+    
+    Args:
+        topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+        
+    Returns:
+        str: HTML kód pro sekci výsledků
+    """
+    # Tabulka výsledků
+    vysledky_html = vytvor_html_tabulku_vysledku_s_procenty(topsis_vysledky)
+    
+    # Shrnutí výsledků
+    shrnuti_html = vytvor_html_shrnuti_vysledku_topsis(topsis_vysledky)
+    
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-results">
+        <h2>Výsledky analýzy</h2>
+        <div class="mcapp-card">
+            {vysledky_html}
+            {shrnuti_html}
         </div>
     </div>
     """

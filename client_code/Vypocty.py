@@ -173,14 +173,14 @@ def priprav_data_z_json(analyza_data):
 def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="wsm", typy_kriterii=None, vyber_kriteria=0, pocet_kroku=9):
     """
     Provede analýzu citlivosti změnou váhy vybraného kritéria.
-    Podporuje metody WSM a WPM.
+    Podporuje metody WSM, WPM a TOPSIS.
     
     Args:
-        norm_matice: 2D list - pro WSM normalizované hodnoty, pro WPM původní hodnoty
+        norm_matice: 2D list - pro WSM/TOPSIS normalizované hodnoty, pro WPM původní hodnoty
         vahy: List vah kritérií
         varianty: List názvů variant
         kriteria: List názvů kritérií
-        metoda: Metoda analýzy ("wsm" nebo "wpm")
+        metoda: Metoda analýzy ("wsm", "wpm" nebo "topsis")
         typy_kriterii: List typů kritérií (povinný pro WPM)
         vyber_kriteria: Index kritéria, jehož váha se bude měnit (výchozí je první kritérium)
         pocet_kroku: Počet kroků při změně váhy
@@ -270,6 +270,45 @@ def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="
                         skore *= hodnota ** nove_vahy[j]
                         
                     skore_variant.append(skore)
+                    
+            elif metoda.lower() == "topsis":
+                # TOPSIS metoda - výpočet relativní blízkosti k ideálnímu řešení
+                skore_variant = []
+                
+                # Výpočet vážené normalizované matice
+                vazena_matice = []
+                for i in range(len(varianty)):
+                    radek = []
+                    for j in range(len(kriteria)):
+                        radek.append(norm_matice[i][j] * nove_vahy[j])
+                    vazena_matice.append(radek)
+                
+                # Výpočet ideálního a anti-ideálního řešení
+                ideal = []
+                anti_ideal = []
+                for j in range(len(kriteria)):
+                    sloupec = [vazena_matice[i][j] for i in range(len(varianty))]
+                    ideal.append(max(sloupec))
+                    anti_ideal.append(min(sloupec))
+                
+                # Výpočet vzdáleností a relativní blízkosti
+                for i in range(len(varianty)):
+                    sum_ideal = 0
+                    sum_anti_ideal = 0
+                    for j in range(len(kriteria)):
+                        sum_ideal += (vazena_matice[i][j] - ideal[j]) ** 2
+                        sum_anti_ideal += (vazena_matice[i][j] - anti_ideal[j]) ** 2
+                    
+                    dist_ideal = sum_ideal ** 0.5
+                    dist_anti_ideal = sum_anti_ideal ** 0.5
+                    
+                    # Výpočet relativní blízkosti
+                    if dist_ideal + dist_anti_ideal == 0:
+                        relativni_blizkost = 0
+                    else:
+                        relativni_blizkost = dist_anti_ideal / (dist_ideal + dist_anti_ideal)
+                    
+                    skore_variant.append(relativni_blizkost)
             else:
                 raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")
             
@@ -294,21 +333,37 @@ def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu analýzy citlivosti: {str(e)}")
 
-def topsis_vypocet(norm_matice, vahy, varianty, kriteria):
+def topsis_vypocet(matice, vahy, varianty, kriteria, typy_kriterii):
     """
     Vypočítá výsledky metodou TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution).
+    Používá normalizaci pomocí Euklidovské normy.
     
     Args:
-        norm_matice: 2D list normalizovaných hodnot
+        matice: 2D list původních (nenormalizovaných) hodnot
         vahy: List vah kritérií
         varianty: List názvů variant
         kriteria: List názvů kritérií
+        typy_kriterii: List typů kritérií ("max" nebo "min")
     
     Returns:
         dict: Výsledky analýzy metodou TOPSIS
     """
     try:
-        # Výpočet vážené normalizované matice
+        # 1. Vektorizace rozhodovací matice (normalizace pomocí Euklidovské normy)
+        norm_matice = []
+        for i in range(len(varianty)):
+            radek = []
+            for j in range(len(kriteria)):
+                # Vypočítáme Euklidovskou normu pro každé kritérium
+                sloupec = [matice[k][j] for k in range(len(varianty))]
+                norma = (sum(x**2 for x in sloupec)) ** 0.5
+                
+                # Normalizace hodnoty
+                hodnota = matice[i][j] / norma if norma != 0 else 0
+                radek.append(hodnota)
+            norm_matice.append(radek)
+        
+        # 2. Výpočet vážené normalizované matice
         vazena_matice = []
         for i in range(len(varianty)):
             radek = []
@@ -316,15 +371,20 @@ def topsis_vypocet(norm_matice, vahy, varianty, kriteria):
                 radek.append(norm_matice[i][j] * vahy[j])
             vazena_matice.append(radek)
         
-        # Výpočet ideálního a anti-ideálního řešení
+        # 3. Určení ideálního a anti-ideálního řešení
         ideal = []
         anti_ideal = []
         for j in range(len(kriteria)):
             sloupec = [vazena_matice[i][j] for i in range(len(varianty))]
-            ideal.append(max(sloupec))
-            anti_ideal.append(min(sloupec))
+            
+            if typy_kriterii[j].lower() in ("max", "benefit"):
+                ideal.append(max(sloupec))
+                anti_ideal.append(min(sloupec))
+            else:  # min kritéria
+                ideal.append(min(sloupec))
+                anti_ideal.append(max(sloupec))
         
-        # Výpočet vzdáleností od ideálního a anti-ideálního řešení
+        # 4. Výpočet vzdáleností od ideálního a anti-ideálního řešení
         dist_ideal = []
         dist_anti_ideal = []
         for i in range(len(varianty)):
@@ -336,16 +396,16 @@ def topsis_vypocet(norm_matice, vahy, varianty, kriteria):
             dist_ideal.append(sum_ideal ** 0.5)
             dist_anti_ideal.append(sum_anti_ideal ** 0.5)
         
-        # Výpočet relativní blízkosti k ideálnímu řešení
-        blízkost = []
+        # 5. Výpočet relativní blízkosti k ideálnímu řešení
+        relativni_blizkost = []
         for i in range(len(varianty)):
             if dist_ideal[i] + dist_anti_ideal[i] == 0:
-                blízkost.append(0)
+                relativni_blizkost.append(0)
             else:
-                blízkost.append(dist_anti_ideal[i] / (dist_ideal[i] + dist_anti_ideal[i]))
+                relativni_blizkost.append(dist_anti_ideal[i] / (dist_ideal[i] + dist_anti_ideal[i]))
         
         # Seřazení variant podle blízkosti (sestupně)
-        skore = [(varianty[i], blízkost[i]) for i in range(len(varianty))]
+        skore = [(varianty[i], relativni_blizkost[i]) for i in range(len(varianty))]
         serazene = sorted(skore, key=lambda x: x[1], reverse=True)
         
         # Vytvoření seznamu výsledků s pořadím
@@ -359,9 +419,13 @@ def topsis_vypocet(norm_matice, vahy, varianty, kriteria):
             'nejlepsi_skore': results[0][2],
             'nejhorsi_varianta': results[-1][0],
             'nejhorsi_skore': results[-1][2],
+            'norm_matice': norm_matice,
+            'vazena_matice': vazena_matice,
             'ideal': ideal,
             'anti_ideal': anti_ideal,
-            'vazena_matice': vazena_matice
+            'dist_ideal': dist_ideal,
+            'dist_anti_ideal': dist_anti_ideal,
+            'relativni_blizkost': relativni_blizkost
         }
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu TOPSIS: {str(e)}")
@@ -489,8 +553,7 @@ def vypocitej_analyzu(analyza_data, metoda="wsm"):
     elif metoda == "wpm":
         return vypocitej_wpm_analyzu(analyza_data)
     elif metoda == "topsis":
-        # Zde by byla implementace pro TOPSIS
-        raise ValueError("Metoda TOPSIS není v této verzi implementována")
+        return vypocitej_topsis_analyzu(analyza_data)
     elif metoda == "electre":
         # Zde by byla implementace pro ELECTRE
         raise ValueError("Metoda ELECTRE není v této verzi implementována")
@@ -711,3 +774,55 @@ def vypocitej_matici_pomeru_variant(matice, vahy, typy_kriterii):
         
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu matice poměrů variant: {str(e)}")
+
+def vypocitej_topsis_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet TOPSIS analýzy z dat.
+    Provádí všechny kroky TOPSIS analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s normalizovanou maticí, vzdálenostmi a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Pro TOPSIS používáme původní matici a normalizujeme ji v samotné metodě TOPSIS
+        # Pro kompatibilitu s ostatními funkcemi vytvoříme také min-max normalizovanou matici
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        
+        # 3. Výpočet TOPSIS výsledků - předáváme původní matici, ne normalizovanou
+        topsis_vysledky = topsis_vypocet(
+            matice, 
+            vahy, 
+            varianty,
+            kriteria,
+            typy_kriterii
+        )
+
+        # 4. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,  # Min-max normalizace pro kompatibilitu
+            'vahy': vahy,
+            'topsis_vysledky': topsis_vysledky,  # Obsahuje výsledky s Euklidovskou normalizací
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'metoda': 'TOPSIS',
+            'popis_metody': 'Technique for Order of Preference by Similarity to Ideal Solution'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu TOPSIS analýzy: {str(e)}")
