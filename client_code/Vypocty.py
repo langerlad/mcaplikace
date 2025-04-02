@@ -169,15 +169,17 @@ def priprav_data_z_json(analyza_data):
     except Exception as e:
         raise ValueError(f"Chyba při přípravě dat pro výpočet: {str(e)}")
 
-def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, vyber_kriteria=0, pocet_kroku=9):
+def vypocitej_analyzu_citlivosti(matrix_data, vahy, varianty, kriteria, typy_kriterii=None, metoda="wsm", vyber_kriteria=0, pocet_kroku=9):
     """
     Provede analýzu citlivosti změnou váhy vybraného kritéria.
     
     Args:
-        norm_matice: 2D list normalizovaných hodnot
+        matrix_data: 2D list hodnot (normalizovaných pro WSM, původních pro WPM)
         vahy: List vah kritérií
         varianty: List názvů variant
         kriteria: List názvů kritérií
+        typy_kriterii: List typů kritérií (povinný pro WPM metodu)
+        metoda: Použitá metoda analýzy ("wsm" nebo "wpm")
         vyber_kriteria: Index kritéria, jehož váha se bude měnit (výchozí je první kritérium)
         pocet_kroku: Počet kroků při změně váhy
         
@@ -209,13 +211,41 @@ def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, vyber_kr
                     if i != vyber_kriteria:
                         nove_vahy[i] = (nove_vahy[i] / suma_zbylych_vah) * zbyvajici_vaha
             
-            # Výpočet nových skóre
-            skore_variant = []
-            for i in range(len(varianty)):
-                skore = 0
-                for j in range(len(kriteria)):
-                    skore += norm_matice[i][j] * nove_vahy[j]
-                skore_variant.append(skore)
+            # Výpočet nových skóre podle metody
+            if metoda.lower() == "wsm":
+                # WSM metoda - sčítání vážených hodnot
+                skore_variant = []
+                for i in range(len(varianty)):
+                    skore = 0
+                    for j in range(len(kriteria)):
+                        skore += matrix_data[i][j] * nove_vahy[j]
+                    skore_variant.append(skore)
+            
+            elif metoda.lower() == "wpm":
+                # WPM metoda - násobení hodnot umocněných na váhy
+                if typy_kriterii is None:
+                    raise ValueError("Pro metodu WPM je nutné specifikovat typy kritérií")
+                    
+                skore_variant = []
+                for i in range(len(varianty)):
+                    skore = 1.0  # Inicializace na 1 pro násobení
+                    for j in range(len(kriteria)):
+                        hodnota = matrix_data[i][j]
+                        
+                        # Kontrola, že hodnoty nejsou nulové nebo záporné
+                        if hodnota <= 0:
+                            hodnota = 0.001  # Malá kladná hodnota
+                        
+                        # Pro minimalizační kritéria používáme 1/hodnota
+                        if typy_kriterii[j].lower() in ("min", "cost"):
+                            hodnota = 1 / hodnota
+                        
+                        # Umocníme hodnotu na váhu a vynásobíme dosavadní skóre
+                        skore *= hodnota ** nove_vahy[j]
+                        
+                    skore_variant.append(skore)
+            else:
+                raise ValueError(f"Nepodporovaná metoda: {metoda}")
             
             # Určení pořadí variant pro tyto váhy
             serazene_indexy = sorted(range(len(skore_variant)), 
@@ -366,61 +396,6 @@ def wpm_vypocet(matice, vahy, typy_kriterii, varianty, kriteria):
 
 # Doplnění modulu Vypocty.py o centralizovanou funkci pro výpočty WSM
 
-def vypocitej_wsm_analyzu(analyza_data):
-    """
-    Centralizovaná funkce pro výpočet WSM analýzy z dat.
-    Provádí všechny kroky WSM analýzy a vrací strukturovaný výsledek.
-    
-    Args:
-        analyza_data: Slovník s daty analýzy
-        
-    Returns:
-        dict: Strukturovaný výsledek s normalizovanou maticí, váženými hodnotami a výsledky
-        
-    Raises:
-        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
-    """
-    try:
-        # Kontrola validity dat
-        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
-        if not je_validni:
-            raise ValueError(f"Neplatná vstupní data: {chyba}")
-            
-        # 1. Příprava dat z JSON formátu
-        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
-        
-        # 2. Normalizace matice pomocí min-max metody
-        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
-        
-        # 3. Výpočet vážených hodnot
-        vazene_matice = vypocitej_vazene_hodnoty(
-            norm_vysledky['normalizovana_matice'], 
-            vahy
-        )
-        
-        # 4. Výpočet WSM výsledků
-        wsm_vysledky = wsm_vypocet(
-            norm_vysledky['normalizovana_matice'], 
-            vahy, 
-            varianty
-        )
-        
-        # 5. Sestavení strukturovaného výsledku
-        vysledek = {
-            'norm_vysledky': norm_vysledky,
-            'vazene_matice': vazene_matice,
-            'vahy': vahy,
-            'wsm_vysledky': wsm_vysledky,
-            'matice': matice,
-            'typy_kriterii': typy_kriterii,
-            'metoda': 'WSM',
-            'popis_metody': 'Weighted Sum Model'
-        }
-        
-        return vysledek
-        
-    except Exception as e:
-        raise ValueError(f"Chyba při výpočtu WSM analýzy: {str(e)}")
 
 def validuj_vstupni_data_analyzy(analyza_data):
     """
@@ -486,8 +461,7 @@ def vypocitej_analyzu(analyza_data, metoda="wsm"):
     if metoda == "wsm":
         return vypocitej_wsm_analyzu(analyza_data)
     elif metoda == "wpm":
-        # Zde by byla implementace pro WPM
-        raise ValueError("Metoda WPM není v této verzi implementována")
+        return vypocitej_wpm_analyzu(analyza_data)
     elif metoda == "topsis":
         # Zde by byla implementace pro TOPSIS
         raise ValueError("Metoda TOPSIS není v této verzi implementována")
@@ -499,3 +473,154 @@ def vypocitej_analyzu(analyza_data, metoda="wsm"):
         raise ValueError("Metoda MABAC není v této verzi implementována")
     else:
         raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")
+      
+def vypocitej_wsm_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet WSM analýzy z dat.
+    Provádí všechny kroky WSM analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s normalizovanou maticí, váženými hodnotami a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Normalizace matice pomocí min-max metody
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        
+        # 3. Výpočet vážených hodnot
+        vazene_matice = vypocitej_vazene_hodnoty(
+            norm_vysledky['normalizovana_matice'], 
+            vahy
+        )
+        
+        # 4. Výpočet WSM výsledků
+        wsm_vysledky = wsm_vypocet(
+            norm_vysledky['normalizovana_matice'], 
+            vahy, 
+            varianty
+        )
+        
+        # 5. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,
+            'vazene_matice': vazene_matice,
+            'vahy': vahy,
+            'wsm_vysledky': wsm_vysledky,
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'metoda': 'WSM',
+            'popis_metody': 'Weighted Sum Model'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu WSM analýzy: {str(e)}")
+
+def vypocitej_wpm_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet WPM analýzy z dat.
+    Provádí všechny kroky WPM analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s normalizovanou maticí, váženými hodnotami a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Normalizace matice pomocí min-max metody
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        
+        # 3. Výpočet WPM výsledků
+        wpm_vysledky = wpm_vypocet(
+            matice, 
+            vahy, 
+            typy_kriterii, 
+            varianty,
+            kriteria
+        )
+        
+        # 4. Výpočet produktového příspěvku (pro vizualizaci) - transformované hodnoty umocněné na váhy
+        produktovy_prispevek = vypocitej_produktovy_prispevek(matice, vahy, typy_kriterii)
+        
+        # 5. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,
+            'vahy': vahy,
+            'wpm_vysledky': wpm_vysledky,
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'produktovy_prispevek': produktovy_prispevek,
+            'metoda': 'WPM',
+            'popis_metody': 'Weighted Product Model'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu WPM analýzy: {str(e)}")
+
+def vypocitej_produktovy_prispevek(matice, vahy, typy_kriterii):
+    """
+    Vypočítá příspěvek jednotlivých kritérií pro WPM jako matici umocněných hodnot.
+    Pro vizualizaci WPM, kde se používá násobení místo sčítání.
+    
+    Args:
+        matice: 2D list původních hodnot [varianty][kriteria]
+        vahy: List vah kritérií
+        typy_kriterii: List typů kritérií ("max" nebo "min")
+    
+    Returns:
+        2D list transformovaných hodnot umocněných na váhy
+    """
+    try:
+        produktovy_prispevek = []
+        
+        for i in range(len(matice)):
+            radek = []
+            for j in range(len(matice[0])):
+                hodnota = matice[i][j]
+                
+                # Kontrola, že hodnoty nejsou nulové nebo záporné
+                if hodnota <= 0:
+                    hodnota = 0.001  # Malá kladná hodnota
+                
+                # Pro minimalizační kritéria používáme 1/hodnota
+                if typy_kriterii[j].lower() in ("min", "cost"):
+                    hodnota = 1 / hodnota
+                
+                # Umocníme hodnotu na váhu a uložíme
+                prispevek = hodnota ** vahy[j]
+                radek.append(prispevek)
+                
+            produktovy_prispevek.append(radek)
+            
+        return produktovy_prispevek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu produktového příspěvku: {str(e)}")

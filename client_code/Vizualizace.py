@@ -509,28 +509,39 @@ def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
         </label>
         <div class="details-content">
             <div style="padding: 0;">
-                <p>WPM je metoda vícekriteriálního rozhodování, která na rozdíl od WSM používá násobení místo sčítání.</p>
+                <p>WPM (Weighted Product Model) je metoda vícekriteriálního rozhodování, která na rozdíl od WSM používá násobení místo sčítání. Tím je méně citlivá na různé měrné jednotky kritérií a eliminuje potřebu normalizace.</p>
                 
                 <h4>Postup metody WPM:</h4>
                 <ol>
                     <li><strong>Sběr dat</strong> - Definice variant, kritérií a hodnocení variant podle kritérií.</li>
-                    <li><strong>Určení vah kritérií</strong> - Přiřazení vah jednotlivým kritériím.</li>
-                    <li><strong>Porovnání variant</strong> - Výpočet poměrů hodnot variant, umocněných na váhy kritérií.</li>
-                    <li><strong>Výpočet celkového skóre</strong> - Násobení těchto poměrů pro každou variantu.</li>
-                    <li><strong>Seřazení variant</strong> - Seřazení variant podle celkového skóre.</li>
+                    <li><strong>Transformace dat</strong> - Pro minimalizační kritéria se použije převrácená hodnota (1/x).</li>
+                    <li><strong>Výpočet výsledné hodnoty</strong> - Pro každou variantu se vypočítá součin hodnot kritérií umocněných na příslušné váhy.</li>
+                    <li><strong>Seřazení variant</strong> - Seřazení variant podle celkového skóre (vyšší je lepší).</li>
                 </ol>
+                
+                <h4>Matematický zápis:</h4>
+                <div class="mcapp-formula-box">
+                    <div class="mcapp-formula-row">
+                        <span class="mcapp-formula-content">
+                            P(A<sub>i</sub>) = ∏<sub>j=1</sub><sup>n</sup> (x<sub>ij</sub>)<sup>w<sub>j</sub></sup>
+                        </span>
+                    </div>
+                </div>
+                <p>kde x<sub>ij</sub> je hodnota i-té varianty podle j-tého kritéria a w<sub>j</sub> je váha j-tého kritéria.</p>
                 
                 <h4>Výhody metody:</h4>
                 <ul>
                     <li>Eliminuje potřebu normalizace jednotek</li>
                     <li>Méně citlivá na extrémní hodnoty</li>
-                    <li>Výhodnější pro některé typy rozhodovacích problémů</li>
+                    <li>Vhodná pro data s rozdílnými měrnými jednotkami</li>
+                    <li>Odolnější vůči problému "rank reversal" než WSM</li>
                 </ul>
                 
                 <h4>Omezení metody:</h4>
                 <ul>
                     <li>Složitější interpretace výsledků</li>
-                    <li>Problémy s nulovými hodnotami</li>
+                    <li>Problémy s nulovými hodnotami (ty je třeba nahradit velmi malým číslem)</li>
+                    <li>Méně intuitivní než WSM</li>
                 </ul>
             </div>
         </div>
@@ -592,9 +603,9 @@ def vytvor_html_sekci_normalizace(default_open=True):
     </div>
     """
 
-def vytvor_sekci_postupu(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
+def vytvor_sekci_postupu_wsm(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
     """
-    Vytvoří HTML sekci s postupem výpočtu s použitím CSS místo JavaScriptu.
+    Vytvoří HTML sekci s postupem výpočtu.
     
     Args:
         norm_matice: Normalizovaná matice hodnot
@@ -656,15 +667,32 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
     hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
     metodologie_html = vytvor_html_sekci_metodologie(metoda, default_open=True)
     vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
-    postup_html = vytvor_sekci_postupu(
-        vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
-        vysledky_vypoctu['vazene_matice'],
-        vysledky_vypoctu['vahy'],
-        varianty,
-        kriteria,
-        vysledky_vypoctu['typy_kriterii']
-    )
-    vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
+    
+    # Rozdílný postup podle metody
+    if metoda.upper() == "WSM":
+        postup_html = vytvor_sekci_postupu_wsm(
+            vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
+            vysledky_vypoctu['vazene_matice'],
+            vysledky_vypoctu['vahy'],
+            varianty,
+            kriteria,
+            vysledky_vypoctu['typy_kriterii']
+        )
+        vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wsm_vysledky'])
+    elif metoda.upper() == "WPM":
+        postup_html = vytvor_sekci_postupu_wpm(
+            vysledky_vypoctu['matice'],
+            vysledky_vypoctu['produktovy_prispevek'],
+            vysledky_vypoctu['vahy'],
+            varianty,
+            kriteria,
+            vysledky_vypoctu['typy_kriterii']
+        )
+        vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['wpm_vysledky'])
+    else:
+        # Pro ostatní metody (budoucí implementace)
+        postup_html = f"<div class='mcapp-section'><h2>Postup zpracování dat</h2><p>Postup zpracování dat metodou {metoda}</p></div>"
+        vysledky_html = f"<div class='mcapp-section'><h2>Výsledky analýzy</h2><p>Výsledky analýzy metodou {metoda}</p></div>"
     
     # Sloučení všech částí do jednoho dokumentu
     html_obsah = f"""
@@ -812,6 +840,66 @@ def vytvor_html_tabulku_vazenych_hodnot(vazene_matice, varianty, kriteria):
             
         # Přidáme buňku s celkovým skóre
         html += f"<td style='background-color:#f0f0f0; font-weight:bold; text-align:right;'>{soucet:.3f}</td>"
+        
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_html_produktovou_tabulku(produkt_prispevek, varianty, kriteria):
+    """
+    Vytvoří HTML tabulku s produktovými příspěvky pro WPM metodu.
+    
+    Args:
+        produkt_prispevek: 2D list s hodnotami umocněnými na váhy [varianty][kriteria]
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        str: HTML kód tabulky s produktovými příspěvky
+    """
+    html = """
+    <h3>Hodnoty umocněné na váhy kritérií</h3>
+    <p class="mcapp-note">
+        Metoda WPM používá násobení hodnot kritérií umocněných na váhy místo sčítání.
+        Níže jsou zobrazeny hodnoty po transformaci (1/x pro minimalizační kritéria) a umocnění na váhy.
+        Celkové skóre je pak součinem všech těchto hodnot v řádku.
+    </p>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-product-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        html += f"<th>{krit}</th>"
+    
+    # Přidáme sloupec součinu
+    html += "<th style='background-color:#f0f0f0; font-weight:bold;'>Celkové skóre</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td>{var}</td>"
+        
+        soucin = 1.0
+        for j in range(len(kriteria)):
+            hodnota = produkt_prispevek[i][j]
+            soucin *= hodnota
+            html += f"<td>{hodnota:.3f}</td>"
+            
+        # Přidáme buňku s celkovým skóre
+        html += f"<td style='background-color:#f0f0f0; font-weight:bold; text-align:right;'>{soucin:.3f}</td>"
         
         html += "</tr>"
     
@@ -1094,6 +1182,133 @@ def vytvor_sekci_vysledku(wsm_vysledky):
         <div class="mcapp-card">
             {vysledky_html}
             {shrnuti_html}
+        </div>
+    </div>
+    """
+def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria, typy_kriterii):
+    """
+    Vytvoří HTML sekci s postupem výpočtu WPM s použitím CSS místo JavaScriptu.
+    
+    Args:
+        matice: Původní matice hodnot
+        produkt_prispevek: 2D list s příspěvky jednotlivých kritérií
+        vahy: Seznam vah kritérií
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií (max/min)
+            
+    Returns:
+        str: HTML kód pro sekci postupu výpočtu
+    """
+    # Vysvětlení WPM metody
+    vysvetleni_wpm_html = """
+    <div class="mcapp-explanation">
+        <h4>Princip výpočtu WPM metody:</h4>
+        <p>
+            Metoda WPM (Weighted Product Model) se od WSM (Weighted Sum Model) liší tím, že místo sčítání 
+            používá násobení hodnot umocněných na váhy kritérií.
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Vzorec výpočtu:</span>
+                <span class="mcapp-formula-content">P(A<sub>i</sub>) = ∏<sub>j=1</sub><sup>n</sup> (x<sub>ij</sub>)<sup>w<sub>j</sub></sup></span>
+            </div>
+        </div>
+        <div class="mcapp-note">
+            <p>kde:</p>
+            <ul>
+                <li>P(A<sub>i</sub>) je výsledné skóre i-té varianty</li>
+                <li>x<sub>ij</sub> je hodnota i-té varianty podle j-tého kritéria</li>
+                <li>w<sub>j</sub> je váha j-tého kritéria</li>
+                <li>Pro minimalizační kritéria se hodnoty převádí na 1/x<sub>ij</sub></li>
+            </ul>
+        </div>
+    </div>
+    """
+    
+    # Tabulka původních hodnot
+    puvodni_hodnoty_html = """
+    <h3>Původní hodnoty</h3>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-original-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        puvodni_hodnoty_html += f"<th>{krit}</th>"
+    
+    puvodni_hodnoty_html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        puvodni_hodnoty_html += f"<tr><td>{var}</td>"
+        for j in range(len(kriteria)):
+            hodnota = matice[i][j]
+            puvodni_hodnoty_html += f"<td>{hodnota:.3f}</td>"
+        puvodni_hodnoty_html += "</tr>"
+    
+    puvodni_hodnoty_html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    # Tabulka vah
+    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    
+    # Tabulka typů kritérií
+    typy_html = """
+    <h3>Typy kritérií</h3>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-types-table">
+            <thead>
+                <tr>
+                    <th>Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        typy_html += f"<th>{krit}</th>"
+    
+    typy_html += """
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Typ</td>
+    """
+    
+    for i, typ in enumerate(typy_kriterii):
+        typy_html += f"<td>{typ.upper()}</td>"
+    
+    typy_html += """
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    # Tabulka produktových příspěvků
+    produkty_html = vytvor_html_produktovou_tabulku(produkt_prispevek, varianty, kriteria)
+
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-process">
+        <h2>Postup zpracování dat</h2>
+        {vysvetleni_wpm_html}
+        <div class="mcapp-card">
+            <h3>Krok 1: Původní data</h3>
+            {puvodni_hodnoty_html}
+            {vahy_html}
+            {typy_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Výpočet metodou WPM</h3>
+            {produkty_html}
         </div>
     </div>
     """

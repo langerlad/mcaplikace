@@ -10,7 +10,7 @@ from .. import Spravce_stavu, Utils, Vypocty, Vizualizace, mcapp_styly
 
 class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
   """
-  Formulář pro zobrazení výsledků WSM analýzy (Weighted Sum Model) s využitím HTML.
+  Formulář pro zobrazení výsledků WPM analýzy (Weighted Product Model) s využitím HTML.
   Využívá sdílené moduly pro výpočty a vizualizace a zobrazuje výstup s bohatým formátováním.
   """
 
@@ -39,27 +39,27 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       return
 
     try:
-      Utils.zapsat_info(f"Načítám data analýzy ID: {self.analyza_id}")
+      Utils.zapsat_info(f"Načítám data analýzy ID: {self.analyza_id} pro WPM")
 
       # Načtení dat analýzy z JSON struktury
       self.analyza_data = anvil.server.call("nacti_analyzu", self.analyza_id)
 
-      # Výpočet WSM analýzy pomocí centralizované funkce z modulu Vypocty
-      self.vysledky_vypoctu = Vypocty.vypocitej_wsm_analyzu(self.analyza_data)
+      # Výpočet WPM analýzy pomocí centralizované funkce z modulu Vypocty
+      self.vysledky_vypoctu = Vypocty.vypocitej_wpm_analyzu(self.analyza_data)
 
       # Zobrazení výsledků
       self._zobraz_kompletni_analyzu()
 
-      Utils.zapsat_info("Výsledky WSM analýzy úspěšně zobrazeny")
+      Utils.zapsat_info("Výsledky WPM analýzy úspěšně zobrazeny")
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při načítání analýzy: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při načítání WPM analýzy: {str(e)}")
       self._zobraz_chybovou_zpravu(str(e))
-      alert(f"Chyba při načítání analýzy: {str(e)}")
+      alert(f"Chyba při načítání WPM analýzy: {str(e)}")
 
   def _zobraz_prazdny_formular(self):
     """Zobrazí prázdný formulář s informací o chybějících datech."""
-    Utils.zapsat_info("Zobrazuji prázdný formulář WSM HTML - chybí ID analýzy")
+    Utils.zapsat_info("Zobrazuji prázdný formulář WPM HTML - chybí ID analýzy")
     chyba_html = """
         <div class="mcapp-error-message">
             <div class="mcapp-error-icon"><i class="fa fa-exclamation-circle"></i></div>
@@ -74,7 +74,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     chyba_html = f"""
         <div class="mcapp-error-message">
             <div class="mcapp-error-icon"><i class="fa fa-exclamation-circle"></i></div>
-            <div class="mcapp-error-text">Chyba při zpracování: {zprava}</div>
+            <div class="mcapp-error-text">Chyba při zpracování WPM: {zprava}</div>
         </div>
         """
     self.html_1.html = mcapp_styly.vloz_styly_do_html(chyba_html)
@@ -85,7 +85,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     try:
       # Vytvoření HTML obsahu pomocí funkcí z modulu Vizualizace
       html_obsah = Vizualizace.vytvor_kompletni_html_analyzy(
-        self.analyza_data, self.vysledky_vypoctu, "WSM"
+        self.analyza_data, self.vysledky_vypoctu, "WPM"
       )
 
       # Vložení stylů do HTML
@@ -95,7 +95,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       self._vytvor_a_nastav_grafy()
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při zobrazování výsledků: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při zobrazování výsledků WPM: {str(e)}")
       self._zobraz_chybovou_zpravu(str(e))
       self._skryj_grafy()
 
@@ -103,31 +103,37 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     """Vytvoří a nastaví grafy pro vizualizaci výsledků."""
     try:
       # Graf výsledků
-      self.plot_wsm_vysledek.figure = Vizualizace.vytvor_sloupovy_graf_vysledku(
-        self.vysledky_vypoctu["wsm_vysledky"]["results"],
-        self.vysledky_vypoctu["wsm_vysledky"]["nejlepsi_varianta"],
-        self.vysledky_vypoctu["wsm_vysledky"]["nejhorsi_varianta"],
-        "WSM",
+      self.plot_wpm_vysledek.figure = Vizualizace.vytvor_sloupovy_graf_vysledku(
+        self.vysledky_vypoctu["wpm_vysledky"]["results"],
+        self.vysledky_vypoctu["wpm_vysledky"]["nejlepsi_varianta"],
+        self.vysledky_vypoctu["wpm_vysledky"]["nejhorsi_varianta"],
+        "WPM",
       )
-      self.plot_wsm_vysledek.visible = True
+      self.plot_wpm_vysledek.visible = True
 
-      # Graf skladby skóre
-      self.plot_wsm_skladba.figure = Vizualizace.vytvor_skladany_sloupovy_graf(
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-        self.vysledky_vypoctu["vazene_matice"],
-      )
-      self.plot_wsm_skladba.visible = True
+      # Graf skladby skóre - WPM používá násobení, proto zde nepoužíváme skládaný graf
+      if "produktovy_prispevek" in self.vysledky_vypoctu:
+        self.plot_wpm_skladba.figure = Vizualizace.vytvor_heat_mapu(
+          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+          self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
+          self.vysledky_vypoctu["produktovy_prispevek"],
+          "WPM - příspěvek kritérií (umocněné hodnoty)"
+        )
+        self.plot_wpm_skladba.visible = True
+      else:
+        self.plot_wpm_skladba.visible = False
 
       # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
       kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
       if len(kriteria) > 1:
         # Výpočet analýzy citlivosti pro první kritérium
         analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
-          self.vysledky_vypoctu["norm_vysledky"]["normalizovana_matice"],
+          self.vysledky_vypoctu["matice"],
           self.vysledky_vypoctu["vahy"],
+          self.vysledky_vypoctu["typy_kriterii"],
           self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
           kriteria,
+          metoda="wpm"  # Parametr určující metodu
         )
 
         # Grafy citlivosti
@@ -146,12 +152,12 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
         self.plot_citlivost_poradi.visible = False
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
+      Utils.zapsat_chybu(f"Chyba při vytváření grafů WPM: {str(e)}")
       self._skryj_grafy()
 
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""
-    self.plot_wsm_vysledek.visible = False
-    self.plot_wsm_skladba.visible = False
+    self.plot_wpm_vysledek.visible = False
+    self.plot_wpm_skladba.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False
