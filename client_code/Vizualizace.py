@@ -1805,7 +1805,8 @@ def vytvor_html_sekci_metodologie_topsis(default_open=True):
 
 def vytvor_html_normalizacni_tabulku_euklidovska(matice, norm_matice, varianty, kriteria):
     """
-    Vytvoří HTML tabulku s normalizovanými hodnotami podle Euklidovské normy.
+    Vytvoří HTML tabulku s normalizovanými hodnotami podle Euklidovské normy
+    s rozšířeným vysvětlením principu.
     
     Args:
         matice: 2D list s původními hodnotami [varianty][kriteria]
@@ -1818,15 +1819,27 @@ def vytvor_html_normalizacni_tabulku_euklidovska(matice, norm_matice, varianty, 
     """
     html = """
     <h3>Normalizovaná matice pomocí Euklidovské normy</h3>
-    <p class="mcapp-note">
-        Pro každé kritérium se vypočítá Euklidovská norma jako odmocnina ze součtu čtverců všech hodnot v daném kritériu:
-        $$\\text{norma}_j = \\sqrt{\\sum_{i=1}^{m} x_{ij}^2}$$
-        
-        Kde $x_{ij}$ je hodnota $i$-té varianty pro $j$-té kritérium a $m$ je počet variant.
-        
-        Potom je každá hodnota normalizována vydělením touto normou:
-        $$r_{ij} = \\frac{x_{ij}}{\\text{norma}_j}$$
-    </p>
+    <div class="mcapp-explanation">
+        <p>
+            V metodě TOPSIS se pro normalizaci používá Euklidovská norma, která zachovává vzájemné vztahy mezi hodnotami:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Euklidovská norma sloupce:</span>
+                <span class="mcapp-formula-content">norma<sub>j</sub> = √(∑<sub>i=1</sub><sup>m</sup>(x<sub>ij</sub>²))</span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Normalizovaná hodnota:</span>
+                <span class="mcapp-formula-content">r<sub>ij</sub> = x<sub>ij</sub> / norma<sub>j</sub></span>
+            </div>
+        </div>
+        <div class="mcapp-note">
+            <p>kde x<sub>ij</sub> je původní hodnota i-té varianty pro j-té kritérium.</p>
+            <p>Výsledkem jsou hodnoty v intervalu [0,1], přičemž součet čtverců hodnot v každém sloupci je roven 1.</p>
+            <p>Na rozdíl od min-max normalizace, Euklidovská normalizace zachovává vzájemné vztahy mezi hodnotami.</p>
+        </div>
+    </div>
+    
     <div class="mcapp-table-container">
         <table class="mcapp-table mcapp-normalized-table">
             <thead>
@@ -2010,50 +2023,6 @@ def vytvor_html_tabulku_vzdalenosti_topsis(dist_ideal, dist_anti_ideal, relativn
     
     return html
 
-def vytvor_html_sekci_euklidovska_normalizace(default_open=True):
-    """
-    Vytvoří HTML sekci s vysvětlením Euklidovské normalizace, používá CSS místo JavaScriptu.
-    
-    Args:
-        default_open: Zda má být sekce ve výchozím stavu otevřená
-        
-    Returns:
-        str: HTML kód s vysvětlením normalizace
-    """
-    # Vytvoření unikátního ID pro tento přepínač
-    toggle_id = "euklidovska-normalizace-info"
-    default_class = "default-open" if default_open else ""
-    
-    return f"""
-    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
-    <label for="{toggle_id}" class="details-toggle {default_class}">
-        Informace o Euklidovské normalizaci
-        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
-    </label>
-    <div class="details-content">
-        <div style="padding: 0;">
-            <div class="mcapp-explanation">
-                <h4>Princip Euklidovské normalizace:</h4>
-                <div class="mcapp-formula-box">
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-label">Euklidovská norma sloupce:</span>
-                        <span class="mcapp-formula-content">norma_j = √(∑(x_ij²))</span>
-                    </div>
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-label">Normalizovaná hodnota:</span>
-                        <span class="mcapp-formula-content">r_ij = x_ij / norma_j</span>
-                    </div>
-                </div>
-                <div class="mcapp-note">
-                    <p>kde x_ij je původní hodnota i-té varianty pro j-té kritérium.</p>
-                    <p>Výsledkem jsou hodnoty v intervalu [0,1], přičemž součet čtverců hodnot v každém sloupci je roven 1.</p>
-                    <p>Na rozdíl od min-max normalizace, Euklidovská normalizace zachovává vzájemné vztahy mezi hodnotami.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-
 def vytvor_sekci_postupu_topsis(matice, norm_matice, vazena_matice, vahy, ideal, anti_ideal, dist_ideal, dist_anti_ideal, relativni_blizkost, varianty, kriteria, typy_kriterii):
     """
     Vytvoří HTML sekci s postupem výpočtu TOPSIS.
@@ -2075,9 +2044,6 @@ def vytvor_sekci_postupu_topsis(matice, norm_matice, vazena_matice, vahy, ideal,
     Returns:
         str: HTML kód pro sekci postupu výpočtu
     """
-    # Vysvětlení Euklidovské normalizace pomocí CSS
-    vysvetleni_norm_html = vytvor_html_sekci_euklidovska_normalizace(default_open=True)
-    
     # Normalizační tabulka podle Euklidovské normy
     normalizace_html = vytvor_html_normalizacni_tabulku_euklidovska(matice, norm_matice, varianty, kriteria)
     
@@ -2094,7 +2060,6 @@ def vytvor_sekci_postupu_topsis(matice, norm_matice, vazena_matice, vahy, ideal,
     return f"""
     <div class="mcapp-section mcapp-process">
         <h2>Postup zpracování dat</h2>
-        {vysvetleni_norm_html}
         <div class="mcapp-card">
             <h3>Krok 1: Vektorizace rozhodovací matice (Euklidovská normalizace)</h3>
             {normalizace_html}
