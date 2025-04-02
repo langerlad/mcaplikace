@@ -596,7 +596,10 @@ def vypocitej_wpm_analyzu(analyza_data):
         # 4. Výpočet produktového příspěvku (pro vizualizaci)
         produktovy_prispevek = vypocitej_produktovy_prispevek(matice, vahy, typy_kriterii)
         
-        # 5. Sestavení strukturovaného výsledku
+        # 5. Výpočet matice poměrů variant
+        pomery_variant = vypocitej_matici_pomeru_variant(matice, vahy, typy_kriterii)
+        
+        # 6. Sestavení strukturovaného výsledku
         vysledek = {
             'norm_vysledky': norm_vysledky,
             'vahy': vahy,
@@ -604,6 +607,7 @@ def vypocitej_wpm_analyzu(analyza_data):
             'matice': matice,
             'typy_kriterii': typy_kriterii,
             'produktovy_prispevek': produktovy_prispevek,
+            'pomery_variant': pomery_variant,  # Přidáno
             'metoda': 'WPM',
             'popis_metody': 'Weighted Product Model'
         }
@@ -652,3 +656,58 @@ def vypocitej_produktovy_prispevek(matice, vahy, typy_kriterii):
         
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu produktového příspěvku: {str(e)}")
+
+def vypocitej_matici_pomeru_variant(matice, vahy, typy_kriterii):
+    """
+    Vypočítá matici poměrů variant pro metodu WPM.
+    Pro každý pár variant (A_i, A_j) vypočítá poměr R(A_i/A_j).
+    
+    Args:
+        matice: 2D list původních hodnot [varianty][kriteria]
+        vahy: List vah kritérií
+        typy_kriterii: List typů kritérií ("max" nebo "min")
+    
+    Returns:
+        2D matice poměrů mezi variantami
+    """
+    try:
+        n_variant = len(matice)
+        pomer_matice = []
+        
+        # Nejprve vypočítáme produktové skóre pro každou variantu
+        produkty_variant = []
+        for i in range(n_variant):
+            produkt = 1.0
+            for j in range(len(vahy)):
+                hodnota = matice[i][j]
+                
+                # Kontrola, že hodnoty nejsou nulové nebo záporné
+                if hodnota <= 0:
+                    hodnota = 0.001  # Malá kladná hodnota
+                
+                # Pro minimalizační kritéria používáme 1/hodnota
+                if typy_kriterii[j].lower() in ("min", "cost"):
+                    hodnota = 1 / hodnota
+                
+                # Umocníme hodnotu na váhu a vynásobíme dosavadní produkt
+                produkt *= hodnota ** vahy[j]
+            
+            produkty_variant.append(produkt)
+        
+        # Nyní vypočítáme matici poměrů
+        for i in range(n_variant):
+            radek = []
+            for j in range(n_variant):
+                # Poměr variant i a j
+                if produkty_variant[j] == 0:
+                    pomer = float('inf')  # Zabránění dělení nulou
+                else:
+                    pomer = produkty_variant[i] / produkty_variant[j]
+                radek.append(pomer)
+            
+            pomer_matice.append(radek)
+            
+        return pomer_matice
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu matice poměrů variant: {str(e)}")

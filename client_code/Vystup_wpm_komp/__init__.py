@@ -1,5 +1,6 @@
 from ._anvil_designer import Vystup_wpm_kompTemplate
 from anvil import *
+import plotly.graph_objects as go
 import anvil.server
 import anvil.users
 import anvil.tables as tables
@@ -120,6 +121,14 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
       )
       self.plot_wpm_heat_mapa.visible = True
 
+      # Graf poměrů variant
+      self.plot_pomery_variant.figure = Vizualizace.vytvor_graf_pomeru_variant(
+          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+          self.vysledky_vypoctu["pomery_variant"],
+          "WPM"
+      )
+      self.plot_pomery_variant.visible = True
+
       # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
       kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
       if len(kriteria) > 1:
@@ -160,3 +169,4 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     self.plot_wpm_heat_mapa.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False
+    self.plot_pomery_variant.visible = False

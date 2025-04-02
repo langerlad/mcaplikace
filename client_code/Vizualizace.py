@@ -344,6 +344,60 @@ def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
             }
         }
 
+def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující poměry mezi variantami.
+    
+    Args:
+        varianty: Seznam názvů variant
+        pomer_matice: 2D matice poměrů mezi variantami R(A_i/A_j)
+        nazev_metody: Název metody pro titulek grafu
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': pomer_matice,
+                'x': varianty,  # Popisky sloupců
+                'y': varianty,  # Popisky řádků
+                'colorscale': 'YlGnBu',  # Odpovídá cmap="YlGnBu" v seaborn
+                'zmin': 0,     # Odpovídá vmin=0
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in pomer_matice],
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Poměr'
+                }
+            }],
+            'layout': {
+                'title': f'Poměry variant (R(A_i/A_j)) - {nazev_metody}',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'top'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 50, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu poměrů variant: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu poměrů variant'
+            }
+        }
+
 def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
     """
     Vytvoří teplotní mapu zobrazující vztahy mezi variantami a kritérii
