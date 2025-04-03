@@ -826,3 +826,62 @@ def vypocitej_topsis_analyzu(analyza_data):
         
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu TOPSIS analýzy: {str(e)}")
+
+def vypocitej_electre_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet ELECTRE analýzy z dat.
+    Provádí všechny kroky ELECTRE analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s maticemi souhlasu, nesouhlasu a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Získání parametrů ELECTRE z nastavení uživatele
+        from .. import Spravce_stavu
+        spravce = Spravce_stavu.Spravce_stavu()
+        electre_params = spravce.ziskej_nastaveni_electre()
+        index_souhlasu = electre_params['index_souhlasu'] 
+        index_nesouhlasu = electre_params['index_nesouhlasu']
+        
+        # 3. Normalizace matice pro účely vizualizace
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        
+        # 4. Výpočet ELECTRE (zde by byl váš vlastní algoritmus ELECTRE)
+        # Toto je jen kostra, kterou budete muset doplnit konkrétním algoritmem
+        # ...
+        
+        # 5. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,
+            'vahy': vahy,
+            'elektre_vysledky': {
+                # Výsledky metody ELECTRE
+            },
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'parametry': {
+                'index_souhlasu': index_souhlasu,
+                'index_nesouhlasu': index_nesouhlasu
+            },
+            'metoda': 'ELECTRE',
+            'popis_metody': 'Elimination Et Choix Traduisant la Réalité'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu ELECTRE analýzy: {str(e)}")

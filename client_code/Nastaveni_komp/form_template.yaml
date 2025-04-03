@@ -1,3 +1,54 @@
-components: []
+components:
+- layout_properties: {grid_position: 'RDTMXR,XPNDGM'}
+  name: headline_1
+  properties: {role: headline, text: Nastavení aplikace}
+  type: Label
+- layout_properties: {grid_position: 'INGOFH,TXIQVI'}
+  name: spacer_1
+  properties: {height: 32}
+  type: Spacer
+- components:
+  - layout_properties: {grid_position: 'DDTEYP,EIPPEU'}
+    name: label_1
+    properties: {bold: true, text: 'Parametry pro metodu ELECTRE:'}
+    type: Label
+  - layout_properties: {grid_position: 'WVDPXV,ITAKCI'}
+    name: label_2
+    properties: {align: right, text: 'Index souhlasu:'}
+    type: Label
+  - layout_properties: {grid_position: 'WVDPXV,QOCGFE'}
+    name: text_box_index_souhlasu
+    properties: {placeholder: 'výchozí hodnota 0,7', type: text}
+    type: TextBox
+  - layout_properties: {grid_position: 'YDUFVC,COMUDG'}
+    name: label_3
+    properties: {align: right, text: 'Index nesouhlasu:'}
+    type: Label
+  - layout_properties: {grid_position: 'YDUFVC,XHLFDE'}
+    name: text_box_index_nesouhlasu
+    properties: {placeholder: 'výchozí hodnota 0,3', type: text}
+    type: TextBox
+  - event_bindings: {click: button_ulozit_nastaveni_click_click}
+    layout_properties: {grid_position: 'MCYKJX,UZIESA'}
+    name: button_ulozit_nastaveni
+    properties: {align: right, icon: 'fa:save', role: primary-color, text: Uložit nastavení}
+    type: Button
+  - layout_properties: {grid_position: 'SMKDVF,BKAPIK'}
+    name: label_chyba
+    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
+    type: Label
+  - layout_properties: {grid_position: 'WIKTIV,EVBSQN'}
+    name: spacer_2
+    properties: {height: 32}
+    type: Spacer
+  - layout_properties: {grid_position: 'LHBZUU,HMPZEF'}
+    name: rich_text_1
+    properties:
+      content: "#### Informace o parametrech ELECTRE\n**Index souhlasu** (hodnota 0-1): Určuje minimální požadovanou míru souhlasu mezi variantami pro vytvoření outrankingové relace (určení přednosti). \nVyšší hodnota znamená přísnější kritérium pro souhlas.\n\n**Index nesouhlasu** (hodnota 0-1): Určuje maximální povolenou míru nesouhlasu mezi variantami.\nNižší hodnota znamená přísnější kritérium pro nesouhlas.\n\nTyto parametry ovlivňují výslednou analýzu ELECTRE a jejich vhodné nastavení závisí na konkrétním problému."
+    type: RichText
+  layout_properties: {grid_position: 'IMWZHI,HRZWAL'}
+  name: card_1
+  properties: {col_widths: '{"COMUDG":35,"XHLFDE":25,"ITAKCI":35,"QOCGFE":25}', role: card}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

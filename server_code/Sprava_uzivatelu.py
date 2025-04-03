@@ -98,6 +98,10 @@ def vytvor_noveho_uzivatele(email: str, heslo: str, je_admin: bool = False):
         novy_uzivatel['signed_up'] = datetime.datetime.now()
         novy_uzivatel['enabled'] = True
         
+        # Nastavení výchozích hodnot parametrů ELECTRE
+        novy_uzivatel['electre_index_souhlasu'] = 0.7
+        novy_uzivatel['electre_index_nesouhlasu'] = 0.3
+        
         # Nastavení role pokud je admin
         if je_admin:
             novy_uzivatel['role'] = 'admin'
@@ -356,7 +360,8 @@ def vrat_pocet_analyz_pro_uzivatele(uzivatel) -> int:
 @handle_errors
 def nastavit_roli_po_registraci(email: str) -> bool:
     """
-    Kontroluje, zda nově registrovaný uživatel má mít automaticky admin roli.
+    Kontroluje, zda nově registrovaný uživatel má mít automaticky admin roli
+    a nastaví výchozí hodnoty parametrů.
     
     Args:
         email: Email registrovaného uživatele
@@ -368,18 +373,22 @@ def nastavit_roli_po_registraci(email: str) -> bool:
         # Seznam admin emailů
         admin_emaily = ['servisni_ucet@505.kg','saur@utb.cz','langer_l@utb.cz']
         
-        # Kontrola, zda email patří mezi admin emaily
-        if email in admin_emaily:
-            # Získání uživatele podle emailu
-            uzivatel = app_tables.users.get(email=email)
-            if uzivatel:
+        # Získání uživatele podle emailu
+        uzivatel = app_tables.users.get(email=email)
+        if uzivatel:
+            # Nastavení výchozích hodnot parametrů ELECTRE
+            uzivatel['electre_index_souhlasu'] = 0.7
+            uzivatel['electre_index_nesouhlasu'] = 0.3
+            
+            # Kontrola, zda email patří mezi admin emaily
+            if email in admin_emaily:
                 # Přidělení admin role
                 uzivatel['role'] = 'admin'
                 zapsat_info(f"Automaticky přidělena admin role uživateli: {email}")
                 return True
     
     except Exception as e:
-        zapsat_chybu(f"Chyba při nastavování role: {str(e)}")
+        zapsat_chybu(f"Chyba při nastavování role a výchozích hodnot: {str(e)}")
     
     return False
 
@@ -405,3 +414,58 @@ def over_admin_prava():
     
     if not je_admin:
         raise ValueError("Pro tuto operaci potřebujete administrátorská práva.")
+
+@anvil.server.callable
+@handle_errors
+def nacti_uzivatelske_nastaveni():
+    """
+    Načte nastavení přihlášeného uživatele.
+    
+    Returns:
+        dict: Slovník s nastaveními uživatele
+    """
+    uzivatel = anvil.users.get_user()
+    if not uzivatel:
+        return None
+    
+    try:
+        # Načtení nastavení z tabulky users
+        nastaveni = {
+            'electre_index_souhlasu': uzivatel.get('electre_index_souhlasu', 0.7),
+            'electre_index_nesouhlasu': uzivatel.get('electre_index_nesouhlasu', 0.3)
+        }
+        
+        zapsat_info(f"Načteno nastavení pro uživatele {uzivatel['email']}")
+        return nastaveni
+        
+    except Exception as e:
+        zapsat_chybu(f"Chyba při načítání nastavení pro uživatele {uzivatel['email']}: {str(e)}")
+        return None
+
+@anvil.server.callable
+@handle_errors
+def uloz_uzivatelske_nastaveni(nastaveni):
+    """
+    Uloží nastavení přihlášeného uživatele.
+    
+    Args:
+        nastaveni: Slovník s nastaveními uživatele
+    
+    Returns:
+        bool: True pokud bylo nastavení úspěšně uloženo
+    """
+    uzivatel = anvil.users.get_user()
+    if not uzivatel:
+        raise ValueError("Pro uložení nastavení musíte být přihlášen.")
+    
+    try:
+        # Uložení nastavení do tabulky users
+        uzivatel['electre_index_souhlasu'] = nastaveni.get('electre_index_souhlasu', 0.7)
+        uzivatel['electre_index_nesouhlasu'] = nastaveni.get('electre_index_nesouhlasu', 0.3)
+        
+        zapsat_info(f"Uloženo nastavení pro uživatele {uzivatel['email']}")
+        return True
+        
+    except Exception as e:
+        zapsat_chybu(f"Chyba při ukládání nastavení pro uživatele {uzivatel['email']}: {str(e)}")
+        raise ValueError(f"Chyba při ukládání nastavení: {str(e)}")
