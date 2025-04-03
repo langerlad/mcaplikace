@@ -40,6 +40,11 @@ class Spravce_stavu:
             "kriteria": {},
             "varianty": {}
         }
+      
+        self._nastaveni_uzivatele = {
+        'electre_index_souhlasu': 0.7,
+        'electre_index_nesouhlasu': 0.3
+       }
         
         Utils.zapsat_info("Spravce_stavu inicializován s novou strukturou dat")
     
@@ -392,58 +397,58 @@ class Spravce_stavu:
             Utils.zapsat_chybu(f"Chyba při ukládání analýzy: {str(e)}")
             return False
 
-def nacti_nastaveni_uzivatele(self):
-    """
-    Načte a uloží nastavení přihlášeného uživatele.
-    
-    Returns:
-        dict: Slovník s nastaveními uživatele nebo výchozí hodnoty
-    """
-    try:
-        # Kontrola, zda je uživatel přihlášen
-        if not self.je_prihlasen():
+    def nacti_nastaveni_uzivatele(self):
+        """
+        Načte a uloží nastavení přihlášeného uživatele.
+        
+        Returns:
+            dict: Slovník s nastaveními uživatele nebo výchozí hodnoty
+        """
+        try:
+            # Kontrola, zda je uživatel přihlášen
+            if not self.je_prihlasen():
+                # Vrátíme výchozí hodnoty
+                return {
+                    'electre_index_souhlasu': 0.7,
+                    'electre_index_nesouhlasu': 0.3
+                }
+            
+            # Načtení nastavení ze serveru
+            nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
+            
+            # Pokud nastavení neexistuje, použijeme výchozí hodnoty
+            if not nastaveni:
+                nastaveni = {
+                    'electre_index_souhlasu': 0.7,
+                    'electre_index_nesouhlasu': 0.3
+                }
+                
+            # Uložíme nastavení do správce stavu
+            self._nastaveni_uzivatele = nastaveni
+                
+            return self._nastaveni_uzivatele
+            
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při načítání nastavení uživatele: {str(e)}")
             # Vrátíme výchozí hodnoty
             return {
                 'electre_index_souhlasu': 0.7,
                 'electre_index_nesouhlasu': 0.3
             }
+      
+    def ziskej_nastaveni_electre(self):
+        """
+        Získá nastavení pro metodu ELECTRE.
         
-        # Načtení nastavení ze serveru
-        nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
-        
-        # Pokud nastavení neexistuje, použijeme výchozí hodnoty
-        if not nastaveni:
-            nastaveni = {
-                'electre_index_souhlasu': 0.7,
-                'electre_index_nesouhlasu': 0.3
-            }
+        Returns:
+            dict: Slovník s parametry pro ELECTRE
+        """
+        # Když nemáme nastavení, načteme ho
+        if not hasattr(self, '_nastaveni_uzivatele'):
+            self.nacti_nastaveni_uzivatele()
             
-        # Uložíme nastavení do správce stavu
-        self._nastaveni_uzivatele = nastaveni
-            
-        return self._nastaveni_uzivatele
-        
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při načítání nastavení uživatele: {str(e)}")
-        # Vrátíme výchozí hodnoty
+        # Vrátíme parametry pro ELECTRE
         return {
-            'electre_index_souhlasu': 0.7,
-            'electre_index_nesouhlasu': 0.3
+            'index_souhlasu': self._nastaveni_uzivatele.get('electre_index_souhlasu', 0.7),
+            'index_nesouhlasu': self._nastaveni_uzivatele.get('electre_index_nesouhlasu', 0.3)
         }
-  
-def ziskej_nastaveni_electre(self):
-    """
-    Získá nastavení pro metodu ELECTRE.
-    
-    Returns:
-        dict: Slovník s parametry pro ELECTRE
-    """
-    # Když nemáme nastavení, načteme ho
-    if not hasattr(self, '_nastaveni_uzivatele'):
-        self.nacti_nastaveni_uzivatele()
-        
-    # Vrátíme parametry pro ELECTRE
-    return {
-        'index_souhlasu': self._nastaveni_uzivatele.get('electre_index_souhlasu', 0.7),
-        'index_nesouhlasu': self._nastaveni_uzivatele.get('electre_index_nesouhlasu', 0.3)
-    }

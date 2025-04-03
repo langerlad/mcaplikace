@@ -419,27 +419,56 @@ def over_admin_prava():
 @handle_errors
 def nacti_uzivatelske_nastaveni():
     """
-    Načte nastavení přihlášeného uživatele.
+    Načte nastavení přihlášeného uživatele přímo z databáze.
     
     Returns:
         dict: Slovník s nastaveními uživatele
     """
-    uzivatel = anvil.users.get_user()
-    if not uzivatel:
+    # Získání přihlášeného uživatele
+    current_user = anvil.users.get_user()
+    if not current_user:
+        zapsat_info("Funkce vrací None - uživatel není přihlášen")
         return None
     
     try:
-        # Načtení nastavení z tabulky users
-        nastaveni = {
-            'electre_index_souhlasu': uzivatel.get('electre_index_souhlasu', 0.7),
-            'electre_index_nesouhlasu': uzivatel.get('electre_index_nesouhlasu', 0.3)
-        }
+        # Získání e-mailu přihlášeného uživatele
+        email = current_user['email']
+        zapsat_info(f"Přihlášený uživatel: {email}")
         
-        zapsat_info(f"Načteno nastavení pro uživatele {uzivatel['email']}")
-        return nastaveni
+        # Explicitní načtení celého řádku z tabulky users
+        from anvil.tables import app_tables
+        user_row = app_tables.users.get(email=email)
         
+        if not user_row:
+            zapsat_info(f"Nenalezen řádek pro uživatele {email}")
+            return None
+        
+        # Přímé získání hodnot z databázového řádku
+        try:
+            # Přímý přístup ke sloupcům
+            index_souhlasu = user_row['electre_index_souhlasu']
+            index_nesouhlasu = user_row['electre_index_nesouhlasu']
+            
+            zapsat_info(f"Načtené hodnoty přímo z DB: souhlasu={index_souhlasu}, nesouhlasu={index_nesouhlasu}")
+            
+            # Sestavení výsledku
+            result = {
+                'electre_index_souhlasu': float(index_souhlasu) if index_souhlasu is not None else 0.7,
+                'electre_index_nesouhlasu': float(index_nesouhlasu) if index_nesouhlasu is not None else 0.3
+            }
+            
+            zapsat_info(f"Vracím nastavení: {result}")
+            return result
+            
+        except Exception as e:
+            zapsat_chybu(f"Chyba při přístupu k sloupcům: {str(e)}")
+            return {
+                'electre_index_souhlasu': 0.7,
+                'electre_index_nesouhlasu': 0.3
+            }
+    
     except Exception as e:
-        zapsat_chybu(f"Chyba při načítání nastavení pro uživatele {uzivatel['email']}: {str(e)}")
+        zapsat_chybu(f"Chyba při načítání nastavení pro uživatele: {str(e)}")
         return None
 
 @anvil.server.callable
@@ -459,11 +488,31 @@ def uloz_uzivatelske_nastaveni(nastaveni):
         raise ValueError("Pro uložení nastavení musíte být přihlášen.")
     
     try:
-        # Uložení nastavení do tabulky users
-        uzivatel['electre_index_souhlasu'] = nastaveni.get('electre_index_souhlasu', 0.7)
-        uzivatel['electre_index_nesouhlasu'] = nastaveni.get('electre_index_nesouhlasu', 0.3)
+        # Explicitně získáme hodnoty a ujistíme se, že se nepoužívají výchozí hodnoty
+        index_souhlasu = nastaveni.get('electre_index_souhlasu')
+        index_nesouhlasu = nastaveni.get('electre_index_nesouhlasu')
         
-        zapsat_info(f"Uloženo nastavení pro uživatele {uzivatel['email']}")
+        # Kontrola, zda hodnoty nejsou None
+        if index_souhlasu is None:
+            raise ValueError("Index souhlasu nesmí být prázdný")
+        if index_nesouhlasu is None:
+            raise ValueError("Index nesouhlasu nesmí být prázdný")
+        
+        # Ujistíme se, že hodnoty jsou typu float
+        index_souhlasu = float(index_souhlasu)
+        index_nesouhlasu = float(index_nesouhlasu)
+        
+        # Kontrola rozsahu hodnot
+        if not (0 <= index_souhlasu <= 1):
+            raise ValueError("Index souhlasu musí být mezi 0 a 1")
+        if not (0 <= index_nesouhlasu <= 1):
+            raise ValueError("Index nesouhlasu musí být mezi 0 a 1")
+        
+        # Uložení nastavení do tabulky users
+        uzivatel['electre_index_souhlasu'] = index_souhlasu
+        uzivatel['electre_index_nesouhlasu'] = index_nesouhlasu
+        
+        zapsat_info(f"Uloženo nastavení pro uživatele {uzivatel['email']}: {index_souhlasu}, {index_nesouhlasu}")
         return True
         
     except Exception as e:

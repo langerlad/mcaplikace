@@ -237,3 +237,29 @@ class Analyza_Row(Analyza_RowTemplate):
       except Exception as e:
           Utils.zapsat_chybu(f"Chyba při načítání dat analýzy: {str(e)}")
           alert(f"Chyba při načítání dat analýzy: {str(e)}")
+
+    def button_klonovat_click(self, **event_args):
+        """
+        Zpracuje požadavek na klonování analýzy.
+        Vytvoří kopii vybrané analýzy.
+        """
+        try:
+            Utils.zapsat_info(f"Klonování analýzy s ID: {self.item['id']}")
+            
+            # Zobrazení dialogu s potvrzením
+            if Utils.zobraz_potvrzovaci_dialog("Opravdu chcete vytvořit kopii této analýzy?"):
+                # Volání serverové funkce pro klonování
+                nova_analyza_id = anvil.server.call('klonuj_analyzu', self.item['id'])
+                
+                if nova_analyza_id:
+                    # Informování uživatele
+                    alert("Analýza byla úspěšně naklonována.")
+                    
+                    # Aktualizace seznamu analýz
+                    self.parent.raise_event('x-refresh')
+                else:
+                    raise ValueError("Klonování analýzy se nezdařilo")
+                    
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při klonování analýzy: {str(e)}")
+            alert(f"Chyba při klonování analýzy: {str(e)}")

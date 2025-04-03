@@ -17,17 +17,26 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
   def nacti_nastaveni(self):
     """Načte aktuální nastavení z databáze"""
     try:
+      # Přidáme debug výpis
+      Utils.zapsat_info("Začínám načítat nastavení v Nastaveni_komp")
+      
       # Získání aktuálních hodnot
       nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
+      
+      Utils.zapsat_info(f"Načtené nastavení ze serveru: {nastaveni}")
       
       if nastaveni:
         # Načtení hodnot do formuláře
         self.text_box_index_souhlasu.text = str(nastaveni.get('electre_index_souhlasu', '0.7'))
         self.text_box_index_nesouhlasu.text = str(nastaveni.get('electre_index_nesouhlasu', '0.3'))
+        
+        # Debug výpis aktuálně nastavených hodnot
+        Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}")
       else:
         # Nastavení výchozích hodnot
         self.text_box_index_souhlasu.text = '0.7'
         self.text_box_index_nesouhlasu.text = '0.3'
+        Utils.zapsat_info("Nastaveny výchozí hodnoty, protože nastavení ze serveru je None")
         
       self.label_chyba.visible = False
     except Exception as e:
@@ -73,7 +82,8 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
       self.label_chyba.text = f"Chyba při ukládání nastavení: {str(e)}"
       self.label_chyba.visible = True
 
-  def button_ulozit_nastaveni_click_click(self, **event_args):
+  def button_1_click(self, **event_args):
     """This method is called when the button is clicked"""
     pass
+
 
