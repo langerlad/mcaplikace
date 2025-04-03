@@ -28,11 +28,6 @@ components:
     name: text_box_index_nesouhlasu
     properties: {placeholder: 'výchozí hodnota 0,3', type: text}
     type: TextBox
-  - event_bindings: {click: button_ulozit_nastaveni_click_click}
-    layout_properties: {grid_position: 'MCYKJX,UZIESA'}
-    name: button_ulozit_nastaveni
-    properties: {align: right, icon: 'fa:save', role: primary-color, text: Uložit nastavení}
-    type: Button
   - layout_properties: {grid_position: 'SMKDVF,BKAPIK'}
     name: label_chyba
     properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}

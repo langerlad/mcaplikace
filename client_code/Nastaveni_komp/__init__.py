@@ -73,3 +73,7 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
       self.label_chyba.text = f"Chyba při ukládání nastavení: {str(e)}"
       self.label_chyba.visible = True
 
+  def button_ulozit_nastaveni_click_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass
+
