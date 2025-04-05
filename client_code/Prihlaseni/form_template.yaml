@@ -57,18 +57,18 @@ components:
         properties: {align: right, text: 'Ještě nemám účet:'}
         type: Label
       - layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
-        name: link_1
+        name: link_prepni_na_signup
         properties: {align: left, icon: 'fa:user-plus', icon_align: right, text: Vytvořit účet}
         type: Link
       - components:
         - layout_properties: {grid_position: 'YWXNOV,ZPWEVC'}
-          name: text_box_1
+          name: text_box_email
           properties:
             align: left
             margin: [null, '0', null, '0']
           type: TextBox
         - layout_properties: {grid_position: 'ATFKJK,QCFHNJ'}
-          name: text_box_2
+          name: text_box_heslo
           properties:
             margin: [null, '0', null, '0']
           type: TextBox
@@ -83,20 +83,79 @@ components:
         properties: {height: 32}
         type: Spacer
       - layout_properties: {grid_position: 'GBMMSS,SINSOL'}
-        name: button_1
-        properties: {icon: 'fa:sign-in', role: primary-color, text: Přihlásit}
+        name: button_prihlasit
+        properties: {icon: '', role: primary-color, text: Přihlásit}
         type: Button
       - layout_properties: {grid_position: 'MWIVAC,KRBEJF'}
         name: spacer_1
         properties: {height: 32}
         type: Spacer
+      - layout_properties: {grid_position: 'RRHALW,YDYFFY'}
+        name: label_chyba_login
+        properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA}
+        type: Label
       layout_properties: {grid_position: 'NYQYAX,HSVOTL STXPTM,YYLOHR'}
       name: login_panel
       properties: {}
       type: ColumnPanel
-    - layout_properties: {grid_position: 'NYQYAX,HSVOTL MGTQMA,FPAEZZ'}
+    - components:
+      - layout_properties: {grid_position: 'PMFUZU,CUFNBU'}
+        name: label_1_copy
+        properties:
+          align: center
+          spacing:
+            padding: [null, '0', null, null]
+          text: Vytvořte si účet pro aplikaci.
+        type: Label
+      - layout_properties: {grid_position: 'UYAOHQ,SIDOIH'}
+        name: label_2_copy
+        properties: {align: right, text: 'Už mám účet:'}
+        type: Label
+      - layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
+        name: link_prepni_na_login
+        properties: {align: left, icon: 'fa:sign-in', icon_align: right, text: Přihlásit se}
+        type: Link
+      - components:
+        - layout_properties: {grid_position: 'YWXNOV,ZPWEVC'}
+          name: text_box_email_reg
+          properties:
+            align: left
+            margin: [null, '0', null, '0']
+          type: TextBox
+        - layout_properties: {grid_position: 'ATFKJK,QCFHNJ'}
+          name: text_box_heslo_reg
+          properties:
+            margin: [null, '0', null, '0']
+          type: TextBox
+        - layout_properties: {grid_position: 'VZTXNF,WSTNRR'}
+          name: text_box_heslo2_reg
+          properties: {}
+          type: TextBox
+        layout_properties: {grid_position: 'MUSLBI,BYINYX'}
+        name: column_panel_4
+        properties:
+          spacing:
+            padding: [null, '100', null, '100']
+        type: ColumnPanel
+      - layout_properties: {grid_position: 'KETBIA,YPUNYE'}
+        name: spacer_2_copy_2_copy
+        properties: {height: 32}
+        type: Spacer
+      - layout_properties: {grid_position: 'GBMMSS,SINSOL'}
+        name: button_registrovat
+        properties: {icon: '', role: primary-color, text: Registrovat}
+        type: Button
+      - layout_properties: {grid_position: 'MWIVAC,KRBEJF'}
+        name: spacer_1_copy
+        properties: {height: 32}
+        type: Spacer
+      - layout_properties: {grid_position: 'RRHALW,YDYFFY'}
+        name: label_chyba_signup
+        properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA}
+        type: Label
+      layout_properties: {grid_position: 'NYQYAX,HSVOTL BRNCAJ,MSNOKD'}
       name: signup_panel
-      properties: {visible: false}
+      properties: {}
       type: ColumnPanel
     layout_properties: {grid_position: 'GPHHNS,EBQAGZ'}
     name: card_1
