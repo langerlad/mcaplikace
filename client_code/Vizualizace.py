@@ -1609,7 +1609,40 @@ def vytvor_sekci_vstupnich_dat(analyza_data):
     </div>
     """
     
-    # Tabulka variant
+    # Zobrazení prahových hodnot pro ELECTRE
+    prahove_hodnoty_html = ""
+    if analyza_data.get('metoda', '').upper() == 'ELECTRE' and 'parametry' in analyza_data:
+        index_souhlasu = analyza_data.get('parametry', {}).get('index_souhlasu', 0.7)
+        index_nesouhlasu = analyza_data.get('parametry', {}).get('index_nesouhlasu', 0.3)
+        
+        prahove_hodnoty_html = f"""
+        <h3>Prahové hodnoty ELECTRE</h3>
+        <div class="mcapp-table-container">
+            <table class="mcapp-table mcapp-thresholds-table">
+                <thead>
+                    <tr>
+                        <th>Parametr</th>
+                        <th>Hodnota</th>
+                        <th>Popis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Index souhlasu (c*)</td>
+                        <td style="text-align: center;">{index_souhlasu:.3f}</td>
+                        <td>Minimální požadovaná míra souhlasu mezi variantami</td>
+                    </tr>
+                    <tr>
+                        <td>Index nesouhlasu (d*)</td>
+                        <td style="text-align: center;">{index_nesouhlasu:.3f}</td>
+                        <td>Maximální povolená míra nesouhlasu mezi variantami</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        """
+    
+    # Tabulka variant (zůstává stejná)
     varianty_html = """
     <h3>Přehled variant</h3>
     <div class="mcapp-table-container">
@@ -1701,6 +1734,7 @@ def vytvor_sekci_vstupnich_dat(analyza_data):
         <div class="mcapp-card">
             {kriteria_html}
         </div>
+        {prahove_hodnoty_html and '<div class="mcapp-card">' + prahove_hodnoty_html + '</div>'}
         <div class="mcapp-card">
             {varianty_html}
         </div>
@@ -2723,61 +2757,223 @@ def vytvor_html_net_flow_ranking(net_flows, varianty):
     
     return html
 
-def vytvor_sekci_postupu_electre(concordance_matrix, discordance_matrix, outranking_matrix, varianty, index_souhlasu, index_nesouhlasu):
+def vytvor_sekci_postupu_electre(norm_matice, matice, concordance_matrix, discordance_matrix, outranking_matrix, varianty, kriteria, typy_kriterii, index_souhlasu, index_nesouhlasu):
     """
     Vytvoří HTML sekci s postupem výpočtu ELECTRE.
     
     Args:
+        norm_matice: Normalizovaná matice hodnot
+        matice: Původní matice hodnot
         concordance_matrix: 2D matice hodnot souhlasu
         discordance_matrix: 2D matice hodnot nesouhlasu
         outranking_matrix: 2D binární matice převahy
         varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií
         index_souhlasu: Prahová hodnota indexu souhlasu
         index_nesouhlasu: Prahová hodnota indexu nesouhlasu
             
     Returns:
         str: HTML kód pro sekci postupu výpočtu
     """
-    # Vysvětlení a zobrazení matice souhlasu
-    concordance_html = vytvor_html_tabulku_concordance_matrix(concordance_matrix, varianty, index_souhlasu)
+    # Krok 1: Normalizace matice
+    normalizace_html = vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, kriteria, typy_kriterii)
     
-    # Vysvětlení a zobrazení matice nesouhlasu
-    discordance_html = vytvor_html_tabulku_discordance_matrix(discordance_matrix, varianty, index_nesouhlasu)
+    # Krok 2: Výpočet matice souhlasu
+    concordance_html = """
+    <h3>Matice souhlasu (Concordance matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice souhlasu vyjadřuje, do jaké míry kritéria podporují tvrzení, že varianta v řádku i je alespoň tak dobrá jako varianta 
+            ve sloupci j.
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Výpočet indexu souhlasu:</span>
+                <span class="mcapp-formula-content">C(i,j) = ∑<sub>k∈K(i,j)</sub> w<sub>k</sub></span>
+            </div>
+        </div>
+        <p>kde K(i,j) je množina kritérií, pro která je varianta i alespoň tak dobrá jako varianta j, a w<sub>k</sub> je váha k-tého kritéria.</p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-concordance-table">
+            <thead>
+                <tr>
+                    <th>C(i,j)</th>
+    """
     
-    # Vysvětlení a zobrazení matice převahy (outranking)
-    outranking_html = vytvor_html_tabulku_outranking_matrix(outranking_matrix, varianty)
-
+    for var in varianty:
+        concordance_html += f"<th>{var}</th>"
+    
+    concordance_html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        concordance_html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                concordance_html += f"<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = concordance_matrix[i][j]
+                buňka_styl = ""
+                if hodnota >= index_souhlasu:
+                    buňka_styl = "background-color: #E0F7FA; font-weight: bold;"  # Světle modrá pro hodnoty nad prahem
+                concordance_html += f"<td style='text-align: center; {buňka_styl}'>{hodnota:.3f}</td>"
+                
+        concordance_html += "</tr>"
+    
+    concordance_html += f"""
+            </tbody>
+        </table>
+    </div>
+    <div class="mcapp-note">
+        <p>
+            Poznámka: Buňky zvýrazněné světle modrou barvou splňují podmínku C(i,j) ≥ {index_souhlasu:.3f}, tedy hodnoty nad prahem souhlasu.
+        </p>
+    </div>
+    """
+    
+    # Krok 3: Výpočet matice nesouhlasu
+    discordance_html = """
+    <h3>Matice nesouhlasu (Discordance matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice nesouhlasu vyjadřuje, do jaké míry existují kritéria, která silně odporují tvrzení, že varianta v řádku i je
+            alespoň tak dobrá jako varianta ve sloupci j.
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Výpočet indexu nesouhlasu:</span>
+                <span class="mcapp-formula-content">D(i,j) = max<sub>k∈K'(i,j)</sub> [ (r<sub>jk</sub> - r<sub>ik</sub>) / R ]</span>
+            </div>
+        </div>
+        <p>kde K'(i,j) je množina kritérií, pro která je varianta j lepší než varianta i, r<sub>ik</sub> je normalizovaná hodnota varianty i pro kritérium k a R je rozsah normalizované škály (typicky 1).</p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-discordance-table">
+            <thead>
+                <tr>
+                    <th>D(i,j)</th>
+    """
+    
+    for var in varianty:
+        discordance_html += f"<th>{var}</th>"
+    
+    discordance_html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        discordance_html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                discordance_html += f"<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = discordance_matrix[i][j]
+                buňka_styl = ""
+                if hodnota <= index_nesouhlasu:
+                    buňka_styl = "background-color: #FFEBEE; font-weight: bold;"  # Světle červená pro hodnoty pod prahem
+                discordance_html += f"<td style='text-align: center; {buňka_styl}'>{hodnota:.3f}</td>"
+                
+        discordance_html += "</tr>"
+    
+    discordance_html += f"""
+            </tbody>
+        </table>
+    </div>
+    <div class="mcapp-note">
+        <p>
+            Poznámka: Buňky zvýrazněné světle červenou barvou splňují podmínku D(i,j) ≤ {index_nesouhlasu:.3f}, tedy hodnoty pod prahem nesouhlasu.
+        </p>
+    </div>
+    """
+    
+    # Krok 4: Výpočet matice převahy
+    outranking_html = """
+    <h3>Matice převahy (Outranking matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice převahy kombinuje matici souhlasu a nesouhlasu a ukazuje, která varianta převyšuje kterou.
+            Hodnota 1 (Ano) znamená, že varianta v řádku i převyšuje variantu ve sloupci j,
+            hodnota 0 (Ne) znamená, že varianta i nepřevyšuje variantu j.
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">
+                    O(i,j) = 1, pokud C(i,j) ≥ {0:.3f} a D(i,j) ≤ {1:.3f}
+                </span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">
+                    O(i,j) = 0, jinak
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-outranking-table">
+            <thead>
+                <tr>
+                    <th>O(i,j)</th>
+    """.format(index_souhlasu, index_nesouhlasu)
+    
+    for var in varianty:
+        outranking_html += f"<th>{var}</th>"
+    
+    outranking_html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        outranking_html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                outranking_html += f"<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = outranking_matrix[i][j]
+                buňka_text = "Ano" if hodnota == 1 else "Ne"
+                buňka_styl = "background-color: #E8F5E9; font-weight: bold;" if hodnota == 1 else ""  # Světle zelená pro 1
+                outranking_html += f"<td style='text-align: center; {buňka_styl}'>{buňka_text}</td>"
+                
+        outranking_html += "</tr>"
+    
+    outranking_html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
     # Sloučení do sekce
     return f"""
     <div class="mcapp-section mcapp-process">
         <h2>Postup zpracování dat</h2>
         <div class="mcapp-card">
-            <h3>Krok 1: Výpočet matice souhlasu</h3>
+            <h3>Krok 1: Normalizace rozhodovací matice</h3>
+            {normalizace_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Výpočet matice souhlasu</h3>
             {concordance_html}
         </div>
         <div class="mcapp-card">
-            <h3>Krok 2: Výpočet matice nesouhlasu</h3>
+            <h3>Krok 3: Výpočet matice nesouhlasu</h3>
             {discordance_html}
         </div>
         <div class="mcapp-card">
-            <h3>Krok 3: Výpočet matice převahy</h3>
-            <div class="mcapp-explanation">
-                <p>
-                    Matice převahy je vytvořena kombinací matice souhlasu a nesouhlasu s použitím prahových hodnot:
-                </p>
-                <div class="mcapp-formula-box">
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-content">
-                            O(i,j) = 1, pokud C(i,j) ≥ {index_souhlasu:.2f} a D(i,j) ≤ {index_nesouhlasu:.2f}
-                        </span>
-                    </div>
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-content">
-                            O(i,j) = 0, jinak
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <h3>Krok 4: Výpočet matice převahy</h3>
             {outranking_html}
         </div>
     </div>
