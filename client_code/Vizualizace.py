@@ -7,6 +7,170 @@
 import plotly.graph_objects as go
 from . import Utils
 
+def vytvor_graf_concordance_electre(matice_souhlasu, varianty):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující matici souhlasu ELECTRE.
+    
+    Args:
+        matice_souhlasu: 2D matice hodnot souhlasu mezi variantami
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': matice_souhlasu,
+                'x': varianty,
+                'y': varianty,
+                'colorscale': 'YlGnBu',
+                'zmin': 0,
+                'zmax': 1,
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in matice_souhlasu],
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Index souhlasu'
+                }
+            }],
+            'layout': {
+                'title': 'Matice souhlasu (Concordance matrix)',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'bottom'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice souhlasu: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu matice souhlasu'
+            }
+        }
+
+def vytvor_graf_discordance_electre(matice_nesouhlasu, varianty):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující matici nesouhlasu ELECTRE.
+    
+    Args:
+        matice_nesouhlasu: 2D matice hodnot nesouhlasu mezi variantami
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': matice_nesouhlasu,
+                'x': varianty,
+                'y': varianty,
+                'colorscale': 'YlOrRd',  # Jiná barevná škála než pro souhlas
+                'zmin': 0,
+                'zmax': 1,
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in matice_nesouhlasu],
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Index nesouhlasu'
+                }
+            }],
+            'layout': {
+                'title': 'Matice nesouhlasu (Discordance matrix)',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'bottom'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice nesouhlasu: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu matice nesouhlasu'
+            }
+        }
+
+def vytvor_graf_outranking_electre(outranking_matice, varianty):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující outranking matrix metody ELECTRE.
+    
+    Args:
+        outranking_matice: 2D binární matice převahy mezi variantami (0/1)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': outranking_matice,
+                'x': varianty,
+                'y': varianty,
+                'colorscale': [[0, 'white'], [1, 'green']],  # Binární barevná škála
+                'zmin': 0,
+                'zmax': 1,
+                'text': [[f'{int(val)}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in outranking_matice],
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Převaha',
+                    'tickvals': [0, 1],
+                    'ticktext': ['Ne', 'Ano']
+                }
+            }],
+            'layout': {
+                'title': 'Matice převahy (Outranking matrix)',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'bottom'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice převahy: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu matice převahy'
+            }
+        }
+
 def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta, nazev_metody=""):
     """
     Vytvoří sloupcový graf výsledků analýzy.
@@ -1080,6 +1244,27 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
             vysledky_vypoctu['typy_kriterii']
         )
         vysledky_html = vytvor_sekci_vysledku_topsis(topsis_results)
+    elif metoda.upper() == "ELECTRE":
+        # Extrakce dat specifických pro ELECTRE
+        electre_results = vysledky_vypoctu['electre_vysledky']
+        
+        metodologie_html = vytvor_html_sekci_metodologie_electre(default_open=True)
+        
+        postup_html = vytvor_sekci_postupu_electre(
+            electre_results['concordance_matrix'],
+            electre_results['discordance_matrix'],
+            electre_results['outranking_matrix'],
+            varianty,
+            electre_results['index_souhlasu'],
+            electre_results['index_nesouhlasu']
+        )
+        
+        vysledky_html = vytvor_sekci_vysledku_electre(
+            electre_results,
+            varianty,
+            electre_results['index_souhlasu'],
+            electre_results['index_nesouhlasu']
+        )
     else:
         # Pro ostatní metody (budoucí implementace)
         metodologie_html = f"<div class='mcapp-card'><h2>Metodologie</h2><p>Metodologie pro metodu {metoda}</p></div>"
@@ -2190,6 +2375,440 @@ def vytvor_sekci_vysledku_topsis(topsis_vysledky):
         <div class="mcapp-card">
             {vysledky_html}
             {shrnuti_html}
+        </div>
+    </div>
+    """
+
+def vytvor_html_sekci_metodologie_electre(default_open=True):
+    """
+    Vytvoří HTML sekci s popisem metodologie pro metodu ELECTRE.
+    
+    Args:
+        default_open: Zda má být sekce ve výchozím stavu otevřená
+        
+    Returns:
+        str: HTML kód s metodologií
+    """
+    # Vytvoření unikátního ID pro tento přepínač
+    toggle_id = "metodologie-electre"
+    default_class = "default-open" if default_open else ""
+    
+    return f"""
+    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+    <label for="{toggle_id}" class="details-toggle {default_class}">
+        O metodě ELECTRE (Elimination Et Choix Traduisant la Réalité)
+        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+    </label>
+    <div class="details-content">
+        <div style="padding: 0;">
+            <p>ELECTRE je metoda vícekriteriálního rozhodování vyvinutá ve Francii, jejíž název znamená "Elimination and Choice Expressing Reality". Je založena na porovnávání párů alternativ a vytváření tzv. outranking (převahových) vztahů.</p>
+            
+            <h4>Postup metody ELECTRE:</h4>
+            <ol>
+                <li><strong>Normalizace kritérií</strong> - Převod různorodých kritérií na srovnatelnou škálu pomocí min-max normalizace.</li>
+                <li><strong>Výpočet matice souhlasu (concordance matrix)</strong> - Určuje, do jaké míry kritéria podporují tvrzení, že varianta A je alespoň tak dobrá jako varianta B.</li>
+                <li><strong>Výpočet matice nesouhlasu (discordance matrix)</strong> - Určuje, do jaké míry existují kritéria, která silně odporují tvrzení, že varianta A je alespoň tak dobrá jako varianta B.</li>
+                <li><strong>Vytvoření matice převahy (outranking matrix)</strong> - Zohledňuje jak míru souhlasu, tak nesouhlasu pomocí prahových hodnot.</li>
+                <li><strong>Určení dominance a nadvlády</strong> - Z výsledné matice převahy jsou odvozeny vztahy dominance mezi variantami.</li>
+                <li><strong>Finální seřazení variant</strong> - Na základě dominanční struktury jsou varianty seřazeny od nejlepší po nejhorší.</li>
+            </ol>
+            
+            <h4>Parametry metody ELECTRE:</h4>
+            <ul>
+                <li><strong>Index souhlasu (Concordance threshold)</strong> - Určuje minimální požadovanou míru souhlasu (běžně 0.5-0.8).</li>
+                <li><strong>Index nesouhlasu (Discordance threshold)</strong> - Určuje maximální povolenou míru nesouhlasu (běžně 0.2-0.4).</li>
+            </ul>
+            
+            <h4>Výhody metody:</h4>
+            <ul>
+                <li>Schopnost pracovat s nekompletními informacemi a nejistotou</li>
+                <li>Zohledňuje možnost neporovnatelnosti alternativ</li>
+                <li>Schopnost identifikovat nekompenzovatelné slabiny variant</li>
+                <li>Vhodná pro problémy s velkým počtem kritérií a alternativ</li>
+            </ul>
+            
+            <h4>Omezení metody:</h4>
+            <ul>
+                <li>Složitější interpretace než u jiných metod</li>
+                <li>Výsledky jsou citlivé na volbu prahových hodnot</li>
+                <li>Ne vždy poskytuje úplné uspořádání alternativ</li>
+                <li>Výpočetně složitější než některé jiné metody</li>
+            </ul>
+        </div>
+    </div>
+    """
+
+def vytvor_html_prahove_hodnoty_electre(index_souhlasu, index_nesouhlasu):
+    """
+    Vytvoří HTML box zobrazující aktuální prahové hodnoty pro metodu ELECTRE.
+    
+    Args:
+        index_souhlasu: Aktuální hodnota indexu souhlasu
+        index_nesouhlasu: Aktuální hodnota indexu nesouhlasu
+    
+    Returns:
+        str: HTML kód s vysvětlením prahových hodnot
+    """
+    return f"""
+    <div class="mcapp-card" style="margin-top: 16px; margin-bottom: 24px;">
+        <h3>Nastavené prahové hodnoty</h3>
+        <div class="mcapp-explanation">
+            <p>Metoda ELECTRE používá dvě prahové hodnoty, které určují, kdy jedna varianta převyšuje druhou:</p>
+            
+            <div class="mcapp-formula-box">
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Index souhlasu (c*):</span>
+                    <span class="mcapp-formula-content">{index_souhlasu:.2f}</span>
+                </div>
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Index nesouhlasu (d*):</span>
+                    <span class="mcapp-formula-content">{index_nesouhlasu:.2f}</span>
+                </div>
+            </div>
+            
+            <div class="mcapp-note">
+                <p><strong>Index souhlasu (c*)</strong> - Čím vyšší hodnota, tím přísnější je podmínka pro "souhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
+                <p><strong>Index nesouhlasu (d*)</strong> - Čím nižší hodnota, tím přísnější je podmínka pro "nesouhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
+                <p>Tyto hodnoty lze upravit v sekci Nastavení aplikace.</p>
+            </div>
+        </div>
+    </div>
+    """
+
+def vytvor_html_tabulku_concordance_matrix(concordance_matrix, varianty, index_souhlasu):
+    """
+    Vytvoří HTML tabulku zobrazující matici souhlasu metody ELECTRE.
+    
+    Args:
+        concordance_matrix: 2D matice hodnot souhlasu mezi variantami
+        varianty: Seznam názvů variant
+        index_souhlasu: Prahová hodnota indexu souhlasu
+        
+    Returns:
+        str: HTML kód tabulky s maticí souhlasu
+    """
+    html = """
+    <h3>Matice souhlasu (Concordance matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice souhlasu vyjadřuje, do jaké míry kritéria podporují tvrzení, že varianta v řádku i je alespoň tak dobrá jako varianta 
+            ve sloupci j. Hodnoty blízké 1 znamenají silný souhlas, hodnoty blízké 0 slabý souhlas.
+        </p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-concordance-table">
+            <thead>
+                <tr>
+                    <th>C(i,j)</th>
+    """
+    
+    for var in varianty:
+        html += f"<th>{var}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                html += "<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = concordance_matrix[i][j]
+                buňka_styl = ""
+                if hodnota >= index_souhlasu:
+                    buňka_styl = "background-color: #E0F7FA; font-weight: bold;"  # Světle modrá pro hodnoty nad prahem
+                html += f"<td style='text-align: center; {buňka_styl}'>{hodnota:.3f}</td>"
+                
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    <div class="mcapp-note">
+        <p>
+            Poznámka: Buňky zvýrazněné světle modrou barvou splňují podmínku C(i,j) ≥ {0}, tedy hodnoty nad prahem souhlasu.
+        </p>
+    </div>
+    """.format(index_souhlasu)
+    
+    return html
+
+def vytvor_html_tabulku_discordance_matrix(discordance_matrix, varianty, index_nesouhlasu):
+    """
+    Vytvoří HTML tabulku zobrazující matici nesouhlasu metody ELECTRE.
+    
+    Args:
+        discordance_matrix: 2D matice hodnot nesouhlasu mezi variantami
+        varianty: Seznam názvů variant
+        index_nesouhlasu: Prahová hodnota indexu nesouhlasu
+        
+    Returns:
+        str: HTML kód tabulky s maticí nesouhlasu
+    """
+    html = """
+    <h3>Matice nesouhlasu (Discordance matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice nesouhlasu vyjadřuje, do jaké míry existují kritéria, která silně odporují tvrzení, že varianta v řádku i je
+            alespoň tak dobrá jako varianta ve sloupci j. Hodnoty blízké 0 znamenají slabý nesouhlas, hodnoty blízké 1 silný nesouhlas.
+        </p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-discordance-table">
+            <thead>
+                <tr>
+                    <th>D(i,j)</th>
+    """
+    
+    for var in varianty:
+        html += f"<th>{var}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                html += "<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = discordance_matrix[i][j]
+                buňka_styl = ""
+                if hodnota <= index_nesouhlasu:
+                    buňka_styl = "background-color: #FFEBEE; font-weight: bold;"  # Světle červená pro hodnoty pod prahem
+                html += f"<td style='text-align: center; {buňka_styl}'>{hodnota:.3f}</td>"
+                
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    <div class="mcapp-note">
+        <p>
+            Poznámka: Buňky zvýrazněné světle červenou barvou splňují podmínku D(i,j) ≤ {0}, tedy hodnoty pod prahem nesouhlasu.
+        </p>
+    </div>
+    """.format(index_nesouhlasu)
+    
+    return html
+
+def vytvor_html_tabulku_outranking_matrix(outranking_matrix, varianty):
+    """
+    Vytvoří HTML tabulku zobrazující matici převahy metody ELECTRE.
+    
+    Args:
+        outranking_matrix: 2D binární matice převahy mezi variantami (0/1)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        str: HTML kód tabulky s maticí převahy
+    """
+    html = """
+    <h3>Matice převahy (Outranking matrix)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Matice převahy kombinuje matici souhlasu a nesouhlasu a ukazuje, která varianta převyšuje kterou.
+            Hodnota 1 (Ano) znamená, že varianta v řádku i převyšuje variantu ve sloupci j,
+            hodnota 0 (Ne) znamená, že varianta i nepřevyšuje variantu j.
+        </p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-outranking-table">
+            <thead>
+                <tr>
+                    <th>O(i,j)</th>
+    """
+    
+    for var in varianty:
+        html += f"<th>{var}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var_i in enumerate(varianty):
+        html += f"<tr><td><strong>{var_i}</strong></td>"
+        
+        for j, _ in enumerate(varianty):
+            if i == j:
+                # Diagonální prvky jsou vždy "-"
+                html += "<td style='text-align: center;'>-</td>"
+            else:
+                hodnota = outranking_matrix[i][j]
+                buňka_text = "Ano" if hodnota == 1 else "Ne"
+                buňka_styl = "background-color: #E8F5E9; font-weight: bold;" if hodnota == 1 else ""  # Světle zelená pro 1
+                html += f"<td style='text-align: center; {buňka_styl}'>{buňka_text}</td>"
+                
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_html_net_flow_ranking(net_flows, varianty):
+    """
+    Vytvoří HTML tabulku zobrazující pořadí variant podle Net Flow Score.
+    
+    Args:
+        net_flows: List trojic (varianta, pořadí, net_flow)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        str: HTML kód tabulky s pořadím variant
+    """
+    html = """
+    <h3>Pořadí variant podle Net Flow Score</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Net Flow Score je pro každou variantu vypočítáno jako rozdíl mezi počtem variant, které daná varianta převyšuje,
+            a počtem variant, které převyšují ji. Čím vyšší Net Flow Score, tím lepší je varianta.
+        </p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-results-table">
+            <thead>
+                <tr>
+                    <th>Pořadí</th>
+                    <th>Varianta</th>
+                    <th>Net Flow Score</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    # Seřazení podle pořadí
+    sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
+    
+    for varianta, poradi, score in sorted_net_flows:
+        radek_styl = ""
+        
+        # Zvýraznění nejlepší a nejhorší varianty
+        if poradi == 1:
+            radek_styl = " style='background-color: #E0F7FA;'"  # Světle modrá pro nejlepší
+        elif poradi == len(varianty):
+            radek_styl = " style='background-color: #FFEBEE;'"  # Světle červená pro nejhorší
+            
+        html += f"""
+            <tr{radek_styl}>
+                <td>{poradi}.</td>
+                <td>{varianta}</td>
+                <td style="text-align: right;">{score}</td>
+            </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_sekci_postupu_electre(concordance_matrix, discordance_matrix, outranking_matrix, varianty, index_souhlasu, index_nesouhlasu):
+    """
+    Vytvoří HTML sekci s postupem výpočtu ELECTRE.
+    
+    Args:
+        concordance_matrix: 2D matice hodnot souhlasu
+        discordance_matrix: 2D matice hodnot nesouhlasu
+        outranking_matrix: 2D binární matice převahy
+        varianty: Seznam názvů variant
+        index_souhlasu: Prahová hodnota indexu souhlasu
+        index_nesouhlasu: Prahová hodnota indexu nesouhlasu
+            
+    Returns:
+        str: HTML kód pro sekci postupu výpočtu
+    """
+    # Vysvětlení a zobrazení matice souhlasu
+    concordance_html = vytvor_html_tabulku_concordance_matrix(concordance_matrix, varianty, index_souhlasu)
+    
+    # Vysvětlení a zobrazení matice nesouhlasu
+    discordance_html = vytvor_html_tabulku_discordance_matrix(discordance_matrix, varianty, index_nesouhlasu)
+    
+    # Vysvětlení a zobrazení matice převahy (outranking)
+    outranking_html = vytvor_html_tabulku_outranking_matrix(outranking_matrix, varianty)
+
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-process">
+        <h2>Postup zpracování dat</h2>
+        <div class="mcapp-card">
+            <h3>Krok 1: Výpočet matice souhlasu</h3>
+            {concordance_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Výpočet matice nesouhlasu</h3>
+            {discordance_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 3: Výpočet matice převahy</h3>
+            <div class="mcapp-explanation">
+                <p>
+                    Matice převahy je vytvořena kombinací matice souhlasu a nesouhlasu s použitím prahových hodnot:
+                </p>
+                <div class="mcapp-formula-box">
+                    <div class="mcapp-formula-row">
+                        <span class="mcapp-formula-content">
+                            O(i,j) = 1, pokud C(i,j) ≥ {index_souhlasu:.2f} a D(i,j) ≤ {index_nesouhlasu:.2f}
+                        </span>
+                    </div>
+                    <div class="mcapp-formula-row">
+                        <span class="mcapp-formula-content">
+                            O(i,j) = 0, jinak
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {outranking_html}
+        </div>
+    </div>
+    """
+
+def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, index_nesouhlasu):
+    """
+    Vytvoří HTML sekci s výsledky ELECTRE analýzy.
+    
+    Args:
+        electre_vysledky: Slovník s výsledky ELECTRE analýzy
+        varianty: Seznam názvů variant
+        index_souhlasu: Prahová hodnota indexu souhlasu
+        index_nesouhlasu: Prahová hodnota indexu nesouhlasu
+        
+    Returns:
+        str: HTML kód pro sekci výsledků
+    """
+    # Prahové hodnoty
+    prahove_hodnoty_html = vytvor_html_prahove_hodnoty_electre(index_souhlasu, index_nesouhlasu)
+    
+    # Tabulka pořadí variant podle Net Flow
+    net_flow_html = vytvor_html_net_flow_ranking(electre_vysledky["results"], varianty)
+    
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-results">
+        <h2>Výsledky analýzy</h2>
+        <div class="mcapp-card">
+            {prahove_hodnoty_html}
+            {net_flow_html}
         </div>
     </div>
     """

@@ -71,16 +71,20 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
         
         anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)
         
+        # Aktualizace správce stavu - vynutíme nové načtení
+        self.spravce.nacti_nastaveni_uzivatele()
+        
+        # Ověříme, že hodnoty byly správně aktualizovány
+        aktualni = self.spravce.ziskej_nastaveni_electre()
+        Utils.zapsat_info(f"Ověření aktualizace: souhlas={aktualni['index_souhlasu']}, nesouhlas={aktualni['index_nesouhlasu']}")
+        
         # Informování uživatele o úspěchu
         alert("Nastavení bylo úspěšně uloženo")
         
-        # Aktualizace správce stavu
-        self.spravce.nacti_nastaveni_uzivatele()
-        
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při ukládání nastavení: {str(e)}")
-      self.label_chyba.text = f"Chyba při ukládání nastavení: {str(e)}"
-      self.label_chyba.visible = True
+        Utils.zapsat_chybu(f"Chyba při ukládání nastavení: {str(e)}")
+        self.label_chyba.text = f"Chyba při ukládání nastavení: {str(e)}"
+        self.label_chyba.visible = True
 
   def button_1_click(self, **event_args):
     """This method is called when the button is clicked"""

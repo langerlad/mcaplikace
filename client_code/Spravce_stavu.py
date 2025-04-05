@@ -405,6 +405,8 @@ class Spravce_stavu:
             dict: Slovník s nastaveními uživatele nebo výchozí hodnoty
         """
         try:
+            # Vynucené nové načtení nastavení ze serveru
+            nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
             # Kontrola, zda je uživatel přihlášen
             if not self.je_prihlasen():
                 # Vrátíme výchozí hodnoty
@@ -439,16 +441,16 @@ class Spravce_stavu:
     def ziskej_nastaveni_electre(self):
         """
         Získá nastavení pro metodu ELECTRE.
+        Vždy načte aktuální hodnoty ze serveru.
         
         Returns:
             dict: Slovník s parametry pro ELECTRE
         """
-        # Když nemáme nastavení, načteme ho
-        if not hasattr(self, '_nastaveni_uzivatele'):
-            self.nacti_nastaveni_uzivatele()
-            
+        # Vždy získáme aktuální nastavení ze serveru
+        aktualni_nastaveni = self.nacti_nastaveni_uzivatele()
+        
         # Vrátíme parametry pro ELECTRE
         return {
-            'index_souhlasu': self._nastaveni_uzivatele.get('electre_index_souhlasu', 0.7),
-            'index_nesouhlasu': self._nastaveni_uzivatele.get('electre_index_nesouhlasu', 0.3)
+            'index_souhlasu': aktualni_nastaveni.get('electre_index_souhlasu', 0.7),
+            'index_nesouhlasu': aktualni_nastaveni.get('electre_index_nesouhlasu', 0.3)
         }

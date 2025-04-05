@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from . import Utils
+from . import Spravce_stavu, Utils
 
 
 def normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria):
@@ -555,8 +555,7 @@ def vypocitej_analyzu(analyza_data, metoda="wsm"):
     elif metoda == "topsis":
         return vypocitej_topsis_analyzu(analyza_data)
     elif metoda == "electre":
-        # Zde by byla implementace pro ELECTRE
-        raise ValueError("Metoda ELECTRE není v této verzi implementována")
+        return vypocitej_electre_analyzu(analyza_data)
     elif metoda == "mabac":
         # Zde by byla implementace pro MABAC
         raise ValueError("Metoda MABAC není v této verzi implementována")
@@ -851,26 +850,58 @@ def vypocitej_electre_analyzu(analyza_data):
         matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
         
         # 2. Získání parametrů ELECTRE z nastavení uživatele
-        from .. import Spravce_stavu
         spravce = Spravce_stavu.Spravce_stavu()
         electre_params = spravce.ziskej_nastaveni_electre()
         index_souhlasu = electre_params['index_souhlasu'] 
         index_nesouhlasu = electre_params['index_nesouhlasu']
         
-        # 3. Normalizace matice pro účely vizualizace
+        # 3. Normalizace matice pomocí min-max metody pro další výpočty
         norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        norm_matice = norm_vysledky['normalizovana_matice']
         
-        # 4. Výpočet ELECTRE (zde by byl váš vlastní algoritmus ELECTRE)
-        # Toto je jen kostra, kterou budete muset doplnit konkrétním algoritmem
-        # ...
+        # 4. Výpočet ELECTRE
+        # 4.1 Výpočet matice souhlasu (concordance matrix)
+        concordance_matrix = vypocitej_concordance_matrix(norm_matice, vahy, len(varianty))
+        
+        # 4.2 Výpočet matice nesouhlasu (discordance matrix)
+        discordance_matrix = vypocitej_discordance_matrix(norm_matice, len(varianty))
+        
+        # 4.3 Výpočet matice převahy (outranking matrix)
+        outranking_matrix = vypocitej_outranking_matrix(concordance_matrix, discordance_matrix, 
+                                                       index_souhlasu, index_nesouhlasu, len(varianty))
+        
+        # 4.4 Výpočet Net Flow pro každou variantu
+        net_flows = vypocitej_net_flows(outranking_matrix, varianty)
+        
+        # 4.5 Seřazení variant podle Net Flow
+        results = []
+        for i, (varianta, net_flow) in enumerate(net_flows):
+            results.append((varianta, i+1, net_flow))
+        
+        # Najdeme nejlepší a nejhorší variantu
+        nejlepsi_var = results[0][0]
+        nejhorsi_var = results[-1][0]
+        nejlepsi_score = results[0][2]
+        nejhorsi_score = results[-1][2]
         
         # 5. Sestavení strukturovaného výsledku
+        electre_vysledky = {
+            'results': results,
+            'nejlepsi_varianta': nejlepsi_var,
+            'nejhorsi_varianta': nejhorsi_var,
+            'nejlepsi_skore': nejlepsi_score,
+            'nejhorsi_skore': nejhorsi_score,
+            'concordance_matrix': concordance_matrix,
+            'discordance_matrix': discordance_matrix,
+            'outranking_matrix': outranking_matrix,
+            'index_souhlasu': index_souhlasu,
+            'index_nesouhlasu': index_nesouhlasu
+        }
+        
         vysledek = {
             'norm_vysledky': norm_vysledky,
             'vahy': vahy,
-            'elektre_vysledky': {
-                # Výsledky metody ELECTRE
-            },
+            'electre_vysledky': electre_vysledky,
             'matice': matice,
             'typy_kriterii': typy_kriterii,
             'parametry': {
@@ -885,3 +916,124 @@ def vypocitej_electre_analyzu(analyza_data):
         
     except Exception as e:
         raise ValueError(f"Chyba při výpočtu ELECTRE analýzy: {str(e)}")
+
+def vypocitej_concordance_matrix(norm_matice, vahy, pocet_variant):
+    """
+    Vypočítá matici souhlasu (concordance matrix) pro metodu ELECTRE.
+    
+    Args:
+        norm_matice: Normalizovaná matice hodnot
+        vahy: Seznam vah kritérií
+        pocet_variant: Počet variant v analýze
+        
+    Returns:
+        2D list: Matice souhlasu
+    """
+    # Inicializace matice souhlasu
+    concordance_matrix = [[0 for _ in range(pocet_variant)] for _ in range(pocet_variant)]
+    
+    # Pro každou dvojici variant i a j
+    for i in range(pocet_variant):
+        for j in range(pocet_variant):
+            if i != j:  # Vynecháme diagonálu
+                # Souhlasná množina - kritéria, ve kterých je varianta i alespoň tak dobrá jako j
+                concordance_sum = 0
+                
+                for k in range(len(vahy)):
+                    # Pokud je varianta i alespoň tak dobrá jako j v kritériu k
+                    if norm_matice[i][k] >= norm_matice[j][k]:
+                        concordance_sum += vahy[k]
+                
+                concordance_matrix[i][j] = concordance_sum
+    
+    return concordance_matrix
+
+def vypocitej_discordance_matrix(norm_matice, pocet_variant):
+    """
+    Vypočítá matici nesouhlasu (discordance matrix) pro metodu ELECTRE.
+    
+    Args:
+        norm_matice: Normalizovaná matice hodnot
+        pocet_variant: Počet variant v analýze
+        
+    Returns:
+        2D list: Matice nesouhlasu
+    """
+    # Inicializace matice nesouhlasu
+    discordance_matrix = [[0 for _ in range(pocet_variant)] for _ in range(pocet_variant)]
+    
+    # Pro každou dvojici variant i a j
+    for i in range(pocet_variant):
+        for j in range(pocet_variant):
+            if i != j:  # Vynecháme diagonálu
+                # Nesouhlasná množina - maximální normalizovaný rozdíl ve prospěch j nad i
+                max_diff = 0
+                
+                for k in range(len(norm_matice[0])):
+                    # Rozdíl mezi j a i v kritériu k (pokud j je lepší než i)
+                    diff = max(0, norm_matice[j][k] - norm_matice[i][k])
+                    max_diff = max(max_diff, diff)
+                
+                # Maximální možný rozdíl v normalizované matici je 1
+                discordance_matrix[i][j] = max_diff
+    
+    return discordance_matrix
+
+def vypocitej_outranking_matrix(concordance_matrix, discordance_matrix, index_souhlasu, index_nesouhlasu, pocet_variant):
+    """
+    Vypočítá matici převahy (outranking matrix) pro metodu ELECTRE.
+    
+    Args:
+        concordance_matrix: Matice souhlasu
+        discordance_matrix: Matice nesouhlasu
+        index_souhlasu: Prahová hodnota indexu souhlasu
+        index_nesouhlasu: Prahová hodnota indexu nesouhlasu
+        pocet_variant: Počet variant v analýze
+        
+    Returns:
+        2D list: Binární matice převahy (0/1)
+    """
+    # Inicializace matice převahy
+    outranking_matrix = [[0 for _ in range(pocet_variant)] for _ in range(pocet_variant)]
+    
+    # Pro každou dvojici variant i a j
+    for i in range(pocet_variant):
+        for j in range(pocet_variant):
+            if i != j:  # Vynecháme diagonálu
+                # Varianta i převyšuje variantu j, pokud:
+                # 1. Index souhlasu je větší nebo roven prahu
+                # 2. Index nesouhlasu je menší nebo roven prahu
+                if (concordance_matrix[i][j] >= index_souhlasu and 
+                    discordance_matrix[i][j] <= index_nesouhlasu):
+                    outranking_matrix[i][j] = 1
+    
+    return outranking_matrix
+
+def vypocitej_net_flows(outranking_matrix, varianty):
+    """
+    Vypočítá Net Flow pro každou variantu na základě matice převahy.
+    
+    Args:
+        outranking_matrix: Binární matice převahy
+        varianty: Seznam názvů variant
+        
+    Returns:
+        list: Seznam dvojic (varianta, net_flow) seřazený sestupně podle net_flow
+    """
+    pocet_variant = len(varianty)
+    net_flows = []
+    
+    for i in range(pocet_variant):
+        # Počet variant, které i převyšuje
+        vychazejici = sum(outranking_matrix[i])
+        
+        # Počet variant, které převyšují i
+        prichazejici = sum(outranking_matrix[j][i] for j in range(pocet_variant))
+        
+        # Net Flow = vychazejici - prichazejici
+        net_flow = vychazejici - prichazejici
+        net_flows.append((varianty[i], net_flow))
+    
+    # Seřazení podle net_flow sestupně
+    return sorted(net_flows, key=lambda x: x[1], reverse=True)
+
