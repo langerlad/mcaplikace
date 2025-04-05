@@ -15,6 +15,16 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     # Inicializace správce stavu
     self.spravce = Spravce_stavu.Spravce_stavu()
     uzivatel = self.spravce.nacti_uzivatele()
+
+    # Kontrola, zda je uživatel přihlášen
+    if not uzivatel:
+        # Pokud není přihlášen, přesměrujeme na přihlašovací stránku
+        Utils.zapsat_info("Uživatel není přihlášen, přesměrování na přihlašovací stránku")
+        from anvil import open_form
+        from .. import Prihlaseni
+        open_form(Prihlaseni.Prihlaseni())
+        return  # Ukončíme inicializaci hlavního okna
+    
     self.nastav_ucet(uzivatel)
 
     Navigace.go('domu')
@@ -127,7 +137,14 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     anvil.users.logout()  # Odhlášení na serveru
     self.spravce.odhlasit()  # Vyčištění stavu
     self.nastav_ucet(None)
-    Navigace.go('domu')
+    
+    # Přesměrování na přihlašovací stránku
+    try:
+        from anvil import open_form
+        from .. import Prihlaseni
+        open_form(Prihlaseni.Prihlaseni())
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při přesměrování na přihlašovací stránku: {str(e)}")
 
   def link_prihlasit_click(self, **event_args):
     uzivatel = anvil.users.login_with_form(allow_cancel=True)

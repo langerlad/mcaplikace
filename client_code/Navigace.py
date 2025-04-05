@@ -187,7 +187,7 @@ def ziskej_komponentu():
 
 def kontrola_prihlaseni():
     """
-    Zkontroluje, zda je uživatel přihlášen, případně zobrazí přihlašovací dialog.
+    Zkontroluje, zda je uživatel přihlášen, případně přesměruje na přihlašovací stránku.
 
     Returns:
         Instance přihlášeného uživatele nebo None
@@ -198,13 +198,15 @@ def kontrola_prihlaseni():
     if uzivatel:
         return uzivatel
 
-    uzivatel = anvil.users.login_with_form(allow_cancel=True)
-    if uzivatel:
-        spravce.nacti_uzivatele()  # Aktualizace správce stavu
+    # Přesměrování na přihlašovací stránku
+    try:
+        from anvil import open_form
+        from . import Prihlaseni
+        open_form(Prihlaseni.Prihlaseni())
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při přesměrování na přihlašovací stránku: {str(e)}")
         
-    komp = ziskej_komponentu()
-    komp.nastav_ucet(uzivatel)
-    return uzivatel
+    return None
 
 
 def over_a_smaz_rozpracovanou(cilova_stranka):

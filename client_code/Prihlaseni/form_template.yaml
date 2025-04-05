@@ -56,7 +56,8 @@ components:
         name: label_2
         properties: {align: right, text: 'Ještě nemám účet:'}
         type: Label
-      - layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
+      - event_bindings: {click: link_prepni_na_signup_click}
+        layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
         name: link_prepni_na_signup
         properties: {align: left, icon: 'fa:user-plus', icon_align: right, text: Vytvořit účet}
         type: Link
@@ -65,11 +66,13 @@ components:
           name: text_box_email
           properties:
             align: left
+            hide_text: false
             margin: [null, '0', null, '0']
           type: TextBox
         - layout_properties: {grid_position: 'ATFKJK,QCFHNJ'}
           name: text_box_heslo
           properties:
+            hide_text: true
             margin: [null, '0', null, '0']
           type: TextBox
         layout_properties: {grid_position: 'MUSLBI,BYINYX'}
@@ -82,7 +85,8 @@ components:
         name: spacer_2_copy_2
         properties: {height: 32}
         type: Spacer
-      - layout_properties: {grid_position: 'GBMMSS,SINSOL'}
+      - event_bindings: {click: button_prihlasit_click}
+        layout_properties: {grid_position: 'GBMMSS,SINSOL'}
         name: button_prihlasit
         properties: {icon: '', role: primary-color, text: Přihlásit}
         type: Button
@@ -95,7 +99,7 @@ components:
         properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA}
         type: Label
       layout_properties: {grid_position: 'NYQYAX,HSVOTL STXPTM,YYLOHR'}
-      name: login_panel
+      name: panel_login
       properties: {}
       type: ColumnPanel
     - components:
@@ -111,7 +115,8 @@ components:
         name: label_2_copy
         properties: {align: right, text: 'Už mám účet:'}
         type: Label
-      - layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
+      - event_bindings: {click: link_prepni_na_login_click}
+        layout_properties: {grid_position: 'UYAOHQ,AAGPYV'}
         name: link_prepni_na_login
         properties: {align: left, icon: 'fa:sign-in', icon_align: right, text: Přihlásit se}
         type: Link
@@ -121,15 +126,17 @@ components:
           properties:
             align: left
             margin: [null, '0', null, '0']
+            type: email
           type: TextBox
         - layout_properties: {grid_position: 'ATFKJK,QCFHNJ'}
           name: text_box_heslo_reg
           properties:
+            hide_text: true
             margin: [null, '0', null, '0']
           type: TextBox
         - layout_properties: {grid_position: 'VZTXNF,WSTNRR'}
           name: text_box_heslo2_reg
-          properties: {}
+          properties: {hide_text: true}
           type: TextBox
         layout_properties: {grid_position: 'MUSLBI,BYINYX'}
         name: column_panel_4
@@ -141,7 +148,8 @@ components:
         name: spacer_2_copy_2_copy
         properties: {height: 32}
         type: Spacer
-      - layout_properties: {grid_position: 'GBMMSS,SINSOL'}
+      - event_bindings: {click: button_registrovat_click}
+        layout_properties: {grid_position: 'GBMMSS,SINSOL'}
         name: button_registrovat
         properties: {icon: '', role: primary-color, text: Registrovat}
         type: Button
@@ -154,7 +162,7 @@ components:
         properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA}
         type: Label
       layout_properties: {grid_position: 'NYQYAX,HSVOTL BRNCAJ,MSNOKD'}
-      name: signup_panel
+      name: panel_signup
       properties: {}
       type: ColumnPanel
     layout_properties: {grid_position: 'GPHHNS,EBQAGZ'}
