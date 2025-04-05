@@ -121,12 +121,13 @@ components:
         properties: {align: left, icon: 'fa:sign-in', icon_align: right, text: Přihlásit se}
         type: Link
       - components:
-        - layout_properties: {grid_position: 'YWXNOV,ZPWEVC'}
+        - event_bindings: {lost_focus: text_box_email_reg_lost_focus}
+          layout_properties: {grid_position: 'YWXNOV,ZPWEVC'}
           name: text_box_email_reg
           properties:
             align: left
             margin: [null, '0', null, '0']
-            type: email
+            type: text
           type: TextBox
         - layout_properties: {grid_position: 'ATFKJK,QCFHNJ'}
           name: text_box_heslo_reg
@@ -171,7 +172,10 @@ components:
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'CTJAXP,RACHGZ'}
   name: column_panel_1
-  properties: {background: ''}
+  properties:
+    background: ''
+    spacing:
+      margin: ['40', null, null, null]
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

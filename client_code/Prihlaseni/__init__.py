@@ -87,6 +87,12 @@ class Prihlaseni(PrihlaseniTemplate):
             self.label_chyba_signup.text = "Vyplňte všechna pole"
             self.label_chyba_signup.visible = True
             return
+
+        # Validace emailu při odeslání formuláře
+        if not self.validuj_email(email):
+            self.label_chyba_signup.text = "Zadejte platný email"
+            self.label_chyba_signup.visible = True
+            return
                 
         if heslo != heslo2:
             self.label_chyba_signup.text = "Hesla se neshodují"
@@ -128,3 +134,18 @@ class Prihlaseni(PrihlaseniTemplate):
             self.label_chyba_signup.text = f"Chyba při registraci: {str(e)}"
             self.label_chyba_signup.visible = True
             Utils.zapsat_chybu(f"Chyba při registraci: {str(e)}")
+
+    def validuj_email(self, email):
+        """Jednoduchá validace emailu"""
+        if not email:
+            return False
+        return '@' in email and '.' in email and email.index('@') < email.rindex('.')
+
+    def text_box_email_reg_lost_focus(self, **event_args):
+        """Validuje email při ztrátě fokusu"""
+        email = self.text_box_email_reg.text
+        if email and not self.validuj_email(email):
+            self.label_chyba_signup.text = "Zadejte platný email"
+            self.label_chyba_signup.visible = True
+        else:
+            self.label_chyba_signup.visible = False

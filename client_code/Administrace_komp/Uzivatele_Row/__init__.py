@@ -87,3 +87,7 @@ class Uzivatele_Row(Uzivatele_RowTemplate):
             alert(f"Chyba při změně role uživatele: {str(e)}")
             self.check_box_admin.checked = not self.check_box_admin.checked
             Utils.zapsat_info(f"Chyba, vracím checkbox na: {self.check_box_admin.checked}")
+
+    def link_zmena_hesla_click(self, **event_args):
+      """This method is called when the link is clicked"""
+      pass

@@ -37,5 +37,10 @@ components:
   name: check_box_admin
   properties: {align: center, text: ''}
   type: CheckBox
+- event_bindings: {click: link_zmena_hesla_click}
+  layout_properties: {column: GPRGRE}
+  name: link_zmena_hesla
+  properties: {icon: 'fa:unlock-alt', tooltip: Změnit heslo}
+  type: Link
 container: {type: DataRowPanel}
 is_package: true
