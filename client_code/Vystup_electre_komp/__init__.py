@@ -103,11 +103,9 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
     """Vytvoří a nastaví grafy pro vizualizaci výsledků."""
     try:
         # Graf výsledků - pořadí variant
-        self.plot_sablona_vysledek.figure = Vizualizace.vytvor_sloupovy_graf_vysledku(
+        self.plot_sablona_vysledek.figure = Vizualizace.vytvor_graf_electre_vysledky(
             self.vysledky_vypoctu["electre_vysledky"]["results"],
-            self.vysledky_vypoctu["electre_vysledky"]["nejlepsi_varianta"],
-            self.vysledky_vypoctu["electre_vysledky"]["nejhorsi_varianta"],
-            "ELECTRE",
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
         )
         self.plot_sablona_vysledek.visible = True
 

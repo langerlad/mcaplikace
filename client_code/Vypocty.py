@@ -850,10 +850,14 @@ def vypocitej_electre_analyzu(analyza_data):
         matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
         
         # 2. Získání parametrů ELECTRE z nastavení uživatele
+        from . import Spravce_stavu
         spravce = Spravce_stavu.Spravce_stavu()
         electre_params = spravce.ziskej_nastaveni_electre()
         index_souhlasu = electre_params['index_souhlasu'] 
         index_nesouhlasu = electre_params['index_nesouhlasu']
+        
+        # Přidejme kontrolní výpis
+        Utils.zapsat_info(f"Použity parametry ELECTRE: souhlas={index_souhlasu}, nesouhlas={index_nesouhlasu}")
         
         # 3. Normalizace matice pomocí min-max metody pro další výpočty
         norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)

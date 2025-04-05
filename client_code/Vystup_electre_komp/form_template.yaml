@@ -19,6 +19,14 @@ components:
   name: spacer_2
   properties: {height: 32}
   type: Spacer
+- layout_properties: {grid_position: 'QSQVXT,GFOPLH'}
+  name: plot_1
+  properties: {}
+  type: Plot
+- layout_properties: {grid_position: 'UISYJL,URZPEX'}
+  name: spacer_6
+  properties: {height: 32}
+  type: Spacer
 - layout_properties: {grid_position: 'OTXIKK,NXEUAY'}
   name: plot_sablona_skladba
   properties: {}
@@ -39,10 +47,6 @@ components:
   name: plot_outranking
   properties: {}
   type: Plot
-- layout_properties: {grid_position: 'WKIEZJ,TESCAX'}
-  name: spacer_4
-  properties: {height: 32}
-  type: Spacer
 container:
   event_bindings: {show: form_show}
   type: ColumnPanel

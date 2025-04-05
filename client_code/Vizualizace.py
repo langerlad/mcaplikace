@@ -969,6 +969,91 @@ def vytvor_prazdny_graf(text="Žádná data k zobrazení"):
         }
     }
 
+
+def vytvor_graf_electre_vysledky(net_flows, varianty):
+    """
+    Vytvoří sloupcový graf pro vizualizaci výsledků ELECTRE.
+    
+    Args:
+        net_flows: Seznam trojic (varianta, pořadí, net_flow)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Extrakce dat pro graf
+        var_nazvy = []
+        prevysovane_hodnoty = []
+        prevysujici_hodnoty = []
+        
+        # Seřazení podle pořadí
+        sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
+        
+        for varianta, poradi, score in sorted_net_flows:
+            var_nazvy.append(varianta)
+            
+            # Rozdělíme net_flow na pozitivní a negativní komponenty
+            if score > 0:
+                prevysovane_hodnoty.append(score)
+                prevysujici_hodnoty.append(0)
+            else:
+                prevysovane_hodnoty.append(0)
+                prevysujici_hodnoty.append(abs(score))
+        
+        # Vytvoření grafu
+        fig = {
+            'data': [
+                {
+                    'type': 'bar',
+                    'x': var_nazvy,
+                    'y': prevysovane_hodnoty,
+                    'name': 'Převyšující (pozitivní vliv)',
+                    'marker': {
+                        'color': '#2ecc71'  # zelená
+                    }
+                },
+                {
+                    'type': 'bar',
+                    'x': var_nazvy,
+                    'y': prevysujici_hodnoty,
+                    'name': 'Převyšované (negativní vliv)',
+                    'marker': {
+                        'color': '#e74c3c'  # červená
+                    }
+                }
+            ],
+            'layout': {
+                'title': 'Výsledky ELECTRE analýzy',
+                'xaxis': {
+                    'title': 'Varianty',
+                    'tickangle': -45 if len(varianty) > 4 else 0
+                },
+                'yaxis': {
+                    'title': 'Počet variant'
+                },
+                'barmode': 'stack',
+                'showlegend': True,
+                'legend': {
+                    'orientation': 'h',
+                    'y': -0.2,
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu výsledků ELECTRE: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu výsledků ELECTRE'
+            }
+        }
+
 # Pokročilejší generátory HTML obsahu
 
 def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
@@ -1251,10 +1336,14 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
         metodologie_html = vytvor_html_sekci_metodologie_electre(default_open=True)
         
         postup_html = vytvor_sekci_postupu_electre(
+            vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
+            vysledky_vypoctu['matice'],  # Předáváme původní matici
             electre_results['concordance_matrix'],
             electre_results['discordance_matrix'],
             electre_results['outranking_matrix'],
             varianty,
+            kriteria,
+            vysledky_vypoctu['typy_kriterii'],
             electre_results['index_souhlasu'],
             electre_results['index_nesouhlasu']
         )
@@ -2698,12 +2787,13 @@ def vytvor_html_tabulku_outranking_matrix(outranking_matrix, varianty):
     
     return html
 
-def vytvor_html_net_flow_ranking(net_flows, varianty):
+def vytvor_html_net_flow_ranking(net_flows, outranking_matrix, varianty):
     """
     Vytvoří HTML tabulku zobrazující pořadí variant podle Net Flow Score.
     
     Args:
         net_flows: List trojic (varianta, pořadí, net_flow)
+        outranking_matrix: 2D binární matice převahy
         varianty: Seznam názvů variant
         
     Returns:
@@ -2723,6 +2813,8 @@ def vytvor_html_net_flow_ranking(net_flows, varianty):
                 <tr>
                     <th>Pořadí</th>
                     <th>Varianta</th>
+                    <th>Počet převyšovaných variant</th>
+                    <th>Počet variant, které převyšují</th>
                     <th>Net Flow Score</th>
                 </tr>
             </thead>
@@ -2733,6 +2825,15 @@ def vytvor_html_net_flow_ranking(net_flows, varianty):
     sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
     
     for varianta, poradi, score in sorted_net_flows:
+        # Najdeme index varianty v seznamu varianty
+        var_idx = varianty.index(varianta)
+        
+        # Počet variant, které tato varianta převyšuje
+        prevysovane = sum(outranking_matrix[var_idx])
+        
+        # Počet variant, které převyšují tuto variantu
+        prevysujici = sum(outranking_matrix[j][var_idx] for j in range(len(varianty)))
+        
         radek_styl = ""
         
         # Zvýraznění nejlepší a nejhorší varianty
@@ -2745,6 +2846,8 @@ def vytvor_html_net_flow_ranking(net_flows, varianty):
             <tr{radek_styl}>
                 <td>{poradi}.</td>
                 <td>{varianta}</td>
+                <td style="text-align: center;">{prevysovane}</td>
+                <td style="text-align: center;">{prevysujici}</td>
                 <td style="text-align: right;">{score}</td>
             </tr>
         """
@@ -2817,7 +2920,7 @@ def vytvor_sekci_postupu_electre(norm_matice, matice, concordance_matrix, discor
         for j, _ in enumerate(varianty):
             if i == j:
                 # Diagonální prvky jsou vždy "-"
-                concordance_html += f"<td style='text-align: center;'>-</td>"
+                concordance_html += "<td style='text-align: center;'>-</td>"
             else:
                 hodnota = concordance_matrix[i][j]
                 buňka_styl = ""
@@ -2876,7 +2979,7 @@ def vytvor_sekci_postupu_electre(norm_matice, matice, concordance_matrix, discor
         for j, _ in enumerate(varianty):
             if i == j:
                 # Diagonální prvky jsou vždy "-"
-                discordance_html += f"<td style='text-align: center;'>-</td>"
+                discordance_html += "<td style='text-align: center;'>-</td>"
             else:
                 hodnota = discordance_matrix[i][j]
                 buňka_styl = ""
@@ -2941,7 +3044,7 @@ def vytvor_sekci_postupu_electre(norm_matice, matice, concordance_matrix, discor
         for j, _ in enumerate(varianty):
             if i == j:
                 # Diagonální prvky jsou vždy "-"
-                outranking_html += f"<td style='text-align: center;'>-</td>"
+                outranking_html += "<td style='text-align: center;'>-</td>"
             else:
                 hodnota = outranking_matrix[i][j]
                 buňka_text = "Ano" if hodnota == 1 else "Ne"
@@ -2996,7 +3099,11 @@ def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, in
     prahove_hodnoty_html = vytvor_html_prahove_hodnoty_electre(index_souhlasu, index_nesouhlasu)
     
     # Tabulka pořadí variant podle Net Flow
-    net_flow_html = vytvor_html_net_flow_ranking(electre_vysledky["results"], varianty)
+    net_flow_html = vytvor_html_net_flow_ranking(
+        electre_vysledky["results"], 
+        electre_vysledky["outranking_matrix"], 
+        varianty
+    )
     
     # Sloučení do sekce
     return f"""
@@ -3008,3 +3115,105 @@ def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, in
         </div>
     </div>
     """
+
+def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, kriteria, typy_kriterii):
+    """
+    Vytvoří HTML tabulku s původními a normalizovanými hodnotami pomocí min-max normalizace.
+    
+    Args:
+        matice: Původní 2D matice hodnot
+        norm_matice: Normalizovaná 2D matice hodnot
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií (max/min)
+        
+    Returns:
+        str: HTML kód s vysvětlením normalizace a tabulkami hodnot
+    """
+    html = """
+    <div class="mcapp-explanation">
+        <h4>Normalizace hodnot metodou Min-Max</h4>
+        <p>
+            Pro zajištění srovnatelnosti různých kritérií s různými měrnými jednotkami se provádí normalizace.
+            V metodě ELECTRE používáme min-max normalizaci, která převádí všechny hodnoty na škálu od 0 do 1.
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro maximalizační kritéria (MAX):</span>
+                <span class="mcapp-formula-content">r<sub>ij</sub> = (x<sub>ij</sub> - min<sub>i</sub>(x<sub>ij</sub>)) / (max<sub>i</sub>(x<sub>ij</sub>) - min<sub>i</sub>(x<sub>ij</sub>))</span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro minimalizační kritéria (MIN):</span>
+                <span class="mcapp-formula-content">r<sub>ij</sub> = (max<sub>i</sub>(x<sub>ij</sub>) - x<sub>ij</sub>) / (max<sub>i</sub>(x<sub>ij</sub>) - min<sub>i</sub>(x<sub>ij</sub>))</span>
+            </div>
+        </div>
+        <p>
+            kde x<sub>ij</sub> je původní hodnota i-té varianty pro j-té kritérium, min<sub>i</sub>(x<sub>ij</sub>) je nejmenší hodnota j-tého
+            kritéria napříč všemi variantami a max<sub>i</sub>(x<sub>ij</sub>) je největší hodnota j-tého kritéria napříč všemi variantami.
+        </p>
+    </div>
+    
+    <div class="mcapp-container" style="display: flex; margin-top: 20px;">
+        <div style="flex: 1; margin-right: 10px;">
+            <h5>Původní hodnoty</h5>
+            <div class="mcapp-table-container">
+                <table class="mcapp-table mcapp-original-table">
+                    <thead>
+                        <tr>
+                            <th>Varianta / Kritérium</th>
+    """
+    
+    for j, krit in enumerate(kriteria):
+        html += f"<th>{krit} ({typy_kriterii[j].upper()})</th>"
+    
+    html += """
+                        </tr>
+                    </thead>
+                    <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td><strong>{var}</strong></td>"
+        for j in range(len(kriteria)):
+            html += f"<td style='text-align: right;'>{matice[i][j]:.2f}</td>"
+        html += "</tr>"
+    
+    html += """
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div style="flex: 1; margin-left: 10px;">
+            <h5>Normalizované hodnoty</h5>
+            <div class="mcapp-table-container">
+                <table class="mcapp-table mcapp-normalized-table">
+                    <thead>
+                        <tr>
+                            <th>Varianta / Kritérium</th>
+    """
+    
+    for j, krit in enumerate(kriteria):
+        html += f"<th>{krit} ({typy_kriterii[j].upper()})</th>"
+    
+    html += """
+                        </tr>
+                    </thead>
+                    <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td><strong>{var}</strong></td>"
+        for j in range(len(kriteria)):
+            html += f"<td style='text-align: right;'>{norm_matice[i][j]:.3f}</td>"
+        html += "</tr>"
+    
+    html += """
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    """
+    
+    return html
