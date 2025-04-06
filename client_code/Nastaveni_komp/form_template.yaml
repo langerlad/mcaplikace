@@ -16,22 +16,47 @@ components:
     name: label_2
     properties: {align: right, text: 'Index souhlasu:'}
     type: Label
-  - layout_properties: {grid_position: 'WVDPXV,QOCGFE'}
-    name: text_box_index_souhlasu
-    properties: {placeholder: 'výchozí hodnota 0,7', type: text}
-    type: TextBox
+  - components:
+    - layout_properties: {grid_position: 'IBEOBN,CJNMGG'}
+      name: text_box_index_souhlasu
+      properties:
+        margin: [null, '0', null, null]
+        placeholder: výchozí hodnota 0,7
+        type: text
+      type: TextBox
+    layout_properties: {grid_position: 'WVDPXV,PFATML'}
+    name: column_panel_1
+    properties:
+      spacing:
+        padding: [null, '80', null, null]
+    type: ColumnPanel
   - layout_properties: {grid_position: 'YDUFVC,COMUDG'}
     name: label_3
     properties: {align: right, text: 'Index nesouhlasu:'}
     type: Label
-  - layout_properties: {grid_position: 'YDUFVC,XHLFDE'}
-    name: text_box_index_nesouhlasu
-    properties: {placeholder: 'výchozí hodnota 0,3', type: text}
-    type: TextBox
+  - components:
+    - layout_properties: {grid_position: 'XNYLXF,SIULHS'}
+      name: text_box_index_nesouhlasu
+      properties: {placeholder: 'výchozí hodnota 0,3', type: text}
+      type: TextBox
+    layout_properties: {grid_position: 'YDUFVC,PMPIYG'}
+    name: column_panel_2
+    properties:
+      spacing:
+        margin: [null, '80', null, null]
+    type: ColumnPanel
   - event_bindings: {click: button_ulozit_nastaveni_click}
     layout_properties: {grid_position: 'PZGEJC,CGADIB'}
     name: button_ulozit_nastaveni
-    properties: {align: right, bold: false, icon: 'fa:save', role: primary-color, text: Uložit nastavení}
+    properties:
+      align: right
+      bold: false
+      icon: fa:save
+      role: primary-color
+      spacing:
+        margin: [null, '80', null, null]
+        padding: [null, '16', null, null]
+      text: Uložit nastavení
     type: Button
   - layout_properties: {grid_position: 'SMKDVF,BKAPIK'}
     name: label_chyba
@@ -48,7 +73,7 @@ components:
     type: RichText
   layout_properties: {grid_position: 'IMWZHI,HRZWAL'}
   name: card_1
-  properties: {col_widths: '{"COMUDG":35,"XHLFDE":25,"ITAKCI":35,"QOCGFE":25}', role: card}
+  properties: {col_widths: '{"COMUDG":40,"ITAKCI":40,"PFATML":25,"PMPIYG":25}', role: card}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
