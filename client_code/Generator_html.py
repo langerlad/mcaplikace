@@ -878,15 +878,34 @@ def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria
             radek.append(norm_hodnota)
         norm_matice.append(radek)
     
+    # Krok 1: Normalizace rozhodovací matice - vysvětlení
+    normalizace_vysvetleni = """
+    <div class="mcapp-explanation">
+        <p>
+            Pro metodu WPM normalizujeme hodnoty tak, aby všechna kritéria byla maximalizační:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro maximalizační kritéria:</span>
+                <span class="mcapp-formula-content">r<sub>ij</sub> = x<sub>ij</sub></span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro minimalizační kritéria:</span>
+                <span class="mcapp-formula-content">r<sub>ij</sub> = 1 / x<sub>ij</sub></span>
+            </div>
+        </div>
+        <p>kde x<sub>ij</sub> je původní hodnota i-té varianty pro j-té kritérium.</p>
+        <div class="mcapp-note">
+            <p>Na rozdíl od metody WSM, metoda WPM používá násobení místo sčítání, což eliminuje potřebu normalizace jednotek. 
+            Pro minimalizační kritéria (kde menší hodnota je lepší) používáme převrácenou hodnotu, aby všechna kritéria 
+            byla hodnocena ve stejném směru (větší = lepší).</p>
+        </div>
+    </div>
+    """
+    
     # Tabulka normalizovaných hodnot
     normalizace_html = """
     <h3>Normalizovaná rozhodovací matice</h3>
-    <p>Pro metodu WPM normalizujeme hodnoty tak, aby všechna kritéria byla maximalizační:</p>
-    <ul>
-        <li>Pro maximalizační kritéria použijeme původní hodnoty</li>
-        <li>Pro minimalizační kritéria použijeme převrácené hodnoty (1/hodnota)</li>
-    </ul>
-    
     <div class="mcapp-table-container">
         <table class="mcapp-table mcapp-normalized-table">
             <thead>
@@ -917,52 +936,33 @@ def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria
     </div>
     """
     
-    # Alternativní přístup - přidání sekce o poměrech
-    alternativni_pristup_html = """
-    <h3>Alternativní přístup - poměry mezi variantami</h3>
-    <p>Další způsob analýzy WPM je vypočítat poměry mezi variantami:</p>
-    <div class="mcapp-formula-box">
-        <div class="mcapp-formula-row">
-            <span class="mcapp-formula-content">R(A<sub>i</sub>/A<sub>j</sub>) = ∏<sub>k=1</sub><sup>n</sup>(x<sub>ik</sub>/x<sub>jk</sub>)<sup>w<sub>k</sub></sup></span>
+    # Krok 2: Výpočet metodou WPM - vysvětlení
+    wpm_vysvetleni = """
+    <div class="mcapp-explanation">
+        <p>
+            V metodě WPM (Weighted Product Model) se hodnoty jednotlivých kritérií násobí, přičemž jsou umocněny na příslušné váhy:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">P(A<sub>i</sub>) = ∏<sub>j=1</sub><sup>n</sup> (r<sub>ij</sub>)<sup>w<sub>j</sub></sup></span>
+            </div>
         </div>
+        <p>kde r<sub>ij</sub> je normalizovaná hodnota i-té varianty podle j-tého kritéria a w<sub>j</sub> je váha j-tého kritéria.</p>
+        <p>Pro každé kritérium se nejprve hodnota umocní na váhu tohoto kritéria, čímž vznikne příspěvek tohoto kritéria k celkovému skóre. 
+        Celkové skóre varianty se pak získá vynásobením všech těchto příspěvků.</p>
     </div>
-    <p>Pokud R(A<sub>i</sub>/A<sub>j</sub>) ≥ 1, pak varianta A<sub>i</sub> je lepší nebo stejně dobrá jako varianta A<sub>j</sub>.</p>
     """
     
     # Tabulka vah
-    vahy_html = """
-    <h3>Váhy kritérií</h3>
-    <div class="mcapp-table-container">
-        <table class="mcapp-table mcapp-weights-table">
-            <thead>
-                <tr>
-                    <th>Kritérium</th>
-    """
+    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
     
-    for krit in kriteria:
-        vahy_html += f"<th>{krit}</th>"
-    
-    vahy_html += """
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Váha</td>
-    """
-    
-    for i, vaha in enumerate(vahy):
-        vahy_html += f"<td style='text-align: right;'>{vaha:.3f}</td>"
-        
-    vahy_html += """
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    """
-    
-    # Tabulka produktových příspěvků (bez popisu)
+    # Tabulka produktových příspěvků
     produkty_html = """
     <h3>Hodnoty umocněné na váhy kritérií</h3>
+    <div class="mcapp-explanation">
+        <p>Níže jsou zobrazeny hodnoty po transformaci (1/x pro minimalizační kritéria) a umocnění na váhy.
+        Celkové skóre je pak součinem všech těchto hodnot v řádku.</p>
+    </div>
     <div class="mcapp-table-container">
         <table class="mcapp-table mcapp-product-table">
             <thead>
@@ -1001,6 +1001,21 @@ def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria
         </table>
     </div>
     """
+    
+    # Alternativní přístup - nyní na konci Kroku 2
+    alternativni_pristup_html = """
+    <h3>Alternativní přístup - poměry mezi variantami</h3>
+    <div class="mcapp-explanation">
+        <p>Další způsob analýzy WPM je vypočítat poměry mezi variantami:</p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">R(A<sub>i</sub>/A<sub>j</sub>) = ∏<sub>k=1</sub><sup>n</sup>(x<sub>ik</sub>/x<sub>jk</sub>)<sup>w<sub>k</sub></sup></span>
+            </div>
+        </div>
+        <p>Pokud R(A<sub>i</sub>/A<sub>j</sub>) ≥ 1, pak varianta A<sub>i</sub> je lepší nebo stejně dobrá jako varianta A<sub>j</sub>.</p>
+        <p>Tento přístup umožňuje přímé porovnání párů variant bez nutnosti vypočítat absolutní hodnoty pro každou variantu.</p>
+    </div>
+    """
 
     # Sloučení do sekce
     return f"""
@@ -1008,13 +1023,15 @@ def vytvor_sekci_postupu_wpm(matice, produkt_prispevek, vahy, varianty, kriteria
         <h2>Postup zpracování dat</h2>
         <div class="mcapp-card">
             <h3>Krok 1: Normalizace rozhodovací matice</h3>
+            {normalizace_vysvetleni}
             {normalizace_html}
-            {alternativni_pristup_html}
         </div>
         <div class="mcapp-card">
             <h3>Krok 2: Výpočet metodou WPM</h3>
+            {wpm_vysvetleni}
             {vahy_html}
             {produkty_html}
+            {alternativni_pristup_html}
         </div>
     </div>
     """
