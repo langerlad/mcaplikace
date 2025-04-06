@@ -116,49 +116,6 @@ def vytvor_html_sekci_metodologie(metoda="WSM", default_open=True):
         </div>
         """
 
-def vytvor_html_sekci_normalizace(default_open=True):
-    """
-    Vytvoří HTML sekci s vysvětlením normalizace hodnot, používá CSS místo JavaScriptu.
-    
-    Args:
-        default_open: Zda má být sekce ve výchozím stavu otevřená
-        
-    Returns:
-        str: HTML kód s vysvětlením normalizace
-    """
-    # Vytvoření unikátního ID pro tento přepínač
-    toggle_id = "normalizace-info"
-    default_class = "default-open" if default_open else ""
-    
-    return f"""
-    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
-    <label for="{toggle_id}" class="details-toggle {default_class}">
-        Informace o normalizaci hodnot
-        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
-    </label>
-    <div class="details-content">
-        <div style="padding: 0;">
-            <div class="mcapp-explanation">
-                <h4>Princip metody Min-Max normalizace:</h4>
-                <div class="mcapp-formula-box">
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-label">Pro maximalizační kritéria (čím více, tím lépe):</span>
-                        <span class="mcapp-formula-content">Normalizovaná hodnota = (hodnota - minimum) / (maximum - minimum)</span>
-                    </div>
-                    <div class="mcapp-formula-row">
-                        <span class="mcapp-formula-label">Pro minimalizační kritéria (čím méně, tím lépe):</span>
-                        <span class="mcapp-formula-content">Normalizovaná hodnota = (maximum - hodnota) / (maximum - minimum)</span>
-                    </div>
-                </div>
-                <div class="mcapp-note">
-                    <p>Kde minimum je nejmenší hodnota v daném kritériu a maximum je největší hodnota v daném kritériu.</p>
-                    <p>Výsledkem jsou hodnoty v intervalu [0,1], kde 1 je vždy nejlepší hodnota (ať už jde o maximalizační či minimalizační kritérium).</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-
 def vytvor_sekci_postupu_wsm(norm_matice, vazene_matice, vahy, varianty, kriteria, typy_kriterii):
     """
     Vytvoří HTML sekci s postupem výpočtu.
@@ -174,14 +131,55 @@ def vytvor_sekci_postupu_wsm(norm_matice, vazene_matice, vahy, varianty, kriteri
     Returns:
         str: HTML kód pro sekci postupu výpočtu
     """
-    # Vysvětlení normalizace pomocí CSS
-    vysvetleni_norm_html = vytvor_html_sekci_normalizace(default_open=False)
-    
     # Normalizační tabulka
-    normalizace_html = vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
+    normalizace_html = """
+    <div class="mcapp-explanation">
+        <h4>Princip metody Min-Max normalizace:</h4>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro maximalizační kritéria (čím více, tím lépe):</span>
+                <span class="mcapp-formula-content">Normalizovaná hodnota = (hodnota - minimum) / (maximum - minimum)</span>
+            </div>
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-label">Pro minimalizační kritéria (čím méně, tím lépe):</span>
+                <span class="mcapp-formula-content">Normalizovaná hodnota = (maximum - hodnota) / (maximum - minimum)</span>
+            </div>
+        </div>
+        <div class="mcapp-note">
+            <p>Kde minimum je nejmenší hodnota v daném kritériu a maximum je největší hodnota v daném kritériu.</p>
+            <p>Výsledkem jsou hodnoty v intervalu [0,1], kde 1 je vždy nejlepší hodnota (ať už jde o maximalizační či minimalizační kritérium).</p>
+        </div>
+    </div>
+    """
+    
+    # Přidání tabulky normalizovaných hodnot
+    normalizace_html += vytvor_html_normalizacni_tabulku(norm_matice, varianty, kriteria)
     
     # Tabulka vah
     vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    
+    # Vysvětlení výpočtu vážených hodnot
+    vazene_vysvetleni = """
+    <h3>Výpočet vážených hodnot a celkového skóre</h3>
+    <div class="mcapp-explanation">
+        <p>
+            V metodě WSM počítáme vážené hodnoty vynásobením normalizovaných hodnot příslušnými vahami kritérií:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">v<sub>ij</sub> = r<sub>ij</sub> × w<sub>j</sub></span>
+            </div>
+        </div>
+        <p>kde r<sub>ij</sub> je normalizovaná hodnota i-té varianty pro j-té kritérium a w<sub>j</sub> je váha j-tého kritéria.</p>
+        <p>Celkové skóre varianty je pak součtem všech vážených hodnot:</p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">S<sub>i</sub> = ∑<sub>j=1</sub><sup>n</sup>v<sub>ij</sub></span>
+            </div>
+        </div>
+        <p>Varianty jsou následně seřazeny podle celkového skóre, kde vyšší hodnota znamená lepší variantu.</p>
+    </div>
+    """
     
     # Tabulka vážených hodnot
     vazene_html = vytvor_html_tabulku_vazenych_hodnot(vazene_matice, varianty, kriteria)
@@ -190,7 +188,6 @@ def vytvor_sekci_postupu_wsm(norm_matice, vazene_matice, vahy, varianty, kriteri
     return f"""
     <div class="mcapp-section mcapp-process">
         <h2>Postup zpracování dat</h2>
-        {vysvetleni_norm_html}
         <div class="mcapp-card">
             <h3>Krok 1: Normalizace hodnot</h3>
             {normalizace_html}
@@ -198,6 +195,7 @@ def vytvor_sekci_postupu_wsm(norm_matice, vazene_matice, vahy, varianty, kriteri
         <div class="mcapp-card">
             <h3>Krok 2: Vážení hodnot a výpočet skóre</h3>
             {vahy_html}
+            {vazene_vysvetleni}
             {vazene_html}
         </div>
     </div>
