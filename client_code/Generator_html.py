@@ -303,6 +303,18 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
             electre_results['index_souhlasu'],
             electre_results['index_nesouhlasu']
         )
+    elif metoda.upper() == "MABAC":
+        metodologie_html = vytvor_html_sekci_metodologie_mabac(default_open=True)
+        postup_html = vytvor_sekci_postupu_mabac(
+            vysledky_vypoctu['vazena_matice'],
+            vysledky_vypoctu['mabac_vysledky']['g_values'],
+            vysledky_vypoctu['mabac_vysledky']['q_matrix'],
+            vysledky_vypoctu['vahy'],
+            varianty,
+            kriteria,
+            vysledky_vypoctu['typy_kriterii']
+        )
+        vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['mabac_vysledky'])
     else:
         # Pro ostatní metody (budoucí implementace)
         metodologie_html = f"<div class='mcapp-card'><h2>Metodologie</h2><p>Metodologie pro metodu {metoda}</p></div>"
@@ -2162,6 +2174,331 @@ def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, krite
                 </table>
             </div>
         </div>
+    </div>
+    """
+    
+    return html
+
+def vytvor_html_sekci_metodologie_mabac(default_open=True):
+    """
+    Vytvoří HTML sekci s popisem metodologie pro metodu MABAC, používá CSS místo JavaScriptu.
+    
+    Args:
+        default_open: Zda má být sekce ve výchozím stavu otevřená
+        
+    Returns:
+        str: HTML kód s metodologií
+    """
+    # Vytvoření unikátního ID pro tento přepínač
+    toggle_id = "metodologie-mabac"
+    default_class = "default-open" if default_open else ""
+    
+    return f"""
+    <input type="checkbox" id="{toggle_id}" class="toggle-checkbox" {"checked" if default_open else ""}>
+    <label for="{toggle_id}" class="details-toggle {default_class}">
+        O metodě MABAC (Multi-Attributive Border Approximation area Comparison)
+        <span class="toggle-hint">Kliknutím zobrazíte/skryjete</span>
+    </label>
+    <div class="details-content">
+        <div style="padding: 0;">
+            <p>MABAC je moderní metoda vícekriteriálního rozhodování, vyvinutá v roce 2015, která je založena na definování vzdálenosti variant od hraničního aproximačního prostoru.</p>
+            
+            <h4>Postup metody MABAC:</h4>
+            <ol>
+                <li><strong>Normalizace rozhodovací matice</strong> - Převod různorodých hodnot kritérií na srovnatelnou škálu 0 až 1 pomocí metody Min-Max.</li>
+                <li><strong>Vážení normalizované matice</strong> - Vynásobení normalizovaných hodnot vahami kritérií.</li>
+                <li><strong>Výpočet hraničního aproximačního prostoru (G)</strong> - Pro každé kritérium se určí hraniční hodnota jako geometrický průměr všech variant.</li>
+                <li><strong>Výpočet vzdáleností (Q)</strong> - Pro každou variantu se vypočítá vzdálenost od hraničního prostoru pro každé kritérium.</li>
+                <li><strong>Výpočet celkového skóre</strong> - Sečtení všech vzdáleností pro každou variantu.</li>
+                <li><strong>Seřazení variant</strong> - Varianty jsou seřazeny podle celkového skóre (vyšší je lepší).</li>
+            </ol>
+            
+            <h4>Matematický zápis:</h4>
+            <div class="mcapp-formula-box">
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Hraniční hodnota (G):</span>
+                    <span class="mcapp-formula-content">g<sub>j</sub> = (∏<sub>i=1</sub><sup>m</sup>v<sub>ij</sub>)<sup>1/m</sup></span>
+                </div>
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Vzdálenost (Q):</span>
+                    <span class="mcapp-formula-content">q<sub>ij</sub> = v<sub>ij</sub> - g<sub>j</sub></span>
+                </div>
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Celkové skóre (S):</span>
+                    <span class="mcapp-formula-content">S<sub>i</sub> = ∑<sub>j=1</sub><sup>n</sup>q<sub>ij</sub></span>
+                </div>
+            </div>
+            
+            <h4>Výhody metody:</h4>
+            <ul>
+                <li>Jednoduchá a intuitivní interpretace výsledků</li>
+                <li>Možnost určit, zda varianta patří do horní (G<sup>+</sup>), dolní (G<sup>-</sup>) nebo hraniční (G) aproximační oblasti</li>
+                <li>Stabilní výsledky a nízká citlivost na změny v používané metodě normalizace</li>
+                <li>Efektivní při velkém počtu alternativ a kritérií</li>
+            </ul>
+            
+            <h4>Interpretace výsledků:</h4>
+            <ul>
+                <li>q<sub>ij</sub> > 0: Varianta patří do horní aproximační oblasti (G<sup>+</sup>)</li>
+                <li>q<sub>ij</sub> < 0: Varianta patří do dolní aproximační oblasti (G<sup>-</sup>)</li>
+                <li>q<sub>ij</sub> = 0: Varianta patří do hraničního aproximačního prostoru (G)</li>
+            </ul>
+        </div>
+    </div>
+    """
+
+def vytvor_sekci_postupu_mabac(vazena_matice, g_values, q_matrix, vahy, varianty, kriteria, typy_kriterii):
+    """
+    Vytvoří HTML sekci s postupem výpočtu MABAC.
+    
+    Args:
+        vazena_matice: 2D list s váženými hodnotami
+        g_values: Seznam hraničních hodnot pro každé kritérium
+        q_matrix: 2D list vzdáleností od hraničního prostoru
+        vahy: Seznam vah kritérií
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        typy_kriterii: Seznam typů kritérií (max/min)
+            
+    Returns:
+        str: HTML kód pro sekci postupu výpočtu
+    """
+    # Tabulka vah kritérií
+    vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
+    
+    # Tabulka vážených hodnot
+    vazene_html = vytvor_html_tabulku_vazenych_hodnot_mabac(vazena_matice, varianty, kriteria)
+    
+    # Tabulka hraničních hodnot
+    g_html = vytvor_html_tabulku_g_hodnot(g_values, kriteria)
+    
+    # Tabulka vzdáleností od hranic (Q)
+    q_html = vytvor_html_tabulku_q_hodnot(q_matrix, varianty, kriteria)
+
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-process">
+        <h2>Postup zpracování dat</h2>
+        <div class="mcapp-card">
+            <h3>Krok 1-2: Vážení normalizovaných hodnot</h3>
+            {vahy_html}
+            {vazene_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 3: Výpočet hraničního aproximačního prostoru (G)</h3>
+            {g_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 4-5: Výpočet vzdáleností od hranic (Q) a celkového skóre</h3>
+            {q_html}
+        </div>
+    </div>
+    """
+
+def vytvor_html_tabulku_vazenych_hodnot_mabac(vazena_matice, varianty, kriteria):
+    """
+    Vytvoří HTML tabulku s váženými hodnotami pro MABAC.
+    
+    Args:
+        vazena_matice: 2D list s váženými hodnotami [varianty][kriteria]
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        str: HTML kód tabulky s váženými hodnotami
+    """
+    html = """
+    <h3>Vážená normalizovaná matice (V)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            V tomto kroku násobíme hodnoty z normalizované matice odpovídajícími vahami kritérií:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">v<sub>ij</sub> = r<sub>ij</sub> × w<sub>j</sub></span>
+            </div>
+        </div>
+        <p>kde r<sub>ij</sub> jsou normalizované hodnoty a w<sub>j</sub> jsou váhy kritérií.</p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-weighted-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        html += f"<th>{krit}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td>{var}</td>"
+        for j in range(len(kriteria)):
+            html += f"<td>{vazena_matice[i][j]:.3f}</td>"
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_html_tabulku_g_hodnot(g_values, kriteria):
+    """
+    Vytvoří HTML tabulku s hraničními hodnotami pro každé kritérium.
+    
+    Args:
+        g_values: Seznam hraničních hodnot pro každé kritérium
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        str: HTML kód tabulky s hraničními hodnotami
+    """
+    html = """
+    <h3>Hraniční aproximační prostor (G)</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Pro každé kritérium vypočítáme hraniční hodnotu jako geometrický průměr všech vážených normalizovaných hodnot:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">g<sub>j</sub> = (∏<sub>i=1</sub><sup>m</sup>v<sub>ij</sub>)<sup>1/m</sup></span>
+            </div>
+        </div>
+        <p>kde m je počet variant a v<sub>ij</sub> jsou vážené normalizované hodnoty.</p>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-boundary-table">
+            <thead>
+                <tr>
+                    <th>Parametr</th>
+    """
+    
+    for krit in kriteria:
+        html += f"<th>{krit}</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Hraniční hodnota (G)</strong></td>
+    """
+    
+    for j in range(len(kriteria)):
+        html += f"<td>{g_values[j]:.4f}</td>"
+    
+    html += """
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_html_tabulku_q_hodnot(q_matrix, varianty, kriteria):
+    """
+    Vytvoří HTML tabulku se vzdálenostmi od hraničního prostoru a celkovým skóre.
+    
+    Args:
+        q_matrix: 2D list vzdáleností od hraničního prostoru [varianty][kriteria]
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        
+    Returns:
+        str: HTML kód tabulky se vzdálenostmi a celkovým skóre
+    """
+    html = """
+    <h3>Matice vzdáleností (Q) a celkové skóre</h3>
+    <div class="mcapp-explanation">
+        <p>
+            Vypočítáme vzdálenost každé varianty od hraničního prostoru pro každé kritérium:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">q<sub>ij</sub> = v<sub>ij</sub> - g<sub>j</sub></span>
+            </div>
+        </div>
+        <p>kde v<sub>ij</sub> jsou vážené normalizované hodnoty a g<sub>j</sub> jsou hraniční hodnoty.</p>
+        <p>
+            Celkové skóre každé varianty je pak součtem všech vzdáleností:
+        </p>
+        <div class="mcapp-formula-box">
+            <div class="mcapp-formula-row">
+                <span class="mcapp-formula-content">S<sub>i</sub> = ∑<sub>j=1</sub><sup>n</sup>q<sub>ij</sub></span>
+            </div>
+        </div>
+        <div class="mcapp-note">
+            <p>Interpretace hodnot q<sub>ij</sub>:</p>
+            <ul>
+                <li>q<sub>ij</sub> > 0: Varianta patří do horní aproximační oblasti (G<sup>+</sup>)</li>
+                <li>q<sub>ij</sub> < 0: Varianta patří do dolní aproximační oblasti (G<sup>-</sup>)</li>
+                <li>q<sub>ij</sub> = 0: Varianta patří do hraničního aproximačního prostoru (G)</li>
+            </ul>
+        </div>
+    </div>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-distance-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
+    """
+    
+    for krit in kriteria:
+        html += f"<th>{krit}</th>"
+    
+    html += "<th style='background-color:#f0f0f0; font-weight:bold;'>Celkové skóre</th>"
+    
+    html += """
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for i, var in enumerate(varianty):
+        html += f"<tr><td>{var}</td>"
+        
+        # Výpočet celkového skóre pro řádek
+        suma = sum(q_matrix[i])
+        
+        for j in range(len(kriteria)):
+            hodnota = q_matrix[i][j]
+            
+            # Přidání barvy buňky podle interpretace hodnoty q
+            if hodnota > 0:
+                barva = "#E0F7FA"  # Světle modrá pro hodnoty v horní oblasti (G+)
+                html += f"<td style='background-color:{barva};'>{hodnota:.4f}</td>"
+            elif hodnota < 0:
+                barva = "#FFEBEE"  # Světle červená pro hodnoty v dolní oblasti (G-)
+                html += f"<td style='background-color:{barva};'>{hodnota:.4f}</td>"
+            else:
+                barva = "#E8F5E9"  # Světle zelená pro hodnoty v hraničním prostoru (G)
+                html += f"<td style='background-color:{barva};'>{hodnota:.4f}</td>"
+        
+        # Přidání celkového skóre
+        html += f"<td style='background-color:#f0f0f0; font-weight:bold; text-align:right;'>{suma:.4f}</td>"
+        
+        html += "</tr>"
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    <div class="mcapp-note">
+        <p>Barevné značení buněk:</p>
+        <ul>
+            <li style='background-color:#E0F7FA; padding: 2px 5px;'>Světle modrá: Hodnota patří do horní aproximační oblasti (G<sup>+</sup>)</li>
+            <li style='background-color:#FFEBEE; padding: 2px 5px;'>Světle červená: Hodnota patří do dolní aproximační oblasti (G<sup>-</sup>)</li>
+            <li style='background-color:#E8F5E9; padding: 2px 5px;'>Světle zelená: Hodnota patří do hraničního aproximačního prostoru (G)</li>
+        </ul>
     </div>
     """
     

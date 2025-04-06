@@ -557,8 +557,7 @@ def vypocitej_analyzu(analyza_data, metoda="wsm"):
     elif metoda == "electre":
         return vypocitej_electre_analyzu(analyza_data)
     elif metoda == "mabac":
-        # Zde by byla implementace pro MABAC
-        raise ValueError("Metoda MABAC není v této verzi implementována")
+        return vypocitej_mabac_analyzu(analyza_data)
     else:
         raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")
       
@@ -1041,3 +1040,119 @@ def vypocitej_net_flows(outranking_matrix, varianty):
     # Seřazení podle net_flow sestupně
     return sorted(net_flows, key=lambda x: x[1], reverse=True)
 
+def vypocitej_mabac_analyzu(analyza_data):
+    """
+    Centralizovaná funkce pro výpočet MABAC analýzy z dat.
+    Provádí všechny kroky MABAC analýzy a vrací strukturovaný výsledek.
+    
+    Args:
+        analyza_data: Slovník s daty analýzy
+        
+    Returns:
+        dict: Strukturovaný výsledek s normalizovanou maticí, mezními hodnotami a výsledky
+        
+    Raises:
+        ValueError: Pokud data nejsou validní nebo nelze provést výpočet
+    """
+    try:
+        # Kontrola validity dat
+        je_validni, chyba = validuj_vstupni_data_analyzy(analyza_data)
+        if not je_validni:
+            raise ValueError(f"Neplatná vstupní data: {chyba}")
+            
+        # 1. Příprava dat z JSON formátu
+        matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
+        
+        # 2. Normalizace matice pomocí min-max metody
+        norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
+        norm_matice = norm_vysledky['normalizovana_matice']
+        
+        # 3. Výpočet vážené normalizované matice
+        vazena_matice = vypocitej_vazene_hodnoty(norm_matice, vahy)
+        
+        # 4. Výpočet MABAC výsledků
+        mabac_vysledky = mabac_vypocet(
+            vazena_matice, 
+            vahy, 
+            varianty, 
+            kriteria
+        )
+        
+        # 5. Sestavení strukturovaného výsledku
+        vysledek = {
+            'norm_vysledky': norm_vysledky,
+            'vazena_matice': vazena_matice,
+            'vahy': vahy,
+            'mabac_vysledky': mabac_vysledky,
+            'matice': matice,
+            'typy_kriterii': typy_kriterii,
+            'metoda': 'MABAC',
+            'popis_metody': 'Multi-Attributive Border Approximation area Comparison'
+        }
+        
+        return vysledek
+        
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu MABAC analýzy: {str(e)}")
+
+def mabac_vypocet(vazena_matice, vahy, varianty, kriteria):
+    """
+    Vypočítá výsledky metodou MABAC (Multi-Attributive Border Approximation area Comparison).
+    
+    Args:
+        vazena_matice: 2D list vážených normalizovaných hodnot [varianty][kriteria]
+        vahy: List vah kritérií
+        varianty: List názvů variant
+        kriteria: List názvů kritérií
+    
+    Returns:
+        dict: Výsledky analýzy metodou MABAC
+    """
+    try:
+        # 1. Výpočet hraničních hodnot pro každé kritérium (G)
+        g_values = []
+        for j in range(len(kriteria)):
+            # Výpočet hraničního aproximačního prostoru pro každé kritérium
+            g = 1
+            for i in range(len(varianty)):
+                g *= vazena_matice[i][j]
+            g = g ** (1/len(varianty))  # Geometrický průměr
+            g_values.append(g)
+            
+        # 2. Výpočet vzdáleností od hraničního aproximačního prostoru (Q)
+        q_matrix = []
+        for i in range(len(varianty)):
+            q_row = []
+            for j in range(len(kriteria)):
+                q = vazena_matice[i][j] - g_values[j]
+                q_row.append(q)
+            q_matrix.append(q_row)
+            
+        # 3. Výpočet celkového hodnocení pro každou variantu
+        skore = []
+        for i, varianta in enumerate(varianty):
+            celkove_skore = sum(q_matrix[i])
+            skore.append((varianta, celkove_skore))
+            
+        # 4. Seřazení variant podle skóre (sestupně)
+        serazene = sorted(skore, key=lambda x: x[1], reverse=True)
+        
+        # 5. Vytvoření seznamu výsledků s pořadím
+        results = []
+        for poradi, (varianta, hodnota) in enumerate(serazene, 1):
+            results.append((varianta, poradi, hodnota))
+            
+        # Výsledný slovník
+        return {
+            'results': results,
+            'nejlepsi_varianta': results[0][0],
+            'nejlepsi_skore': results[0][2],
+            'nejhorsi_varianta': results[-1][0],
+            'nejhorsi_skore': results[-1][2],
+            'g_values': g_values,  # Hraniční hodnoty
+            'q_matrix': q_matrix,  # Matice vzdáleností
+            'q_distance_matrix': q_matrix,  # Pro vizualizaci
+            'rozdil_skore': results[0][2] - results[-1][2]
+        }
+    except Exception as e:
+        raise ValueError(f"Chyba při výpočtu MABAC: {str(e)}")
