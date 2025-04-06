@@ -173,15 +173,15 @@ def priprav_data_z_json(analyza_data):
 def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="wsm", typy_kriterii=None, vyber_kriteria=0, pocet_kroku=9):
     """
     Provede analýzu citlivosti změnou váhy vybraného kritéria.
-    Podporuje metody WSM, WPM a TOPSIS.
+    Podporuje metody WSM, WPM, TOPSIS a MABAC.
     
     Args:
-        norm_matice: 2D list - pro WSM/TOPSIS normalizované hodnoty, pro WPM původní hodnoty
+        norm_matice: 2D list - pro WSM/TOPSIS normalizované hodnoty, pro WPM/MABAC původní hodnoty
         vahy: List vah kritérií
         varianty: List názvů variant
         kriteria: List názvů kritérií
-        metoda: Metoda analýzy ("wsm", "wpm" nebo "topsis")
-        typy_kriterii: List typů kritérií (povinný pro WPM)
+        metoda: Metoda analýzy ("wsm", "wpm", "topsis" nebo "mabac")
+        typy_kriterii: List typů kritérií (povinný pro WPM a MABAC)
         vyber_kriteria: Index kritéria, jehož váha se bude měnit (výchozí je první kritérium)
         pocet_kroku: Počet kroků při změně váhy
         
@@ -211,10 +211,10 @@ def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="
         if vyber_kriteria < 0 or vyber_kriteria >= len(kriteria):
             vyber_kriteria = 0
             
-        # Pro WPM je nutné mít typy kritérií
-        if metoda.lower() == "wpm":
+        # Pro WPM a MABAC je nutné mít typy kritérií
+        if metoda.lower() in ["wpm", "mabac"]:
             if not typy_kriterii or len(typy_kriterii) != len(kriteria):
-                raise ValueError("Pro metodu WPM je nutné specifikovat typy kritérií")
+                raise ValueError(f"Pro metodu {metoda.upper()} je nutné specifikovat typy kritérií")
         
         # Vytvoření rozsahu vah pro analýzu citlivosti
         vahy_rozsah = []
@@ -309,6 +309,59 @@ def vypocitej_analyzu_citlivosti(norm_matice, vahy, varianty, kriteria, metoda="
                         relativni_blizkost = dist_anti_ideal / (dist_ideal + dist_anti_ideal)
                     
                     skore_variant.append(relativni_blizkost)
+                    
+            elif metoda.lower() == "mabac":
+                # MABAC metoda
+                skore_variant = []
+                
+                # 1. Normalizace matice
+                norm_matice_minmax = []
+                for i in range(len(varianty)):
+                    radek = []
+                    for j in range(len(kriteria)):
+                        sloupec = [row[j] for row in norm_matice]
+                        min_val = min(sloupec)
+                        max_val = max(sloupec)
+                        
+                        if max_val == min_val:
+                            norm_hodnota = 1.0
+                        else:
+                            # Pro MIN kritéria obrátíme normalizaci
+                            if typy_kriterii[j].lower() in ("min", "cost"):
+                                norm_hodnota = (max_val - norm_matice[i][j]) / (max_val - min_val)
+                            else:
+                                norm_hodnota = (norm_matice[i][j] - min_val) / (max_val - min_val)
+                            
+                        radek.append(norm_hodnota)
+                    norm_matice_minmax.append(radek)
+                
+                # 2. Výpočet vážené normalizované matice - specifický pro MABAC
+                vazena_matice = []
+                for i in range(len(varianty)):
+                    radek = []
+                    for j in range(len(kriteria)):
+                        # v_ij = w_j * (r_ij + 1)
+                        v_ij = nove_vahy[j] * (norm_matice_minmax[i][j] + 1)
+                        radek.append(v_ij)
+                    vazena_matice.append(radek)
+                
+                # 3. Výpočet hraničních hodnot
+                g_values = []
+                for j in range(len(kriteria)):
+                    g = 1
+                    for i in range(len(varianty)):
+                        g *= vazena_matice[i][j]
+                    g = g ** (1/len(varianty))
+                    g_values.append(g)
+                
+                # 4. Výpočet vzdáleností od hranic a skóre
+                for i in range(len(varianty)):
+                    celkove_skore = 0
+                    for j in range(len(kriteria)):
+                        q = vazena_matice[i][j] - g_values[j]
+                        celkove_skore += q
+                    skore_variant.append(celkove_skore)
+                
             else:
                 raise ValueError(f"Nepodporovaná metoda analýzy: {metoda}")
             
@@ -1067,8 +1120,14 @@ def vypocitej_mabac_analyzu(analyza_data):
         norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
         norm_matice = norm_vysledky['normalizovana_matice']
         
-        # 3. Výpočet vážené normalizované matice
-        vazena_matice = vypocitej_vazene_hodnoty(norm_matice, vahy)
+        # 3. Výpočet vážené normalizované matice podle specifického vzorce MABAC: v_ij = w_j * (r_ij + 1)
+        vazena_matice = []
+        for i in range(len(varianty)):
+            radek = []
+            for j in range(len(kriteria)):
+                v_ij = vahy[j] * (norm_matice[i][j] + 1)
+                radek.append(v_ij)
+            vazena_matice.append(radek)
         
         # 4. Výpočet MABAC výsledků
         mabac_vysledky = mabac_vypocet(
@@ -1109,7 +1168,9 @@ def mabac_vypocet(vazena_matice, vahy, varianty, kriteria):
         dict: Výsledky analýzy metodou MABAC
     """
     try:
-        # 1. Výpočet hraničních hodnot pro každé kritérium (G)
+        # 1. Vazená normalizovaná matice už by měla být vypočítaná jako v_ij = w_j * (r_ij + 1)
+        
+        # 2. Výpočet hraničních hodnot pro každé kritérium (G)
         g_values = []
         for j in range(len(kriteria)):
             # Výpočet hraničního aproximačního prostoru pro každé kritérium
@@ -1119,7 +1180,7 @@ def mabac_vypocet(vazena_matice, vahy, varianty, kriteria):
             g = g ** (1/len(varianty))  # Geometrický průměr
             g_values.append(g)
             
-        # 2. Výpočet vzdáleností od hraničního aproximačního prostoru (Q)
+        # 3. Výpočet vzdáleností od hraničního aproximačního prostoru (Q)
         q_matrix = []
         for i in range(len(varianty)):
             q_row = []
@@ -1128,16 +1189,16 @@ def mabac_vypocet(vazena_matice, vahy, varianty, kriteria):
                 q_row.append(q)
             q_matrix.append(q_row)
             
-        # 3. Výpočet celkového hodnocení pro každou variantu
+        # 4. Výpočet celkového hodnocení pro každou variantu
         skore = []
         for i, varianta in enumerate(varianty):
             celkove_skore = sum(q_matrix[i])
             skore.append((varianta, celkove_skore))
             
-        # 4. Seřazení variant podle skóre (sestupně)
+        # 5. Seřazení variant podle skóre (sestupně)
         serazene = sorted(skore, key=lambda x: x[1], reverse=True)
         
-        # 5. Vytvoření seznamu výsledků s pořadím
+        # 6. Vytvoření seznamu výsledků s pořadím
         results = []
         for poradi, (varianta, hodnota) in enumerate(serazene, 1):
             results.append((varianta, poradi, hodnota))

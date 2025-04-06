@@ -306,6 +306,7 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
     elif metoda.upper() == "MABAC":
         metodologie_html = vytvor_html_sekci_metodologie_mabac(default_open=True)
         postup_html = vytvor_sekci_postupu_mabac(
+            vysledky_vypoctu['norm_vysledky']['normalizovana_matice'],
             vysledky_vypoctu['vazena_matice'],
             vysledky_vypoctu['mabac_vysledky']['g_values'],
             vysledky_vypoctu['mabac_vysledky']['q_matrix'],
@@ -2247,11 +2248,12 @@ def vytvor_html_sekci_metodologie_mabac(default_open=True):
     </div>
     """
 
-def vytvor_sekci_postupu_mabac(vazena_matice, g_values, q_matrix, vahy, varianty, kriteria, typy_kriterii):
+def vytvor_sekci_postupu_mabac(norm_matice, vazena_matice, g_values, q_matrix, vahy, varianty, kriteria, typy_kriterii):
     """
     Vytvoří HTML sekci s postupem výpočtu MABAC.
     
     Args:
+        norm_matice: 2D list s normalizovanými hodnotami
         vazena_matice: 2D list s váženými hodnotami
         g_values: Seznam hraničních hodnot pro každé kritérium
         q_matrix: 2D list vzdáleností od hraničního prostoru
@@ -2263,6 +2265,10 @@ def vytvor_sekci_postupu_mabac(vazena_matice, g_values, q_matrix, vahy, varianty
     Returns:
         str: HTML kód pro sekci postupu výpočtu
     """
+    # Normalizační tabulka
+    normalizace_html = vytvor_html_normalizacni_tabulku_minmax(
+        norm_matice, vazena_matice, varianty, kriteria, typy_kriterii)
+    
     # Tabulka vah kritérií
     vahy_html = vytvor_html_tabulku_vah(vahy, kriteria)
     
@@ -2280,7 +2286,11 @@ def vytvor_sekci_postupu_mabac(vazena_matice, g_values, q_matrix, vahy, varianty
     <div class="mcapp-section mcapp-process">
         <h2>Postup zpracování dat</h2>
         <div class="mcapp-card">
-            <h3>Krok 1-2: Vážení normalizovaných hodnot</h3>
+            <h3>Krok 1: Normalizace hodnot metodou Min-Max</h3>
+            {normalizace_html}
+        </div>
+        <div class="mcapp-card">
+            <h3>Krok 2: Vážení normalizovaných hodnot</h3>
             {vahy_html}
             {vazene_html}
         </div>
@@ -2311,11 +2321,11 @@ def vytvor_html_tabulku_vazenych_hodnot_mabac(vazena_matice, varianty, kriteria)
     <h3>Vážená normalizovaná matice (V)</h3>
     <div class="mcapp-explanation">
         <p>
-            V tomto kroku násobíme hodnoty z normalizované matice odpovídajícími vahami kritérií:
+            V metodě MABAC používáme specifický vzorec pro výpočet vážené normalizované matice:
         </p>
         <div class="mcapp-formula-box">
             <div class="mcapp-formula-row">
-                <span class="mcapp-formula-content">v<sub>ij</sub> = r<sub>ij</sub> × w<sub>j</sub></span>
+                <span class="mcapp-formula-content">v<sub>ij</sub> = w<sub>j</sub> × (r<sub>ij</sub> + 1)</span>
             </div>
         </div>
         <p>kde r<sub>ij</sub> jsou normalizované hodnoty a w<sub>j</sub> jsou váhy kritérií.</p>
