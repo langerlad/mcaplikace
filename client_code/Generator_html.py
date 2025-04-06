@@ -315,7 +315,7 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
             kriteria,
             vysledky_vypoctu['typy_kriterii']
         )
-        vysledky_html = vytvor_sekci_vysledku(vysledky_vypoctu['mabac_vysledky'])
+        vysledky_html = vytvor_sekci_vysledku_mabac(vysledky_vypoctu['mabac_vysledky'])
     else:
         # Pro ostatní metody (budoucí implementace)
         metodologie_html = f"<div class='mcapp-card'><h2>Metodologie</h2><p>Metodologie pro metodu {metoda}</p></div>"
@@ -2080,7 +2080,7 @@ def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, in
 
 def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, kriteria, typy_kriterii):
     """
-    Vytvoří HTML tabulku s původními a normalizovanými hodnotami pomocí min-max normalizace.
+    Vytvoří HTML tabulku s normalizovanými hodnotami pomocí min-max normalizace.
     
     Args:
         matice: Původní 2D matice hodnot
@@ -2090,14 +2090,14 @@ def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, krite
         typy_kriterii: Seznam typů kritérií (max/min)
         
     Returns:
-        str: HTML kód s vysvětlením normalizace a tabulkami hodnot
+        str: HTML kód s vysvětlením normalizace a tabulkou hodnot
     """
     html = """
     <div class="mcapp-explanation">
         <h4>Normalizace hodnot metodou Min-Max</h4>
         <p>
             Pro zajištění srovnatelnosti různých kritérií s různými měrnými jednotkami se provádí normalizace.
-            V metodě ELECTRE používáme min-max normalizaci, která převádí všechny hodnoty na škálu od 0 do 1.
+            V metodě MABAC používáme min-max normalizaci, která převádí všechny hodnoty na škálu od 0 do 1.
         </p>
         <div class="mcapp-formula-box">
             <div class="mcapp-formula-row">
@@ -2115,53 +2115,20 @@ def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, krite
         </p>
     </div>
     
-    <div class="mcapp-container" style="display: flex; margin-top: 20px;">
-        <div style="flex: 1; margin-right: 10px;">
-            <h5>Původní hodnoty</h5>
-            <div class="mcapp-table-container">
-                <table class="mcapp-table mcapp-original-table">
-                    <thead>
-                        <tr>
-                            <th>Varianta / Kritérium</th>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-normalized-table">
+            <thead>
+                <tr>
+                    <th>Varianta / Kritérium</th>
     """
     
     for j, krit in enumerate(kriteria):
         html += f"<th>{krit} ({typy_kriterii[j].upper()})</th>"
     
     html += """
-                        </tr>
-                    </thead>
-                    <tbody>
-    """
-    
-    for i, var in enumerate(varianty):
-        html += f"<tr><td><strong>{var}</strong></td>"
-        for j in range(len(kriteria)):
-            html += f"<td style='text-align: right;'>{matice[i][j]:.2f}</td>"
-        html += "</tr>"
-    
-    html += """
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div style="flex: 1; margin-left: 10px;">
-            <h5>Normalizované hodnoty</h5>
-            <div class="mcapp-table-container">
-                <table class="mcapp-table mcapp-normalized-table">
-                    <thead>
-                        <tr>
-                            <th>Varianta / Kritérium</th>
-    """
-    
-    for j, krit in enumerate(kriteria):
-        html += f"<th>{krit} ({typy_kriterii[j].upper()})</th>"
-    
-    html += """
-                        </tr>
-                    </thead>
-                    <tbody>
+                </tr>
+            </thead>
+            <tbody>
     """
     
     for i, var in enumerate(varianty):
@@ -2171,10 +2138,8 @@ def vytvor_html_normalizacni_tabulku_minmax(matice, norm_matice, varianty, krite
         html += "</tr>"
     
     html += """
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            </tbody>
+        </table>
     </div>
     """
     
@@ -2513,3 +2478,101 @@ def vytvor_html_tabulku_q_hodnot(q_matrix, varianty, kriteria):
     """
     
     return html
+
+def vytvor_html_tabulku_vysledku_mabac(mabac_vysledky):
+    """
+    Vytvoří HTML tabulku s výsledky MABAC analýzy včetně procenta z maxima a počtu kritérií v G+ a G-.
+    
+    Args:
+        mabac_vysledky: Slovník s výsledky MABAC analýzy
+        
+    Returns:
+        str: HTML kód tabulky s výsledky
+    """
+    html = """
+    <h3>Pořadí variant</h3>
+    <div class="mcapp-table-container">
+        <table class="mcapp-table mcapp-results-table">
+            <thead>
+                <tr>
+                    <th>Pořadí</th>
+                    <th>Varianta</th>
+                    <th>Skóre</th>
+                    <th>% z maxima</th>
+                    <th>Počet kritérií v G+</th>
+                    <th>Počet kritérií v G-</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    max_skore = mabac_vysledky['nejlepsi_skore']
+    q_matrix = mabac_vysledky['q_matrix']
+    
+    # Vytvoření mapování z názvu varianty na index v q_matrix
+    varianta_na_index = {}
+    for i, (varianta, poradi, skore) in enumerate(mabac_vysledky['results']):
+        varianta_na_index[varianta] = i
+    
+    for varianta, poradi, skore in sorted(mabac_vysledky['results'], key=lambda x: x[1]):
+        procento = (skore / max_skore) * 100 if max_skore > 0 else 0
+        radek_styl = ""
+        
+        # Získání indexu varianty v q_matrix
+        idx = varianta_na_index.get(varianta, 0)
+        
+        # Spočítání kritérií v G+ (q > 0) a G- (q < 0)
+        gplus_count = sum(1 for q in q_matrix[idx] if q > 0)
+        gminus_count = sum(1 for q in q_matrix[idx] if q < 0)
+        
+        # Zvýraznění nejlepší a nejhorší varianty
+        if varianta == mabac_vysledky['nejlepsi_varianta']:
+            radek_styl = " style='background-color: #E0F7FA;'"  # Light Cyan for best
+        elif varianta == mabac_vysledky['nejhorsi_varianta']:
+            radek_styl = " style='background-color: #FFEBEE;'"  # Light Red for worst
+            
+        html += f"""
+            <tr{radek_styl}>
+                <td>{poradi}.</td>
+                <td>{varianta}</td>
+                <td style="text-align: right;">{skore:.3f}</td>
+                <td style="text-align: right;">{procento:.1f}%</td>
+                <td style="text-align: center;">{gplus_count}</td>
+                <td style="text-align: center;">{gminus_count}</td>
+            </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+def vytvor_sekci_vysledku_mabac(mabac_vysledky):
+    """
+    Vytvoří HTML sekci s výsledky MABAC analýzy.
+    
+    Args:
+        mabac_vysledky: Slovník s výsledky MABAC analýzy
+        
+    Returns:
+        str: HTML kód pro sekci výsledků
+    """
+    # Tabulka výsledků
+    vysledky_html = vytvor_html_tabulku_vysledku_mabac(mabac_vysledky)
+    
+    # Shrnutí výsledků
+    shrnuti_html = vytvor_html_shrnuti_vysledku_rozsirene(mabac_vysledky)
+    
+    # Sloučení do sekce
+    return f"""
+    <div class="mcapp-section mcapp-results">
+        <h2>Výsledky analýzy</h2>
+        <div class="mcapp-card">
+            {vysledky_html}
+            {shrnuti_html}
+        </div>
+    </div>
+    """
