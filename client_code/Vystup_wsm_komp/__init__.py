@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .. import Spravce_stavu, Utils, Vypocty, Vizualizace, mcapp_styly
+from .. import Spravce_stavu, Utils,Generator_html, Vypocty, Vizualizace, mcapp_styly
 
 
 class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
@@ -84,7 +84,7 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
         """Zobrazí kompletní analýzu včetně všech výpočtů a vizualizací."""
         try:
             # Vytvoření HTML obsahu pomocí funkcí z modulu Vizualizace
-            html_obsah = Vizualizace.vytvor_kompletni_html_analyzy(
+            html_obsah = Generator_html.vytvor_kompletni_html_analyzy(
                 self.analyza_data,
                 self.vysledky_vypoctu,
                 "WSM"
