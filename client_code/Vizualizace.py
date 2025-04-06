@@ -1053,4 +1053,3 @@ def vytvor_graf_electre_vysledky(net_flows, varianty):
                 'title': 'Chyba při vytváření grafu výsledků ELECTRE'
             }
         }
-
