@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .. import Spravce_stavu, Utils,Generator_html, Vypocty, Vizualizace, mcapp_styly
+from .. import Spravce_stavu, Utils, Generator_html, Vypocty, Vizualizace, mcapp_styly
 
 
 class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
