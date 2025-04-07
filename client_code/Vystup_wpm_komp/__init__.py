@@ -118,21 +118,21 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
         )
         self.plot_wpm_vysledek.visible = True
 
-        # Graf skladby skóre - WPM používá teplotní mapu místo skládaného grafu
-        self.plot_wpm_heat_mapa.figure = Vizualizace.vytvor_heat_mapu(
-            serazene_varianty,  # Použití seřazených variant
+        # Radarový graf pro produktový příspěvek
+        # Pro metodu WPM použijeme původní (transformované) hodnoty, ne normalizované
+        produktovy_prispevek = self.vysledky_vypoctu["produktovy_prispevek"]
+        norm_produktovy_prispevek = self._normalizovat_hodnoty_pro_radar(produktovy_prispevek)
+        
+        self.plot_wpm_heat_mapa.figure = Vizualizace.vytvor_radar_graf(
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
             self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-            # Přeuspořádání produktového příspěvku podle seřazených variant
-            self._preusporadat_matici(
-                self.vysledky_vypoctu["produktovy_prispevek"],
-                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-                serazene_varianty
-            ),
-            "WPM - příspěvek kritérií (umocněné hodnoty)"
+            norm_produktovy_prispevek,
+            self.vysledky_vypoctu["typy_kriterii"],
+            "WPM - příspěvek kritérií"
         )
         self.plot_wpm_heat_mapa.visible = True
 
-        # Graf poměrů variant
+        # Graf poměrů variant s upravenou barevnou škálou
         self.plot_pomery_variant.figure = Vizualizace.vytvor_graf_pomeru_variant(
             serazene_varianty,  # Použití seřazených variant
             # Přeuspořádání matice poměrů podle seřazených variant
@@ -178,7 +178,39 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
         self._skryj_grafy()
-        
+
+  def _normalizovat_hodnoty_pro_radar(self, matice):
+      """
+      Normalizuje hodnoty pro zobrazení v radarovém grafu (na stupnici 0-1).
+      
+      Args:
+          matice: 2D seznam hodnot [varianty][kriteria]
+          
+      Returns:
+          2D seznam: Normalizované hodnoty pro radarový graf
+      """
+      try:
+          # Získání maximálních hodnot pro každé kritérium
+          max_hodnoty = []
+          for j in range(len(matice[0]) if matice else 0):
+              max_hodnota = max([matice[i][j] for i in range(len(matice))]) if matice else 1
+              # Minimální hodnota 1 pro vyhnutí se dělení nulou
+              max_hodnoty.append(max(max_hodnota, 1))
+              
+          # Normalizace hodnot
+          norm_matice = []
+          for radek in matice:
+              norm_radek = []
+              for j, hodnota in enumerate(radek):
+                  norm_hodnota = hodnota / max_hodnoty[j]
+                  norm_radek.append(norm_hodnota)
+              norm_matice.append(norm_radek)
+              
+          return norm_matice
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při normalizaci hodnot pro radarový graf: {str(e)}")
+          return [[0] * len(matice[0]) for _ in range(len(matice))] if matice else []
+          
   def _preusporadat_matici(self, matice, puvodni_poradi, nove_poradi):
       """
       Přeuspořádá matici hodnot podle nového pořadí řádků.

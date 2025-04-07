@@ -326,14 +326,17 @@ def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty, serazene_v
             }
         }
 
-def vytvor_radar_graf(varianty, kriteria, norm_hodnoty):
+def vytvor_radar_graf(varianty, kriteria, norm_hodnoty, typy_kriterii=None, nazev_grafu=""):
     """
     Vytvoří radarový (paprskový) graf zobrazující normalizované hodnoty variant ve všech kritériích.
+    Přizpůsobeno vzorovému obrázku s výraznými obvodovými čarami a typem kritéria v popisku.
     
     Args:
         varianty: Seznam názvů variant
         kriteria: Seznam názvů kritérií
         norm_hodnoty: 2D list normalizovaných hodnot [varianty][kriteria]
+        typy_kriterii: Seznam typů kritérií ("max" nebo "min") - volitelný
+        nazev_grafu: Volitelný název grafu
         
     Returns:
         dict: Plotly figure configuration
@@ -341,40 +344,140 @@ def vytvor_radar_graf(varianty, kriteria, norm_hodnoty):
     try:
         data = []
         
+        # Seznam barev pro varianty
+        colors = ['rgba(30, 144, 255, 0.3)', 'rgba(50, 205, 50, 0.3)', 
+                  'rgba(220, 20, 60, 0.3)', 'rgba(255, 140, 0, 0.3)',
+                  'rgba(148, 0, 211, 0.3)', 'rgba(0, 139, 139, 0.3)',
+                  'rgba(227, 119, 194, 0.3)', 'rgba(127, 127, 127, 0.3)',
+                  'rgba(188, 189, 34, 0.3)', 'rgba(23, 190, 207, 0.3)']
+        
+        # Seznam obrysových barev (výraznější než výplně)
+        line_colors = ['rgb(30, 144, 255)', 'rgb(50, 205, 50)', 
+                      'rgb(220, 20, 60)', 'rgb(255, 140, 0)',
+                      'rgb(148, 0, 211)', 'rgb(0, 139, 139)',
+                      'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
+                      'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+        
+        # Příprava upravených popisků kritérií s informací o typu (max/min)
+        theta_labels = []
+        for i, krit in enumerate(kriteria):
+            if typy_kriterii and i < len(typy_kriterii):
+                typ = typy_kriterii[i].lower()
+                typ_text = "(max)" if typ in ("max", "benefit") else "(min)"
+                theta_labels.append(f"{krit} {typ_text}")
+            else:
+                theta_labels.append(krit)
+        
+        # Nejprve přidáme koncentrické kružnice pro hodnoty 0.2, 0.4, 0.6, 0.8
+        # (hodnota 1.0 bude vnější okraj grafu)
+        for hodnota in [0.2, 0.4, 0.6, 0.8]:
+            data.append({
+                'type': 'scatterpolar',
+                'r': [hodnota] * (len(kriteria) + 1),
+                'theta': theta_labels + [theta_labels[0]],
+                'fill': 'none',
+                'line': {
+                    'color': 'rgba(200, 200, 200, 0.5)',
+                    'width': 1
+                },
+                'name': f'{hodnota}',
+                'showlegend': False,
+                'hoverinfo': 'none'
+            })
+        
+        # Přidáme popisky hodnot u koncentrických kružnic
+        # (toto bohužel není přímá funkce Plotly, popisky budou na osách)
+        
         # Pro každou variantu vytvoříme jednu sérii dat
         for i, varianta in enumerate(varianty):
             # Pro radarový graf musíme uzavřít křivku tak, že opakujeme první hodnotu na konci
             hodnoty = norm_hodnoty[i] + [norm_hodnoty[i][0]]
-            labels = kriteria + [kriteria[0]]
+            labels = theta_labels + [theta_labels[0]]
+            
+            # Výběr barvy s cyklickým opakováním
+            color_idx = i % len(colors)
+            
+            # Připravíme texty pro hover efekt, které zobrazí informace při najetí myší
+            hover_texts = []
+            for j, hodnota in enumerate(norm_hodnoty[i]):
+                hover_texts.append(f"{varianta}<br>{kriteria[j]}: {hodnota:.3f}")
+            
+            # Přidáme záznam na konec pro uzavření tvaru
+            hover_texts.append(hover_texts[0])
             
             data.append({
                 'type': 'scatterpolar',
                 'r': hodnoty,
                 'theta': labels,
                 'fill': 'toself',
-                'name': varianta
+                'name': varianta,
+                'fillcolor': colors[color_idx],  # Průhledná výplň
+                'line': {
+                    'color': line_colors[color_idx],  # Výrazná obvodová čára
+                    'width': 3  # Širší obvodová čára pro větší viditelnost
+                },
+                'text': hover_texts,
+                'hoverinfo': 'text'
             })
         
         # Vytvoření grafu
+        titulek = "Porovnání variant na základě normalizovaných hodnot"
+        if nazev_grafu:
+            titulek = f"{nazev_grafu} - {titulek}"
+            
         fig = {
             'data': data,
             'layout': {
-                'title': 'Porovnání variant podle normalizovaných hodnot kritérií',
+                'title': {
+                    'text': "Radar graf pro porovnání variant",
+                    'y': 0.98,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top'
+                },
                 'polar': {
                     'radialaxis': {
                         'visible': True,
-                        'range': [0, 1]
-                    }
+                        'range': [0, 1],
+                        'tickvals': [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                        'ticktext': ['0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+                        'tickmode': 'array',
+                        'tickfont': {'size': 10},
+                        'angle': 45,  # Natočení popisků pro lepší čitelnost
+                        'gridcolor': 'gray',
+                        'linecolor': 'black',
+                        'linewidth': 1
+                    },
+                    'angularaxis': {
+                        'tickfont': {'size': 12},
+                        'rotation': 90,  # Natočení os
+                        'direction': 'clockwise',  # Pro zobrazení jako ve vzorovém obrázku
+                        'gridcolor': 'gray',
+                        'linecolor': 'black',
+                        'linewidth': 1
+                    },
+                    'bgcolor': 'rgba(255, 255, 255, 0.9)',
+                    'gridshape': 'circular'  # Zajistí kruhové kružnice
                 },
                 'showlegend': True,
                 'legend': {
-                    'title': 'Varianty',
                     'orientation': 'h',
-                    'y': -0.2,
+                    'y': -0.1,
                     'x': 0.5,
                     'xanchor': 'center'
                 },
-                'margin': {'t': 50, 'b': 100}
+                'annotations': [
+                    {
+                        'text': "Porovnání variant na základě normalizovaných hodnot",
+                        'x': 0.5,
+                        'y': 0.95,
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'showarrow': False,
+                        'font': {'size': 14}
+                    }
+                ],
+                'margin': {'t': 100, 'b': 100, 'l': 100, 'r': 100}
             }
         }
         
@@ -532,6 +635,8 @@ def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
 def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
     """
     Vytvoří teplotní mapu (heatmap) zobrazující poměry mezi variantami.
+    Barevná škála je navržena tak, že hodnota 1 je nejsvětlejší a hodnoty
+    se ztmavují s rostoucí vzdáleností od 1 v obou směrech.
     
     Args:
         varianty: Seznam názvů variant
@@ -563,6 +668,28 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                     text = f"R({varianty[i]}/{varianty[j]}) = {hodnota:.3f}<br>{interpretace}"
                 hover_row.append(text)
             hover_texts.append(hover_row)
+        
+        # Najdeme minimum a maximum v matici (mimo diagonálu)
+        all_values = []
+        for i in range(len(pomer_matice)):
+            for j in range(len(pomer_matice[i])):
+                if i != j:  # Přeskočíme diagonálu
+                    all_values.append(pomer_matice[i][j])
+                    
+        min_val = min(all_values) if all_values else 0
+        max_val = max(all_values) if all_values else 2
+        
+        # Definujeme vlastní barevnou škálu - modré pro hodnoty < 1, červené pro hodnoty > 1, světlé kolem 1
+        # Rozložíme barevnou škálu tak, aby hodnota 1 byla uprostřed
+        custom_colorscale = [
+            [0, 'rgb(5, 48, 97)'],      # Tmavě modrá pro minimální hodnoty (hodnoty << 1)
+            [0.3, 'rgb(65, 105, 225)'],  # Středně modrá pro hodnoty mírně < 1
+            [0.45, 'rgb(173, 216, 230)'], # Světle modrá pro hodnoty blízké 1 (ale < 1)
+            [0.5, 'rgb(240, 240, 240)'], # Bílá/světlá pro hodnotu 1
+            [0.55, 'rgb(255, 204, 204)'], # Světle červená pro hodnoty blízké 1 (ale > 1)
+            [0.7, 'rgb(220, 20, 60)'],   # Středně červená pro hodnoty mírně > 1
+            [1.0, 'rgb(128, 0, 0)']      # Tmavě červená pro maximální hodnoty (hodnoty >> 1)
+        ]
             
         # Vytvoření grafu
         fig = {
@@ -571,15 +698,18 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'z': pomer_matice,
                 'x': varianty,
                 'y': varianty,
-                'colorscale': 'YlGnBu',
-                'zmin': 0,
+                'colorscale': custom_colorscale,  # Vlastní barevná škála
+                'zmid': 1,  # Střed barevné škály je na hodnotě 1
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) and i != j else "-" 
                           for j, val in enumerate(row)] for i, row in enumerate(pomer_matice)],
                 'hovertext': hover_texts,
                 'hoverinfo': 'text',
                 'showscale': True,
                 'colorbar': {
-                    'title': 'Poměr'
+                    'title': 'Poměr',
+                    'titleside': 'right',
+                    'tickvals': [min_val, 0.5, 1, 1.5, max_val],  # Vlastní značky na barevné škále
+                    'ticktext': [f'{min_val:.1f}', '0.5', '1.0', '1.5', f'{max_val:.1f}']
                 }
             }],
             'layout': {
@@ -591,7 +721,36 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'yaxis': {
                     'title': 'Varianta i'
                 },
-                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+                'annotations': [
+                    {
+                        'text': 'Hodnota 1 znamená stejnou kvalitu variant',
+                        'x': 0.5,
+                        'y': 1.08,
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'showarrow': False,
+                        'font': {'size': 10, 'color': 'gray'}
+                    },
+                    {
+                        'text': '> 1: řádková varianta je lepší než sloupcová',
+                        'x': 0.2,
+                        'y': 1.02,
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'showarrow': False,
+                        'font': {'size': 10, 'color': 'crimson'}
+                    },
+                    {
+                        'text': '< 1: řádková varianta je horší než sloupcová',
+                        'x': 0.8,
+                        'y': 1.02,
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'showarrow': False,
+                        'font': {'size': 10, 'color': 'royalblue'}
+                    }
+                ],
+                'margin': {'t': 80, 'b': 100, 'l': 100, 'r': 80}
             }
         }
         
