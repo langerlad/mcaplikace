@@ -113,11 +113,18 @@ class Vystup_wsm_komp(Vystup_wsm_kompTemplate):
             )
             self.plot_wsm_vysledek.visible = True
             
-            # Graf skladby skóre
+            # Získání seřazených variant podle výsledků (pro konzistentní zobrazení)
+            serazene_varianty = [var for var, _, _ in sorted(
+                self.vysledky_vypoctu['wsm_vysledky']['results'], 
+                key=lambda x: x[1]  # Seřazení podle pořadí (druhý prvek v tuple)
+            )]
+            
+            # Graf skladby skóre s předáním seřazených variant
             self.plot_wsm_skladba.figure = Vizualizace.vytvor_skladany_sloupovy_graf(
                 self.vysledky_vypoctu['norm_vysledky']['nazvy_variant'],
                 self.vysledky_vypoctu['norm_vysledky']['nazvy_kriterii'],
-                self.vysledky_vypoctu['vazene_matice']
+                self.vysledky_vypoctu['vazene_matice'],
+                serazene_varianty  # Předání seřazených variant
             )
             self.plot_wsm_skladba.visible = True
             

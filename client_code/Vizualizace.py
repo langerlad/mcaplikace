@@ -240,7 +240,7 @@ def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta,
             }
         }
 
-def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty):
+def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty, serazene_varianty=None):
     """
     Vytvoří skládaný sloupcový graf zobrazující příspěvek jednotlivých kritérií.
     
@@ -248,25 +248,46 @@ def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty):
         varianty: Seznam názvů variant
         kriteria: Seznam názvů kritérií
         vazene_hodnoty: 2D list vážených hodnot [varianty][kriteria]
+        serazene_varianty: Seznam variant seřazených podle celkového skóre (volitelný)
+            Pokud je zadán, použije se toto pořadí pro zobrazení variant v grafu
         
     Returns:
         dict: Plotly figure configuration
     """
     try:
+        # Vytvoření mapování pro získání indexu varianty
+        var_to_idx = {var: idx for idx, var in enumerate(varianty)}
+        
+        # Pokud jsou zadány seřazené varianty, přeuspořádáme data podle nich
+        if serazene_varianty:
+            # Kontrola, zda jsou v serazene_varianty všechny varianty z původního seznamu
+            if set(serazene_varianty) != set(varianty):
+                Utils.zapsat_chybu("Seznam seřazených variant neobsahuje stejné varianty jako původní seznam")
+                serazene_varianty = None  # Nepoužijeme seřazení při neshodě
+        
+        # Určení pořadí variant pro graf
+        zobrazene_varianty = serazene_varianty if serazene_varianty else varianty
+        
         # Vytvoření datových sérií pro každé kritérium
         data = []
         
         # Pro každé kritérium vytvoříme jednu sérii dat
         for j, kriterium in enumerate(kriteria):
-            hodnoty_kriteria = [vazene_hodnoty[i][j] for i in range(len(varianty))]
+            hodnoty_kriteria = []
+            
+            # Připravíme hodnoty v pořadí podle zobrazených variant
+            for var in zobrazene_varianty:
+                idx = var_to_idx[var]  # Index varianty v původních datech
+                hodnoty_kriteria.append(vazene_hodnoty[idx][j])
             
             data.append({
                 'type': 'bar',
                 'name': kriterium,
-                'x': varianty,
+                'x': zobrazene_varianty,
                 'y': hodnoty_kriteria,
                 'text': [f'{h:.3f}' for h in hodnoty_kriteria],
                 'textposition': 'inside',
+                'hovertemplate': '%{x}<br>' + f'{kriterium}: ' + '%{y:.3f}<extra></extra>'
             })
             
         # Vytvoření grafu
@@ -277,7 +298,7 @@ def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty):
                 'barmode': 'stack',  # Skládaný sloupcový graf
                 'xaxis': {
                     'title': 'Varianty',
-                    'tickangle': -45 if len(varianty) > 4 else 0
+                    'tickangle': -45 if len(zobrazene_varianty) > 4 else 0
                 },
                 'yaxis': {
                     'title': 'Skóre',
@@ -286,11 +307,11 @@ def vytvor_skladany_sloupovy_graf(varianty, kriteria, vazene_hodnoty):
                 'legend': {
                     'title': 'Kritéria',
                     'orientation': 'h',  # Horizontální legenda
-                    'y': -0.2,  # Umístění pod grafem
+                    'y': -0.3,  # Umístění pod grafem - více místa
                     'x': 0.5,
                     'xanchor': 'center'
                 },
-                'margin': {'t': 50, 'b': 150}  # Větší spodní okraj pro legendu
+                'margin': {'t': 50, 'b': 180}  # Zvětšený spodní okraj pro legendu
             }
         }
         
@@ -521,6 +542,28 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
         dict: Plotly figure configuration
     """
     try:
+        # Příprava popisků pro zobrazení při najetí myší
+        hover_texts = []
+        for i in range(len(varianty)):
+            hover_row = []
+            for j in range(len(varianty)):
+                if i == j:
+                    text = "-"  # Pro diagonální prvky
+                else:
+                    # Pro poměry variant zobrazujeme interpretaci
+                    hodnota = pomer_matice[i][j]
+                    interpretace = ""
+                    if hodnota > 1:
+                        interpretace = f"{varianty[i]} je lepší než {varianty[j]}"
+                    elif hodnota < 1:
+                        interpretace = f"{varianty[i]} je horší než {varianty[j]}"
+                    else:
+                        interpretace = f"{varianty[i]} je stejně dobrá jako {varianty[j]}"
+                    
+                    text = f"R({varianty[i]}/{varianty[j]}) = {hodnota:.3f}<br>{interpretace}"
+                hover_row.append(text)
+            hover_texts.append(hover_row)
+            
         # Vytvoření grafu
         fig = {
             'data': [{
@@ -530,8 +573,9 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'y': varianty,
                 'colorscale': 'YlGnBu',
                 'zmin': 0,
-                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
-                          for val in row] for row in pomer_matice],
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) and i != j else "-" 
+                          for j, val in enumerate(row)] for i, row in enumerate(pomer_matice)],
+                'hovertext': hover_texts,
                 'hoverinfo': 'text',
                 'showscale': True,
                 'colorbar': {
@@ -582,6 +626,16 @@ def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
         z_min = min(all_values)
         z_max = max(all_values)
         
+        # Příprava popisků pro zobrazení při najetí myší
+        hover_texts = []
+        for i in range(len(varianty)):
+            hover_row = []
+            for j in range(len(kriteria)):
+                # Formát: Varianta: X, Kritérium: Y, Hodnota: Z
+                text = f"Varianta: {varianty[i]}<br>Kritérium: {kriteria[j]}<br>Hodnota: {hodnoty[i][j]:.3f}"
+                hover_row.append(text)
+            hover_texts.append(hover_row)
+        
         fig = {
             'data': [{
                 'type': 'heatmap',
@@ -594,7 +648,8 @@ def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
                 # Přidání anotací s hodnotami do každé buňky
                 'text': [[f'{hodnoty[i][j]:.3f}' for j in range(len(kriteria))]
                          for i in range(len(varianty))],
-                'hoverinfo': 'text',
+                'hovertext': hover_texts,  # Vylepšené popisky při najetí myší
+                'hoverinfo': 'text',  # Zobrazení pouze vlastních popisků
                 'showscale': True,
                 'colorbar': {
                     'title': 'Hodnota',

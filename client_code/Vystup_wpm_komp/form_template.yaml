@@ -21,7 +21,7 @@ components:
   type: Spacer
 - layout_properties: {grid_position: 'OTXIKK,NXEUAY'}
   name: plot_wpm_heat_mapa
-  properties: {}
+  properties: {height: '600'}
   type: Plot
 - layout_properties: {grid_position: 'ZFTMSJ,YTTGUC'}
   name: spacer_3
@@ -29,7 +29,7 @@ components:
   type: Spacer
 - layout_properties: {grid_position: 'VTAPXU,QVZESG'}
   name: plot_pomery_variant
-  properties: {}
+  properties: {height: '600'}
   type: Plot
 - layout_properties: {grid_position: 'FQLWTA,FXWKCJ'}
   name: spacer_5

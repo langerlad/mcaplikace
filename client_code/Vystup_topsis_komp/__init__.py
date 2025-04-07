@@ -103,70 +103,147 @@ class Vystup_topsis_komp(Vystup_topsis_kompTemplate):
   def _vytvor_a_nastav_grafy(self):
     """Vytvoří a nastaví grafy pro vizualizaci výsledků."""
     try:
-      # Graf výsledků - relativní blízkost k ideálnímu řešení
-      self.plot_topsis_vysledek.figure = Vizualizace.vytvor_sloupovy_graf_vysledku(
-        self.vysledky_vypoctu["topsis_vysledky"]["results"],
-        self.vysledky_vypoctu["topsis_vysledky"]["nejlepsi_varianta"],
-        self.vysledky_vypoctu["topsis_vysledky"]["nejhorsi_varianta"],
-        "TOPSIS - relativní blízkost k ideálnímu řešení",
-      )
-      self.plot_topsis_vysledek.visible = True
-
-      # Graf vzdáleností od ideálního a anti-ideálního řešení
-      self.plot_topsis_vzdalenosti.figure = Vizualizace.vytvor_graf_vzdalenosti_topsis(
-        self.vysledky_vypoctu["topsis_vysledky"],
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
-      )
-      self.plot_topsis_vzdalenosti.visible = True
-
-      # Radarový graf porovnání s ideálním řešením
-      self.plot_topsis_radar.figure = Vizualizace.vytvor_radar_graf_topsis(
-        self.vysledky_vypoctu["topsis_vysledky"],
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
-      )
-      self.plot_topsis_radar.visible = True
-
-      # 2D rozptylový graf vzdáleností
-      self.plot_topsis_2d.figure = Vizualizace.vytvor_2d_graf_vzdalenosti_topsis(
-        self.vysledky_vypoctu["topsis_vysledky"],
-        self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
-      )
-      self.plot_topsis_2d.visible = True
-
-      # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
-      kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
-      if len(kriteria) > 1:
-        # Výpočet analýzy citlivosti pro první kritérium
-        analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
-          self.vysledky_vypoctu["norm_vysledky"]["normalizovana_matice"],
-          self.vysledky_vypoctu["vahy"],
-          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-          kriteria,
-          metoda="topsis",
-          typy_kriterii=self.vysledky_vypoctu["typy_kriterii"]
+        # Získání seřazených variant podle výsledků
+        serazene_varianty = [var for var, _, _ in sorted(
+            self.vysledky_vypoctu["topsis_vysledky"]["results"], 
+            key=lambda x: x[1]  # Seřazení podle pořadí
+        )]
+        
+        # Graf výsledků - relativní blízkost k ideálnímu řešení
+        self.plot_topsis_vysledek.figure = Vizualizace.vytvor_sloupovy_graf_vysledku(
+            self.vysledky_vypoctu["topsis_vysledky"]["results"],
+            self.vysledky_vypoctu["topsis_vysledky"]["nejlepsi_varianta"],
+            self.vysledky_vypoctu["topsis_vysledky"]["nejhorsi_varianta"],
+            "TOPSIS - relativní blízkost k ideálnímu řešení",
         )
+        self.plot_topsis_vysledek.visible = True
 
-        # Grafy citlivosti
-        self.plot_citlivost_skore.figure = Vizualizace.vytvor_graf_citlivosti_skore(
-          analyza_citlivosti, 
-          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+        # Úpravy dat pro grafy v seřazeném pořadí
+        topsis_vysledky_upravene = self._preusporadat_data_topsis(
+            self.vysledky_vypoctu["topsis_vysledky"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+            serazene_varianty
         )
-        self.plot_citlivost_skore.visible = True
+        
+        # Graf vzdáleností od ideálního a anti-ideálního řešení
+        self.plot_topsis_vzdalenosti.figure = Vizualizace.vytvor_graf_vzdalenosti_topsis(
+            topsis_vysledky_upravene,
+            serazene_varianty
+        )
+        self.plot_topsis_vzdalenosti.visible = True
 
-        self.plot_citlivost_poradi.figure = Vizualizace.vytvor_graf_citlivosti_poradi(
-          analyza_citlivosti, 
-          self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+        # Radarový graf porovnání s ideálním řešením
+        self.plot_topsis_radar.figure = Vizualizace.vytvor_radar_graf_topsis(
+            topsis_vysledky_upravene,
+            serazene_varianty,
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
         )
-        self.plot_citlivost_poradi.visible = True
-      else:
-        # Skryjeme grafy citlivosti, pokud máme jen jedno kritérium
-        self.plot_citlivost_skore.visible = False
-        self.plot_citlivost_poradi.visible = False
+        self.plot_topsis_radar.visible = True
+
+        # 2D rozptylový graf vzdáleností
+        self.plot_topsis_2d.figure = Vizualizace.vytvor_2d_graf_vzdalenosti_topsis(
+            topsis_vysledky_upravene,
+            serazene_varianty
+        )
+        self.plot_topsis_2d.visible = True
+
+        # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
+        kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
+        if len(kriteria) > 1:
+            # Výpočet analýzy citlivosti pro první kritérium
+            analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
+                self.vysledky_vypoctu["norm_vysledky"]["normalizovana_matice"],
+                self.vysledky_vypoctu["vahy"],
+                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+                kriteria,
+                metoda="topsis",
+                typy_kriterii=self.vysledky_vypoctu["typy_kriterii"]
+            )
+
+            # Grafy citlivosti
+            self.plot_citlivost_skore.figure = Vizualizace.vytvor_graf_citlivosti_skore(
+                analyza_citlivosti, 
+                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            )
+            self.plot_citlivost_skore.visible = True
+
+            self.plot_citlivost_poradi.figure = Vizualizace.vytvor_graf_citlivosti_poradi(
+                analyza_citlivosti, 
+                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            )
+            self.plot_citlivost_poradi.visible = True
+        else:
+            # Skryjeme grafy citlivosti, pokud máme jen jedno kritérium
+            self.plot_citlivost_skore.visible = False
+            self.plot_citlivost_poradi.visible = False
 
     except Exception as e:
-      Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
-      self._skryj_grafy()
+        Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
+        self._skryj_grafy()
+
+  def _preusporadat_data_topsis(self, topsis_vysledky, puvodni_poradi, nove_poradi):
+      """
+      Přeuspořádá data TOPSIS výsledků podle nového pořadí variant.
+      
+      Args:
+          topsis_vysledky: Slovník s výsledky TOPSIS analýzy
+          puvodni_poradi: Seznam názvů variant v původním pořadí
+          nove_poradi: Seznam názvů variant v novém pořadí
+          
+      Returns:
+          dict: Upravený slovník s výsledky TOPSIS
+      """
+      try:
+          # Vytvoření mapování jméno varianty -> index
+          var_to_idx = {var: idx for idx, var in enumerate(puvodni_poradi)}
+          
+          # Vytvoření kopie topsis_vysledky
+          import copy
+          upravene_vysledky = copy.deepcopy(topsis_vysledky)
+          
+          # Seznamy, které je potřeba přeuspořádat - jednodimenzionální
+          jednodim_seznamy = ["dist_ideal", "dist_anti_ideal", "relativni_blizkost"]
+          
+          for nazev_seznamu in jednodim_seznamy:
+              if nazev_seznamu in upravene_vysledky:
+                  puvodni_seznam = upravene_vysledky[nazev_seznamu]
+                  if len(puvodni_seznam) == len(puvodni_poradi):
+                      novy_seznam = []
+                      for var in nove_poradi:
+                          idx = var_to_idx.get(var)
+                          if idx is not None and idx < len(puvodni_seznam):
+                              novy_seznam.append(puvodni_seznam[idx])
+                          else:
+                              # Pokud varianta není v původním pořadí, přidáme nulu
+                              novy_seznam.append(0)
+                      
+                      upravene_vysledky[nazev_seznamu] = novy_seznam
+          
+          # Seznamy, které je potřeba přeuspořádat - dvoudimenzionální
+          dvoudim_seznamy = ["vazena_matice", "norm_matice"]
+          
+          for nazev_seznamu in dvoudim_seznamy:
+              if nazev_seznamu in upravene_vysledky:
+                  puvodni_matice = upravene_vysledky[nazev_seznamu]
+                  if len(puvodni_matice) == len(puvodni_poradi):
+                      nova_matice = []
+                      for var in nove_poradi:
+                          idx = var_to_idx.get(var)
+                          if idx is not None and idx < len(puvodni_matice):
+                              nova_matice.append(puvodni_matice[idx])
+                          else:
+                              # Pokud varianta není v původním pořadí, přidáme prázdný řádek
+                              if puvodni_matice and len(puvodni_matice[0]) > 0:
+                                  nova_matice.append([0] * len(puvodni_matice[0]))
+                              else:
+                                  nova_matice.append([])
+                      
+                      upravene_vysledky[nazev_seznamu] = nova_matice
+          
+          return upravene_vysledky
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při přeuspořádání dat TOPSIS: {str(e)}")
+          return topsis_vysledky  # V případě chyby vrátíme původní výsledky
 
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""

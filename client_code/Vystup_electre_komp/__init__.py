@@ -102,37 +102,104 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
   def _vytvor_a_nastav_grafy(self):
     """Vytvoří a nastaví grafy pro vizualizaci výsledků."""
     try:
+        # Získání seřazených variant podle výsledků
+        serazene_varianty = [var for var, _, _ in sorted(
+            self.vysledky_vypoctu["electre_vysledky"]["results"], 
+            key=lambda x: x[1]  # Seřazení podle pořadí
+        )]
+
+        # Přeuspořádání matic podle seřazených variant
+        concordance_matrix_serazena = self._preusporadat_matici_pomerova(
+            self.vysledky_vypoctu["electre_vysledky"]["concordance_matrix"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+            serazene_varianty
+        )
+        
+        discordance_matrix_serazena = self._preusporadat_matici_pomerova(
+            self.vysledky_vypoctu["electre_vysledky"]["discordance_matrix"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+            serazene_varianty
+        )
+        
+        outranking_matrix_serazena = self._preusporadat_matici_pomerova(
+            self.vysledky_vypoctu["electre_vysledky"]["outranking_matrix"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+            serazene_varianty
+        )
+
         # Graf výsledků - pořadí variant
         self.plot_sablona_vysledek.figure = Vizualizace.vytvor_graf_electre_vysledky(
             self.vysledky_vypoctu["electre_vysledky"]["results"],
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            serazene_varianty
         )
         self.plot_sablona_vysledek.visible = True
 
         # Graf matice souhlasu (concordance)
         self.plot_sablona_skladba.figure = Vizualizace.vytvor_graf_concordance_electre(
-            self.vysledky_vypoctu["electre_vysledky"]["concordance_matrix"], 
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            concordance_matrix_serazena, 
+            serazene_varianty
         )
         self.plot_sablona_skladba.visible = True
 
         # Graf matice nesouhlasu (discordance)
         self.plot_discordance.figure = Vizualizace.vytvor_graf_discordance_electre(
-            self.vysledky_vypoctu["electre_vysledky"]["discordance_matrix"], 
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            discordance_matrix_serazena, 
+            serazene_varianty
         )
         self.plot_discordance.visible = True
 
         # Graf převahy (outranking)
         self.plot_outranking.figure = Vizualizace.vytvor_graf_outranking_electre(
-            self.vysledky_vypoctu["electre_vysledky"]["outranking_matrix"], 
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+            outranking_matrix_serazena, 
+            serazene_varianty
         )
         self.plot_outranking.visible = True
 
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
         self._skryj_grafy()
+
+  def _preusporadat_matici_pomerova(self, matice, puvodni_poradi, nove_poradi):
+      """
+      Přeuspořádá čtvercovou matici poměrů podle nového pořadí řádků a sloupců.
+      
+      Args:
+          matice: 2D čtvercová matice hodnot [varianty][varianty]
+          puvodni_poradi: Seznam názvů variant v původním pořadí
+          nove_poradi: Seznam názvů variant v novém pořadí
+          
+      Returns:
+          2D seznam: Přeuspořádaná matice poměrů
+      """
+      try:
+          # Vytvoření mapování jméno varianty -> index
+          var_to_idx = {var: idx for idx, var in enumerate(puvodni_poradi)}
+          
+          # Vytvoření nové matice s přeuspořádanými řádky a sloupci
+          nova_matice = []
+          for var_radek in nove_poradi:
+              idx_radek = var_to_idx.get(var_radek)
+              if idx_radek is None:
+                  # Pokud varianta není v původním pořadí, přidáme prázdný řádek
+                  Utils.zapsat_chybu(f"Varianta '{var_radek}' není v původním seznamu variant")
+                  nova_matice.append([0] * len(nove_poradi))
+                  continue
+                  
+              novy_radek = []
+              for var_sloupec in nove_poradi:
+                  idx_sloupec = var_to_idx.get(var_sloupec)
+                  if idx_sloupec is None:
+                      # Pokud varianta není v původním pořadí, přidáme nulu
+                      novy_radek.append(0)
+                  else:
+                      novy_radek.append(matice[idx_radek][idx_sloupec])
+                      
+              nova_matice.append(novy_radek)
+                  
+          return nova_matice
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při přeuspořádání matice poměrů: {str(e)}")
+          return matice  # V případě chyby vrátíme původní matici
 
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""
