@@ -220,6 +220,21 @@ def vytvor_kompletni_html_analyzy(analyza_data, vysledky_vypoctu, metoda="WSM"):
     # Vytvoření částí HTML dokumentu
     hlavicka_html = vytvor_hlavicku_analyzy(analyza_data['nazev'], metoda)
     vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
+
+    if metoda.upper() == "ELECTRE" and "electre_vysledky" in vysledky_vypoctu:
+        # Vytvoříme kopii analyza_data, abychom nemodifikovali originál
+        analyza_data_local = analyza_data.copy()
+        
+        # Přidáme parametry z vysledky_vypoctu
+        analyza_data_local["metoda"] = "ELECTRE"
+        analyza_data_local["parametry"] = {
+            "index_souhlasu": vysledky_vypoctu["electre_vysledky"]["index_souhlasu"],
+            "index_nesouhlasu": vysledky_vypoctu["electre_vysledky"]["index_nesouhlasu"]
+        }
+        
+        vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data_local)
+    else:
+        vstupni_data_html = vytvor_sekci_vstupnich_dat(analyza_data)
     
     # Rozdílný postup podle metody
     if metoda.upper() == "WSM":
@@ -660,7 +675,10 @@ def vytvor_sekci_vstupnich_dat(analyza_data):
     
     # Zobrazení prahových hodnot pro ELECTRE
     prahove_hodnoty_html = ""
-    if analyza_data.get('metoda', '').upper() == 'ELECTRE' and 'parametry' in analyza_data:
+    # Kontrola, zda jde o metodu ELECTRE a zda existují parametry v analyza_data nebo parametry
+    je_electre = analyza_data.get('metoda', '').upper() == 'ELECTRE'
+    
+    if je_electre and 'parametry' in analyza_data:
         index_souhlasu = analyza_data.get('parametry', {}).get('index_souhlasu', 0.7)
         index_nesouhlasu = analyza_data.get('parametry', {}).get('index_nesouhlasu', 0.3)
         
@@ -783,7 +801,7 @@ def vytvor_sekci_vstupnich_dat(analyza_data):
         <div class="mcapp-card">
             {kriteria_html}
         </div>
-        {prahove_hodnoty_html and '<div class="mcapp-card">' + prahove_hodnoty_html + '</div>'}
+        {f'<div class="mcapp-card">{prahove_hodnoty_html}</div>' if prahove_hodnoty_html else ''}
         <div class="mcapp-card">
             {varianty_html}
         </div>
@@ -2072,9 +2090,6 @@ def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, in
     Returns:
         str: HTML kód pro sekci výsledků
     """
-    # Prahové hodnoty
-    prahove_hodnoty_html = vytvor_html_prahove_hodnoty_electre(index_souhlasu, index_nesouhlasu)
-    
     # Tabulka pořadí variant podle Net Flow
     net_flow_html = vytvor_html_net_flow_ranking(
         electre_vysledky["results"], 
@@ -2087,7 +2102,6 @@ def vytvor_sekci_vysledku_electre(electre_vysledky, varianty, index_souhlasu, in
     <div class="mcapp-section mcapp-results">
         <h2>Výsledky analýzy</h2>
         <div class="mcapp-card">
-            {prahove_hodnoty_html}
             {net_flow_html}
         </div>
     </div>
