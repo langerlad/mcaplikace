@@ -683,29 +683,26 @@ def vytvor_sekci_vstupnich_dat(analyza_data):
         index_nesouhlasu = analyza_data.get('parametry', {}).get('index_nesouhlasu', 0.3)
         
         prahove_hodnoty_html = f"""
-        <h3>Prahové hodnoty ELECTRE</h3>
-        <div class="mcapp-table-container">
-            <table class="mcapp-table mcapp-thresholds-table">
-                <thead>
-                    <tr>
-                        <th>Parametr</th>
-                        <th>Hodnota</th>
-                        <th>Popis</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Index souhlasu (c*)</td>
-                        <td style="text-align: center;">{index_souhlasu:.3f}</td>
-                        <td>Minimální požadovaná míra souhlasu mezi variantami</td>
-                    </tr>
-                    <tr>
-                        <td>Index nesouhlasu (d*)</td>
-                        <td style="text-align: center;">{index_nesouhlasu:.3f}</td>
-                        <td>Maximální povolená míra nesouhlasu mezi variantami</td>
-                    </tr>
-                </tbody>
-            </table>
+        <h3>Nastavené prahové hodnoty</h3>
+        <div class="mcapp-explanation">
+            <p>Metoda ELECTRE používá dvě prahové hodnoty, které určují, kdy jedna varianta převyšuje druhou:</p>
+            
+            <div class="mcapp-formula-box">
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Index souhlasu (c*):</span>
+                    <span class="mcapp-formula-content">{index_souhlasu:.2f}</span>
+                </div>
+                <div class="mcapp-formula-row">
+                    <span class="mcapp-formula-label">Index nesouhlasu (d*):</span>
+                    <span class="mcapp-formula-content">{index_nesouhlasu:.2f}</span>
+                </div>
+            </div>
+            
+            <div class="mcapp-note">
+                <p><strong>Index souhlasu (c*)</strong> - Čím vyšší hodnota, tím přísnější je podmínka pro "souhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
+                <p><strong>Index nesouhlasu (d*)</strong> - Čím nižší hodnota, tím přísnější je podmínka pro "nesouhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
+            </div>
+            <p>Tyto hodnoty lze upravit v sekci Nastavení aplikace.</p>
         </div>
         """
     
@@ -1556,42 +1553,6 @@ def vytvor_html_sekci_metodologie_electre(default_open=True):
     </div>
     """
 
-def vytvor_html_prahove_hodnoty_electre(index_souhlasu, index_nesouhlasu):
-    """
-    Vytvoří HTML box zobrazující aktuální prahové hodnoty pro metodu ELECTRE.
-    
-    Args:
-        index_souhlasu: Aktuální hodnota indexu souhlasu
-        index_nesouhlasu: Aktuální hodnota indexu nesouhlasu
-    
-    Returns:
-        str: HTML kód s vysvětlením prahových hodnot
-    """
-    return f"""
-    <div class="mcapp-card" style="margin-top: 16px; margin-bottom: 24px;">
-        <h3>Nastavené prahové hodnoty</h3>
-        <div class="mcapp-explanation">
-            <p>Metoda ELECTRE používá dvě prahové hodnoty, které určují, kdy jedna varianta převyšuje druhou:</p>
-            
-            <div class="mcapp-formula-box">
-                <div class="mcapp-formula-row">
-                    <span class="mcapp-formula-label">Index souhlasu (c*):</span>
-                    <span class="mcapp-formula-content">{index_souhlasu:.2f}</span>
-                </div>
-                <div class="mcapp-formula-row">
-                    <span class="mcapp-formula-label">Index nesouhlasu (d*):</span>
-                    <span class="mcapp-formula-content">{index_nesouhlasu:.2f}</span>
-                </div>
-            </div>
-            
-            <div class="mcapp-note">
-                <p><strong>Index souhlasu (c*)</strong> - Čím vyšší hodnota, tím přísnější je podmínka pro "souhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
-                <p><strong>Index nesouhlasu (d*)</strong> - Čím nižší hodnota, tím přísnější je podmínka pro "nesouhlas" s tvrzením, že jedna varianta je lepší než druhá.</p>
-                <p>Tyto hodnoty lze upravit v sekci Nastavení aplikace.</p>
-            </div>
-        </div>
-    </div>
-    """
 
 def vytvor_html_tabulku_concordance_matrix(concordance_matrix, varianty, index_souhlasu):
     """
