@@ -571,8 +571,11 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'z': pomer_matice,
                 'x': varianty,
                 'y': varianty,
-                'colorscale': 'YlGnBu',
-                'zmin': 0,
+                'colorscale': 'Picnic',
+                'zmid': 1,
+                'xgap':2,       # horizontální mezera (v pixelech)
+                'ygap':2,       # vertikální mezera (v pixelech)
+                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) and i != j else "-" 
                           for j, val in enumerate(row)] for i, row in enumerate(pomer_matice)],
                 'hovertext': hover_texts,
@@ -584,12 +587,13 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
             }],
             'layout': {
                 'title': f'Poměry variant (R(A_i/A_j)) - {nazev_metody}',
+                'plot_bgcolor':'grey',
                 'xaxis': {
                     'title': 'Varianta j',
-                    'side': 'bottom'  # Přesun popisku na spodní okraj
+                    'side': 'bottom',
                 },
                 'yaxis': {
-                    'title': 'Varianta i'
+                    'title': 'Varianta i',
                 },
                 'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
             }
