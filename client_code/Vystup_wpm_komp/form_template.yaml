@@ -13,15 +13,44 @@ components:
   type: Label
 - layout_properties: {grid_position: 'SFOOTW,RYUJXN'}
   name: plot_wpm_vysledek
-  properties: {}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'CCLTFS,CWLJZM'}
   name: spacer_2
   properties: {height: 32}
   type: Spacer
+- layout_properties: {grid_position: 'XYGVOK,KWCTYK'}
+  name: rich_text_2
+  properties:
+    content: |-
+      #### Waterfall graf vlivu kritérií
+      Tento graf ukazuje, jak jednotlivá kritéria přispívají k celkovému skóre variant v metodě WPM (Weighted Product Model).
+
+
+      **Jak číst vodopádový graf:**
+      - Graf začíná na hodnotě 1,0 (neutrální prvek pro násobení).
+      - Každý sloupec reprezentuje jedno kritérium a jeho výška ukazuje, jak toto kritérium násobně přispívá k celkovému skóre.
+      - Hodnota uvedená nad/pod každým sloupcem je příspěvek kritéria (hodnota umocněná na váhu kritéria).
+      - Koncový sloupec ukazuje výsledné skóre varianty (součin všech příspěvků).
+
+      **Proč je tento graf důležitý:**
+      - V metodě WPM, na rozdíl od WSM, se hodnoty násobí místo sčítání.\n- Vodopádový graf jasně vizualizuje multiplikativní efekt každého kritéria.
+      - Můžete snadno identifikovat, která kritéria mají největší vliv na celkové hodnocení.
+
+      Pro zobrazení grafu pro jinou variantu použijte rozbalovací menu v levém horním rohu grafu.
+    format: markdown
+  type: RichText
+- layout_properties: {grid_position: 'ARRWGS,QQPERY'}
+  name: plot_wpm_waterfall
+  properties: {height: '730'}
+  type: Plot
+- layout_properties: {grid_position: 'UKXZWF,KKJVAT'}
+  name: spacer_6
+  properties: {height: 32}
+  type: Spacer
 - layout_properties: {grid_position: 'OTXIKK,NXEUAY'}
   name: plot_wpm_heat_mapa
-  properties: {height: '600'}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'ZFTMSJ,YTTGUC'}
   name: spacer_3
@@ -29,7 +58,7 @@ components:
   type: Spacer
 - layout_properties: {grid_position: 'VTAPXU,QVZESG'}
   name: plot_pomery_variant
-  properties: {height: '600'}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'FQLWTA,FXWKCJ'}
   name: spacer_5
@@ -46,7 +75,7 @@ components:
   type: RichText
 - layout_properties: {grid_position: 'AULPVI,NUEILB'}
   name: plot_citlivost_skore
-  properties: {}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'WKIEZJ,TESCAX'}
   name: spacer_4
@@ -54,7 +83,7 @@ components:
   type: Spacer
 - layout_properties: {grid_position: 'DDEELS,ATLUMA'}
   name: plot_citlivost_poradi
-  properties: {}
+  properties: {height: '730'}
   type: Plot
 container:
   event_bindings: {show: form_show}

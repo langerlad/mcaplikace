@@ -649,6 +649,9 @@ def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
                 'colorscale': 'YlGnBu',  # Použití požadované barevné škály
                 'zmin': z_min,
                 'zmax': z_max,
+                'xgap':2,        # horizontální mezera (v pixelech)
+                'ygap':2,        # vertikální mezera (v pixelech)
+                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 # Přidání anotací s hodnotami do každé buňky
                 'text': [[f'{hodnoty[i][j]:.3f}' for j in range(len(kriteria))]
                          for i in range(len(varianty))],
@@ -679,10 +682,9 @@ def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
                     'tickvals': list(range(len(varianty))),
                     'ticktext': varianty
                 },
+                'plot_bgcolor':'grey',
                 'margin': {'t': 60, 'b': 80, 'l': 80, 'r': 80},
                 'template': 'plotly_white',
-                'width': 800,   # Velikost grafu odpovídající figsize=(8,6)
-                'height': 600,
             }
         }
         
@@ -1110,5 +1112,143 @@ def vytvor_graf_electre_vysledky(net_flows, varianty):
             'data': [],
             'layout': {
                 'title': 'Chyba při vytváření grafu výsledků ELECTRE'
+            }
+        }
+
+def vytvor_wpm_vodopadovy_graf(varianty, kriteria, produktovy_prispevek, serazene_varianty=None):
+    """
+    Vytvoří vodopádový (waterfall) graf ilustrující vliv jednotlivých kritérií na výsledek WPM.
+    Zobrazuje, jak jednotlivá kritéria (a jejich váhy) přispívají k celkovému produktu.
+    
+    Args:
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        produktovy_prispevek: 2D list hodnot umocněných na váhy [varianty][kriteria]
+        serazene_varianty: Seznam variant seřazených podle celkového skóre (volitelný)
+            Pokud je zadán, použije se toto pořadí pro zobrazení variant v grafu
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření mapování pro získání indexu varianty
+        var_to_idx = {var: idx for idx, var in enumerate(varianty)}
+        
+        # Pokud jsou zadány seřazené varianty, přeuspořádáme data podle nich
+        if serazene_varianty:
+            # Kontrola, zda jsou v serazene_varianty všechny varianty z původního seznamu
+            if set(serazene_varianty) != set(varianty):
+                Utils.zapsat_chybu("Seznam seřazených variant neobsahuje stejné varianty jako původní seznam")
+                serazene_varianty = None  # Nepoužijeme seřazení při neshodě
+        
+        # Určení pořadí variant pro graf
+        zobrazene_varianty = serazene_varianty if serazene_varianty else varianty
+        
+        # Pro každou variantu vytvoříme samostatný vodopádový graf
+        data = []
+        
+        for var_idx, varianta in enumerate(zobrazene_varianty):
+            idx = var_to_idx[varianta]  # Index varianty v původních datech
+            
+            # Příprava dat pro vodopádový graf
+            measure = ["absolute"]  # První hodnota je vždy absolutní (výchozí hodnota 1.0)
+            y = [1.0]  # Výchozí hodnota 1.0 (neutrální multiplikativní faktor)
+            x = ["Výchozí"]  # Popisek pro výchozí hodnotu
+            text = ["1.0"]  # Text hodnoty
+            
+            produkt = 1.0  # Výchozí hodnota produktu
+            
+            # Pro každé kritérium vypočítáme průběžný produkt
+            for j, kriterium in enumerate(kriteria):
+                hodnota = produktovy_prispevek[idx][j]
+                novy_produkt = produkt * hodnota
+                
+                # Přidáme hodnotu kritéria jako relativní změnu
+                measure.append("relative")
+                y.append(novy_produkt - produkt)  # Změna produktu
+                x.append(kriterium)
+                text.append(f"{hodnota:.3f}")
+                
+                produkt = novy_produkt  # Aktualizace produktu
+            
+            # Přidáme finální hodnotu
+            measure.append("total")
+            y.append(produkt)
+            x.append("Celkem")
+            text.append(f"{produkt:.3f}")
+            
+            # Vytvoříme vodopádový graf pro danou variantu
+            data.append({
+                'type': 'waterfall',
+                'name': varianta,
+                'orientation': 'v',
+                'measure': measure,
+                'y': y,
+                'x': x,
+                'text': text,
+                'textposition': 'outside',
+                'connector': {'line': {'color': 'rgb(63, 63, 63)'}},
+                'visible': True if var_idx == 0 else 'legendonly'  # Prvně zobrazená varianta je viditelná, ostatní skryté
+            })
+        
+        # Vytvoření tlačítek pro přepínání mezi variantami
+        buttons = []
+        for i, varianta in enumerate(zobrazene_varianty):
+            visible = [False] * len(zobrazene_varianty)
+            visible[i] = True
+            
+            buttons.append({
+                'label': varianta,
+                'method': 'update',
+                'args': [
+                    {'visible': visible},
+                    {'title': f'Vodopádový graf vlivu kritérií - {varianta}'}
+                ]
+            })
+        
+        updatemenus = [{
+            'buttons': buttons,
+            'direction': 'down',
+            'showactive': True,
+            'x': 0.1,
+            'y': 1.15,
+            'xanchor': 'left',
+            'yanchor': 'top'
+        }]
+        
+        # Vytvoření grafu
+        fig = {
+            'data': data,
+            'layout': {
+                'title': f"Vodopádový graf vlivu kritérií - {zobrazene_varianty[0]}",
+                'xaxis': {
+                    'title': 'Kritéria',
+                    'tickangle': -45 if len(kriteria) > 4 else 0
+                },
+                'yaxis': {
+                    'title': 'Hodnota produktu',
+                    'tickformat': '.3f'
+                },
+                'showlegend': True,
+                'legend': {
+                    'title': 'Varianty',
+                    'orientation': 'h',
+                    'y': -0.15,
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
+                'updatemenus': updatemenus,
+                'margin': {'t': 120, 'b': 120, 'l': 80, 'r': 80}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření vodopádového grafu WPM: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření vodopádového grafu'
             }
         }

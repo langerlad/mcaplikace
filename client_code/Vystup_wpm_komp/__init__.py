@@ -131,6 +131,15 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
             "WPM - příspěvek kritérií (umocněné hodnoty)"
         )
         self.plot_wpm_heat_mapa.visible = True
+      
+        # Vodopádový graf vlivu kritérií pro WPM
+        self.plot_wpm_waterfall.figure = Vizualizace.vytvor_wpm_vodopadovy_graf(
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
+            self.vysledky_vypoctu["produktovy_prispevek"],
+            serazene_varianty
+        )
+        self.plot_wpm_waterfall.visible = True
 
         # Graf poměrů variant
         self.plot_pomery_variant.figure = Vizualizace.vytvor_graf_pomeru_variant(
