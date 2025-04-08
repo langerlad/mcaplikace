@@ -20,7 +20,7 @@ components:
   properties: {height: 32}
   type: Spacer
 - layout_properties: {grid_position: 'OTXIKK,NXEUAY'}
-  name: plot_wpm_heat_mapa
+  name: plot_wpm_relativni_skore
   properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'ZFTMSJ,YTTGUC'}

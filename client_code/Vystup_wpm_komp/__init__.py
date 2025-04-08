@@ -118,20 +118,28 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
         )
         self.plot_wpm_vysledek.visible = True
 
-        # Graf skladby skóre - WPM používá teplotní mapu místo skládaného grafu
-        self.plot_wpm_heat_mapa.figure = Vizualizace.vytvor_heat_mapu(
+        # Graf relativního skóre pro WPM
+        self.plot_wpm_relativni_skore.figure = Vizualizace.vytvor_graf_relativniho_skore_wpm(
+            self.vysledky_vypoctu["wpm_vysledky"]["results"],
+            self.vysledky_vypoctu["wpm_vysledky"]["nejlepsi_varianta"],
+            self.vysledky_vypoctu["wpm_vysledky"]["nejlepsi_skore"],
+            self.vysledky_vypoctu["wpm_vysledky"]["nejhorsi_varianta"],
+            "WPM"
+        )
+        self.plot_wpm_relativni_skore.visible = True
+
+        # Graf poměrů variant
+        self.plot_pomery_variant.figure = Vizualizace.vytvor_graf_pomeru_variant(
             serazene_varianty,  # Použití seřazených variant
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-            # Přeuspořádání produktového příspěvku podle seřazených variant
-            self._preusporadat_matici(
-                self.vysledky_vypoctu["produktovy_prispevek"],
+            # Přeuspořádání matice poměrů podle seřazených variant
+            self._preusporadat_matici_pomerova(
+                self.vysledky_vypoctu["pomery_variant"],
                 self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
                 serazene_varianty
             ),
-            "WPM - příspěvek kritérií (umocněné hodnoty)"
+            "WPM"
         )
-        self.plot_wpm_heat_mapa.visible = True
-      
+        self.plot_pomery_variant.visible = True
 
         # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
         kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]

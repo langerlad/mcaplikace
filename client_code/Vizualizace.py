@@ -29,8 +29,12 @@ def vytvor_graf_concordance_electre(matice_souhlasu, varianty):
                 'colorscale': 'YlGnBu',
                 'zmin': 0,
                 'zmax': 1,
+                'xgap':2,        # horizontální mezera (v pixelech)
+                'ygap':2,        # vertikální mezera (v pixelech)
+                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
                           for val in row] for row in matice_souhlasu],
+                'texttemplate': '%{text}',
                 'hoverinfo': 'text',
                 'showscale': True,
                 'colorbar': {
@@ -83,8 +87,12 @@ def vytvor_graf_discordance_electre(matice_nesouhlasu, varianty):
                 'colorscale': 'YlOrRd',
                 'zmin': 0,
                 'zmax': 1,
+                'xgap':2,        # horizontální mezera (v pixelech)
+                'ygap':2,        # vertikální mezera (v pixelech)
+                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
                           for val in row] for row in matice_nesouhlasu],
+                'texttemplate': '%{text}',
                 'hoverinfo': 'text',
                 'showscale': True,
                 'colorbar': {
@@ -134,9 +142,12 @@ def vytvor_graf_outranking_electre(outranking_matice, varianty):
                 'z': outranking_matice,
                 'x': varianty,
                 'y': varianty,
-                'colorscale': [[0, 'white'], [1, 'green']],  # Binární barevná škála
+                'colorscale': [[0, 'gray'], [1, 'green']],  # Binární barevná škála
                 'zmin': 0,
                 'zmax': 1,
+                'xgap':2,        # horizontální mezera (v pixelech)
+                'ygap':2,        # vertikální mezera (v pixelech)
+                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 'text': [[f'{int(val)}' if isinstance(val, (int, float)) else val 
                           for val in row] for row in outranking_matice],
                 'hoverinfo': 'text',
@@ -578,6 +589,7 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
                 'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) and i != j else "-" 
                           for j, val in enumerate(row)] for i, row in enumerate(pomer_matice)],
+                'texttemplate': '%{text}',
                 'hovertext': hover_texts,
                 'hoverinfo': 'text',
                 'showscale': True,
@@ -607,146 +619,6 @@ def vytvor_graf_pomeru_variant(varianty, pomer_matice, nazev_metody="WPM"):
             'data': [],
             'layout': {
                 'title': 'Chyba při vytváření grafu poměrů variant'
-            }
-        }
-
-def vytvor_heat_mapu(varianty, kriteria, hodnoty, nazev_metody=""):
-    """
-    Vytvoří teplotní mapu zobrazující vztahy mezi variantami a kritérii
-    s použitím barevné škály YlGnBu a dynamickým nastavením rozsahu barev.
-    
-    Args:
-        varianty: Seznam názvů variant (řádky)
-        kriteria: Seznam názvů kritérií (sloupce)
-        hodnoty: 2D list hodnot [varianty][kriteria]
-        nazev_metody: Název metody pro titulek (volitelný)
-        
-    Returns:
-        dict: Konfigurace Plotly figure
-    """
-    try:
-        # Získání všech hodnot a výpočet minimální a maximální hodnoty
-        all_values = [val for row in hodnoty for val in row]
-        z_min = min(all_values)
-        z_max = max(all_values)
-        
-        # Příprava popisků pro zobrazení při najetí myší
-        hover_texts = []
-        for i in range(len(varianty)):
-            hover_row = []
-            for j in range(len(kriteria)):
-                # Formát: Varianta: X, Kritérium: Y, Hodnota: Z
-                text = f"Varianta: {varianty[i]}<br>Kritérium: {kriteria[j]}<br>Hodnota: {hodnoty[i][j]:.3f}"
-                hover_row.append(text)
-            hover_texts.append(hover_row)
-        
-        fig = {
-            'data': [{
-                'type': 'heatmap',
-                'z': hodnoty,
-                'x': kriteria,
-                'y': varianty,
-                'colorscale': 'YlGnBu',  # Použití požadované barevné škály
-                'zmin': z_min,
-                'zmax': z_max,
-                'xgap':2,        # horizontální mezera (v pixelech)
-                'ygap':2,        # vertikální mezera (v pixelech)
-                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
-                # Přidání anotací s hodnotami do každé buňky
-                'text': [[f'{hodnoty[i][j]:.3f}' for j in range(len(kriteria))]
-                         for i in range(len(varianty))],
-                'hovertext': hover_texts,  # Vylepšené popisky při najetí myší
-                'hoverinfo': 'text',  # Zobrazení pouze vlastních popisků
-                'showscale': True,
-                'colorbar': {
-                    'title': 'Hodnota',
-                    'titleside': 'right',
-                    'tickformat': '.3f',
-                },
-            }],
-            'layout': {
-                'title': {
-                    'text': f'Teplotní mapa hodnot{f" - {nazev_metody}" if nazev_metody else ""}',
-                    'x': 0.5,
-                    'xanchor': 'center'
-                },
-                'xaxis': {
-                    'title': 'Kritéria',
-                    'side': 'bottom',  # Umístění popisku osy X pod grafem
-                    'automargin': True
-                },
-                'yaxis': {
-                    'title': 'Varianty',
-                    'automargin': True,
-                    'tickmode': 'array',          # Zajistí, že se zobrazí všechny varianty
-                    'tickvals': list(range(len(varianty))),
-                    'ticktext': varianty
-                },
-                'plot_bgcolor':'grey',
-                'margin': {'t': 60, 'b': 80, 'l': 80, 'r': 80},
-                'template': 'plotly_white',
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření teplotní mapy: {str(e)}")
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření teplotní mapy'
-            }
-        }
-
-
-
-def vytvor_histogram_vah(kriteria, vahy):
-    """
-    Vytvoří histogram vah kritérií.
-    
-    Args:
-        kriteria: Seznam názvů kritérií
-        vahy: Seznam vah kritérií
-        
-    Returns:
-        dict: Plotly figure configuration
-    """
-    try:
-        # Vytvoření grafu
-        fig = {
-            'data': [{
-                'type': 'bar',
-                'x': kriteria,
-                'y': vahy,
-                'marker': {
-                    'color': '#3498db',
-                },
-                'text': [f'{v:.3f}' for v in vahy],
-                'textposition': 'auto',
-            }],
-            'layout': {
-                'title': 'Váhy kritérií',
-                'xaxis': {
-                    'title': 'Kritéria',
-                    'tickangle': -45 if len(kriteria) > 4 else 0
-                },
-                'yaxis': {
-                    'title': 'Váha',
-                    'range': [0, max(vahy) * 1.1] if vahy else [0, 1]
-                },
-                'showlegend': False,
-                'margin': {'t': 50, 'b': 100}
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření histogramu vah: {str(e)}")
-        # Vrátíme prázdný graf
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření histogramu vah'
             }
         }
 
@@ -1045,45 +917,34 @@ def vytvor_graf_electre_vysledky(net_flows, varianty):
     try:
         # Extrakce dat pro graf
         var_nazvy = []
-        prevysovane_hodnoty = []
-        prevysujici_hodnoty = []
+        net_flow_hodnoty = []
+        colors = []
         
         # Seřazení podle pořadí
         sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
         
         for varianta, poradi, score in sorted_net_flows:
             var_nazvy.append(varianta)
+            net_flow_hodnoty.append(score)
             
-            # Rozdělíme net_flow na pozitivní a negativní komponenty
-            if score > 0:
-                prevysovane_hodnoty.append(score)
-                prevysujici_hodnoty.append(0)
+            # Přidání barvy podle hodnoty - pozitivní jsou zelené, negativní červené
+            if score >= 0:
+                colors.append('#2ecc71')  # zelená pro pozitivní
             else:
-                prevysovane_hodnoty.append(0)
-                prevysujici_hodnoty.append(abs(score))
+                colors.append('#e74c3c')  # červená pro negativní
         
         # Vytvoření grafu
         fig = {
-            'data': [
-                {
-                    'type': 'bar',
-                    'x': var_nazvy,
-                    'y': prevysovane_hodnoty,
-                    'name': 'Převyšující (pozitivní vliv)',
-                    'marker': {
-                        'color': '#2ecc71'  # zelená
-                    }
+            'data': [{
+                'type': 'bar',
+                'x': var_nazvy,
+                'y': net_flow_hodnoty,
+                'marker': {
+                    'color': colors
                 },
-                {
-                    'type': 'bar',
-                    'x': var_nazvy,
-                    'y': prevysujici_hodnoty,
-                    'name': 'Převyšované (negativní vliv)',
-                    'marker': {
-                        'color': '#e74c3c'  # červená
-                    }
-                }
-            ],
+                'text': [f'{hodnota}' for hodnota in net_flow_hodnoty],
+                'textposition': 'auto',
+            }],
             'layout': {
                 'title': 'Výsledky ELECTRE analýzy',
                 'xaxis': {
@@ -1091,16 +952,17 @@ def vytvor_graf_electre_vysledky(net_flows, varianty):
                     'tickangle': -45 if len(varianty) > 4 else 0
                 },
                 'yaxis': {
-                    'title': 'Počet variant'
+                    'title': 'Net Flow skóre',
+                    'zeroline': True,
+                    'zerolinecolor': 'black',
+                    'zerolinewidth': 1,
+                    'gridcolor': 'rgba(0,0,0,0.1)',
+                    'gridwidth': 1
                 },
-                'barmode': 'stack',
-                'showlegend': True,
-                'legend': {
-                    'orientation': 'h',
-                    'y': -0.2,
-                    'x': 0.5,
-                    'xanchor': 'center'
-                },
+                'showlegend': False,
+                'margin': {'t': 50, 'b': 100},
+                'plot_bgcolor': 'rgba(255,255,255,1)',
+                'paper_bgcolor': 'rgba(255,255,255,1)',
             }
         }
         
@@ -1115,140 +977,78 @@ def vytvor_graf_electre_vysledky(net_flows, varianty):
             }
         }
 
-def vytvor_wpm_vodopadovy_graf(varianty, kriteria, produktovy_prispevek, serazene_varianty=None):
+def vytvor_graf_relativniho_skore_wpm(results, nejlepsi_varianta, nejlepsi_skore, nejhorsi_varianta, nazev_metody="WPM"):
     """
-    Vytvoří vodopádový (waterfall) graf ilustrující vliv jednotlivých kritérií na výsledek WPM.
-    Zobrazuje, jak jednotlivá kritéria (a jejich váhy) přispívají k celkovému produktu.
+    Vytvoří graf relativního skóre pro WPM metodu, kde všechny hodnoty jsou
+    vyjádřeny jako procentuální podíl nejlepšího skóre.
     
     Args:
-        varianty: Seznam názvů variant
-        kriteria: Seznam názvů kritérií
-        produktovy_prispevek: 2D list hodnot umocněných na váhy [varianty][kriteria]
-        serazene_varianty: Seznam variant seřazených podle celkového skóre (volitelný)
-            Pokud je zadán, použije se toto pořadí pro zobrazení variant v grafu
+        results: List tuple (varianta, poradi, hodnota)
+        nejlepsi_varianta: Název nejlepší varianty
+        nejlepsi_skore: Skóre nejlepší varianty (pro výpočet relativního skóre)
+        nejhorsi_varianta: Název nejhorší varianty
+        nazev_metody: Název použité metody (pro titulek grafu)
         
     Returns:
         dict: Plotly figure configuration
     """
     try:
-        # Vytvoření mapování pro získání indexu varianty
-        var_to_idx = {var: idx for idx, var in enumerate(varianty)}
+        # Příprava dat pro graf
+        varianty = []
+        relativni_skore = []
+        colors = []  # Barvy pro sloupce
         
-        # Pokud jsou zadány seřazené varianty, přeuspořádáme data podle nich
-        if serazene_varianty:
-            # Kontrola, zda jsou v serazene_varianty všechny varianty z původního seznamu
-            if set(serazene_varianty) != set(varianty):
-                Utils.zapsat_chybu("Seznam seřazených variant neobsahuje stejné varianty jako původní seznam")
-                serazene_varianty = None  # Nepoužijeme seřazení při neshodě
+        # Seřazení dat podle pořadí (vzestupně)
+        serazene_results = sorted(results, key=lambda x: x[1])
         
-        # Určení pořadí variant pro graf
-        zobrazene_varianty = serazene_varianty if serazene_varianty else varianty
-        
-        # Pro každou variantu vytvoříme samostatný vodopádový graf
-        data = []
-        
-        for var_idx, varianta in enumerate(zobrazene_varianty):
-            idx = var_to_idx[varianta]  # Index varianty v původních datech
+        for varianta, _, hodnota in serazene_results:
+            varianty.append(varianta)
+            # Výpočet relativního skóre jako procento nejlepšího skóre
+            proc_skore = (hodnota / nejlepsi_skore) * 100 if nejlepsi_skore > 0 else 0
+            relativni_skore.append(proc_skore)
             
-            # Příprava dat pro vodopádový graf
-            measure = ["absolute"]  # První hodnota je vždy absolutní (výchozí hodnota 1.0)
-            y = [1.0]  # Výchozí hodnota 1.0 (neutrální multiplikativní faktor)
-            x = ["Výchozí"]  # Popisek pro výchozí hodnotu
-            text = ["1.0"]  # Text hodnoty
-            
-            produkt = 1.0  # Výchozí hodnota produktu
-            
-            # Pro každé kritérium vypočítáme průběžný produkt
-            for j, kriterium in enumerate(kriteria):
-                hodnota = produktovy_prispevek[idx][j]
-                novy_produkt = produkt * hodnota
-                
-                # Přidáme hodnotu kritéria jako relativní změnu
-                measure.append("relative")
-                y.append(novy_produkt - produkt)  # Změna produktu
-                x.append(kriterium)
-                text.append(f"{hodnota:.3f}")
-                
-                produkt = novy_produkt  # Aktualizace produktu
-            
-            # Přidáme finální hodnotu
-            measure.append("total")
-            y.append(produkt)
-            x.append("Celkem")
-            text.append(f"{produkt:.3f}")
-            
-            # Vytvoříme vodopádový graf pro danou variantu
-            data.append({
-                'type': 'waterfall',
-                'name': varianta,
-                'orientation': 'v',
-                'measure': measure,
-                'y': y,
-                'x': x,
-                'text': text,
-                'textposition': 'outside',
-                'connector': {'line': {'color': 'rgb(63, 63, 63)'}},
-                'visible': True if var_idx == 0 else 'legendonly'  # Prvně zobrazená varianta je viditelná, ostatní skryté
-            })
-        
-        # Vytvoření tlačítek pro přepínání mezi variantami
-        buttons = []
-        for i, varianta in enumerate(zobrazene_varianty):
-            visible = [False] * len(zobrazene_varianty)
-            visible[i] = True
-            
-            buttons.append({
-                'label': varianta,
-                'method': 'update',
-                'args': [
-                    {'visible': visible},
-                    {'title': f'Vodopádový graf vlivu kritérií - {varianta}'}
-                ]
-            })
-        
-        updatemenus = [{
-            'buttons': buttons,
-            'direction': 'down',
-            'showactive': True,
-            'x': 0.1,
-            'y': 1.15,
-            'xanchor': 'left',
-            'yanchor': 'top'
-        }]
+            # Nejlepší varianta bude mít zelenou, nejhorší červenou
+            if varianta == nejlepsi_varianta:
+                colors.append('#2ecc71')  # zelená
+            elif varianta == nejhorsi_varianta:
+                colors.append('#e74c3c')  # červená
+            else:
+                colors.append('#3498db')  # modrá
         
         # Vytvoření grafu
         fig = {
-            'data': data,
+            'data': [{
+                'type': 'bar',
+                'x': varianty,
+                'y': relativni_skore,
+                'marker': {
+                    'color': colors
+                },
+                'text': [f'{s:.1f}%' for s in relativni_skore],  # Zobrazení hodnot nad sloupci
+                'textposition': 'auto',
+            }],
             'layout': {
-                'title': f"Vodopádový graf vlivu kritérií - {zobrazene_varianty[0]}",
+                'title': f'Relativní skóre variant {nazev_metody} (% nejlepšího skóre)',
                 'xaxis': {
-                    'title': 'Kritéria',
-                    'tickangle': -45 if len(kriteria) > 4 else 0
+                    'title': 'Varianty',
+                    'tickangle': -45 if len(varianty) > 4 else 0  # Natočení popisků pro lepší čitelnost
                 },
                 'yaxis': {
-                    'title': 'Hodnota produktu',
-                    'tickformat': '.3f'
+                    'title': 'Relativní skóre (%)',
+                    'range': [0, 105],  # Trochu místa nad sloupci pro hodnoty
                 },
-                'showlegend': True,
-                'legend': {
-                    'title': 'Varianty',
-                    'orientation': 'h',
-                    'y': -0.15,
-                    'x': 0.5,
-                    'xanchor': 'center'
-                },
-                'updatemenus': updatemenus,
-                'margin': {'t': 120, 'b': 120, 'l': 80, 'r': 80}
+                'showlegend': False,
+                'margin': {'t': 50, 'b': 100}  # Větší okraje pro popisky
             }
         }
         
         return fig
     except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření vodopádového grafu WPM: {str(e)}")
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu relativního skóre: {str(e)}")
         # Vrátíme prázdný graf
         return {
             'data': [],
             'layout': {
-                'title': 'Chyba při vytváření vodopádového grafu'
+                'title': 'Chyba při vytváření grafu relativního skóre'
             }
         }

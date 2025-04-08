@@ -128,11 +128,11 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
         )
 
         # Graf výsledků - pořadí variant
-        self.plot_sablona_vysledek.figure = Vizualizace.vytvor_graf_electre_vysledky(
+        self.plot_electre_vysledky.figure = Vizualizace.vytvor_graf_electre_vysledky(
             self.vysledky_vypoctu["electre_vysledky"]["results"],
-            serazene_varianty
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
         )
-        self.plot_sablona_vysledek.visible = True
+        self.plot_electre_vysledky.visible = True
 
         # Graf matice souhlasu (concordance)
         self.plot_sablona_skladba.figure = Vizualizace.vytvor_graf_concordance_electre(
