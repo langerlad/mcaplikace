@@ -80,7 +80,7 @@ def vytvor_graf_discordance_electre(matice_nesouhlasu, varianty):
                 'z': matice_nesouhlasu,
                 'x': varianty,
                 'y': varianty,
-                'colorscale': 'YlOrRd',  # Jiná barevná škála než pro souhlas
+                'colorscale': 'YlOrRd',
                 'zmin': 0,
                 'zmax': 1,
                 'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
