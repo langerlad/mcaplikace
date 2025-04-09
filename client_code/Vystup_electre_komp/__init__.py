@@ -120,12 +120,6 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
             self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
             serazene_varianty
         )
-        
-        outranking_matrix_serazena = self._preusporadat_matici_pomerova(
-            self.vysledky_vypoctu["electre_vysledky"]["outranking_matrix"],
-            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-            serazene_varianty
-        )
 
         # Graf výsledků - pořadí variant
         self.plot_electre_vysledky.figure = Vizualizace.vytvor_graf_electre_vysledky(
@@ -147,13 +141,6 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
             serazene_varianty
         )
         self.plot_discordance.visible = True
-
-        # Graf převahy (outranking)
-        self.plot_outranking.figure = Vizualizace.vytvor_graf_outranking_electre(
-            outranking_matrix_serazena, 
-            serazene_varianty
-        )
-        self.plot_outranking.visible = True
 
         # Graf outrankingových relací
         self.plot_electre_outranking.figure = Vizualizace.vytvor_graf_outranking_relace(
@@ -210,7 +197,7 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
 
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""
-    self.plot_sablona_vysledek.visible = False
+    self.plot_electre_vysledky.visible = False
     self.plot_sablona_skladba.visible = False
     self.plot_discordance.visible = False
     self.plot_outranking.visible = False
