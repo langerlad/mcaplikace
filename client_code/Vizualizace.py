@@ -5,182 +5,9 @@
 # -------------------------------------------------------
 
 import plotly.graph_objects as go
+import math
 from . import Utils
 
-def vytvor_graf_concordance_electre(matice_souhlasu, varianty):
-    """
-    Vytvoří teplotní mapu (heatmap) zobrazující matici souhlasu ELECTRE.
-    
-    Args:
-        matice_souhlasu: 2D matice hodnot souhlasu mezi variantami
-        varianty: Seznam názvů variant
-        
-    Returns:
-        dict: Plotly figure configuration
-    """
-    try:
-        # Vytvoření grafu
-        fig = {
-            'data': [{
-                'type': 'heatmap',
-                'z': matice_souhlasu,
-                'x': varianty,
-                'y': varianty,
-                'colorscale': 'YlGnBu',
-                'zmin': 0,
-                'zmax': 1,
-                'xgap':2,        # horizontální mezera (v pixelech)
-                'ygap':2,        # vertikální mezera (v pixelech)
-                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
-                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
-                          for val in row] for row in matice_souhlasu],
-                'texttemplate': '%{text}',
-                'hoverinfo': 'text',
-                'showscale': True,
-                'colorbar': {
-                    'title': 'Index souhlasu'
-                }
-            }],
-            'layout': {
-                'title': 'Matice souhlasu (Concordance matrix)',
-                'xaxis': {
-                    'title': 'Varianta j',
-                    'side': 'bottom'
-                },
-                'yaxis': {
-                    'title': 'Varianta i'
-                },
-                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice souhlasu: {str(e)}")
-        # Vrátíme prázdný graf
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření grafu matice souhlasu'
-            }
-        }
-
-def vytvor_graf_discordance_electre(matice_nesouhlasu, varianty):
-    """
-    Vytvoří teplotní mapu (heatmap) zobrazující matici nesouhlasu ELECTRE.
-    
-    Args:
-        matice_nesouhlasu: 2D matice hodnot nesouhlasu mezi variantami
-        varianty: Seznam názvů variant
-        
-    Returns:
-        dict: Plotly figure configuration
-    """
-    try:
-        # Vytvoření grafu
-        fig = {
-            'data': [{
-                'type': 'heatmap',
-                'z': matice_nesouhlasu,
-                'x': varianty,
-                'y': varianty,
-                'colorscale': 'YlOrRd',
-                'zmin': 0,
-                'zmax': 1,
-                'xgap':2,        # horizontální mezera (v pixelech)
-                'ygap':2,        # vertikální mezera (v pixelech)
-                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
-                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
-                          for val in row] for row in matice_nesouhlasu],
-                'texttemplate': '%{text}',
-                'hoverinfo': 'text',
-                'showscale': True,
-                'colorbar': {
-                    'title': 'Index nesouhlasu'
-                }
-            }],
-            'layout': {
-                'title': 'Matice nesouhlasu (Discordance matrix)',
-                'xaxis': {
-                    'title': 'Varianta j',
-                    'side': 'bottom'
-                },
-                'yaxis': {
-                    'title': 'Varianta i'
-                },
-                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice nesouhlasu: {str(e)}")
-        # Vrátíme prázdný graf
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření grafu matice nesouhlasu'
-            }
-        }
-
-def vytvor_graf_outranking_electre(outranking_matice, varianty):
-    """
-    Vytvoří teplotní mapu (heatmap) zobrazující outranking matrix metody ELECTRE.
-    
-    Args:
-        outranking_matice: 2D binární matice převahy mezi variantami (0/1)
-        varianty: Seznam názvů variant
-        
-    Returns:
-        dict: Plotly figure configuration
-    """
-    try:
-        # Vytvoření grafu
-        fig = {
-            'data': [{
-                'type': 'heatmap',
-                'z': outranking_matice,
-                'x': varianty,
-                'y': varianty,
-                'colorscale': [[0, 'gray'], [1, 'green']],  # Binární barevná škála
-                'zmin': 0,
-                'zmax': 1,
-                'xgap':2,        # horizontální mezera (v pixelech)
-                'ygap':2,        # vertikální mezera (v pixelech)
-                'zsmooth':False, # aby se Plotly nesnažilo hodnoty interpolovat
-                'text': [[f'{int(val)}' if isinstance(val, (int, float)) else val 
-                          for val in row] for row in outranking_matice],
-                'hoverinfo': 'text',
-                'showscale': True,
-                'colorbar': {
-                    'title': 'Převaha',
-                    'tickvals': [0, 1],
-                    'ticktext': ['Ne', 'Ano']
-                }
-            }],
-            'layout': {
-                'title': 'Matice převahy (Outranking matrix)',
-                'xaxis': {
-                    'title': 'Varianta j',
-                    'side': 'bottom'
-                },
-                'yaxis': {
-                    'title': 'Varianta i'
-                },
-                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice převahy: {str(e)}")
-        # Vrátíme prázdný graf
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření grafu matice převahy'
-            }
-        }
 
 def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta, nazev_metody=""):
     """
@@ -903,79 +730,7 @@ def vytvor_prazdny_graf(text="Žádná data k zobrazení"):
     }
 
 
-def vytvor_graf_electre_vysledky(net_flows, varianty):
-    """
-    Vytvoří sloupcový graf pro vizualizaci výsledků ELECTRE.
-    
-    Args:
-        net_flows: Seznam trojic (varianta, pořadí, net_flow)
-        varianty: Seznam názvů variant
-        
-    Returns:
-        dict: Plotly figure configuration
-    """
-    try:
-        # Extrakce dat pro graf
-        var_nazvy = []
-        net_flow_hodnoty = []
-        colors = []
-        
-        # Seřazení podle pořadí
-        sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
-        
-        for varianta, poradi, score in sorted_net_flows:
-            var_nazvy.append(varianta)
-            net_flow_hodnoty.append(score)
-            
-            # Přidání barvy podle hodnoty - pozitivní jsou zelené, negativní červené
-            if score >= 0:
-                colors.append('#2ecc71')  # zelená pro pozitivní
-            else:
-                colors.append('#e74c3c')  # červená pro negativní
-        
-        # Vytvoření grafu
-        fig = {
-            'data': [{
-                'type': 'bar',
-                'x': var_nazvy,
-                'y': net_flow_hodnoty,
-                'marker': {
-                    'color': colors
-                },
-                'text': [f'{hodnota}' for hodnota in net_flow_hodnoty],
-                'textposition': 'auto',
-            }],
-            'layout': {
-                'title': 'Výsledky ELECTRE analýzy',
-                'xaxis': {
-                    'title': 'Varianty',
-                    'tickangle': -45 if len(varianty) > 4 else 0
-                },
-                'yaxis': {
-                    'title': 'Net Flow skóre',
-                    'zeroline': True,
-                    'zerolinecolor': 'black',
-                    'zerolinewidth': 1,
-                    'gridcolor': 'rgba(0,0,0,0.1)',
-                    'gridwidth': 1
-                },
-                'showlegend': False,
-                'margin': {'t': 50, 'b': 100},
-                'plot_bgcolor': 'rgba(255,255,255,1)',
-                'paper_bgcolor': 'rgba(255,255,255,1)',
-            }
-        }
-        
-        return fig
-    except Exception as e:
-        Utils.zapsat_chybu(f"Chyba při vytváření grafu výsledků ELECTRE: {str(e)}")
-        # Vrátíme prázdný graf
-        return {
-            'data': [],
-            'layout': {
-                'title': 'Chyba při vytváření grafu výsledků ELECTRE'
-            }
-        }
+
 
 def vytvor_graf_relativniho_skore_wpm(results, nejlepsi_varianta, nejlepsi_skore, nejhorsi_varianta, nazev_metody="WPM"):
     """
@@ -1050,5 +805,373 @@ def vytvor_graf_relativniho_skore_wpm(results, nejlepsi_varianta, nejlepsi_skore
             'data': [],
             'layout': {
                 'title': 'Chyba při vytváření grafu relativního skóre'
+            }
+        }
+
+def vytvor_graf_electre_vysledky(net_flows, varianty):
+    """
+    Vytvoří sloupcový graf pro vizualizaci výsledků ELECTRE.
+    
+    Args:
+        net_flows: Seznam trojic (varianta, pořadí, net_flow)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Extrakce dat pro graf
+        var_nazvy = []
+        net_flow_hodnoty = []
+        colors = []
+        
+        # Seřazení podle pořadí
+        sorted_net_flows = sorted(net_flows, key=lambda x: x[1])
+        
+        for varianta, poradi, score in sorted_net_flows:
+            var_nazvy.append(varianta)
+            net_flow_hodnoty.append(score)
+            
+            # Přidání barvy podle hodnoty - pozitivní jsou zelené, negativní červené
+            if score >= 0:
+                colors.append('#2ecc71')  # zelená pro pozitivní
+            else:
+                colors.append('#e74c3c')  # červená pro negativní
+        
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'bar',
+                'x': var_nazvy,
+                'y': net_flow_hodnoty,
+                'marker': {
+                    'color': colors
+                },
+                'text': [f'{hodnota}' for hodnota in net_flow_hodnoty],
+                'textposition': 'auto',
+            }],
+            'layout': {
+                'title': 'Výsledky ELECTRE analýzy',
+                'xaxis': {
+                    'title': 'Varianty',
+                    'tickangle': -45 if len(varianty) > 4 else 0
+                },
+                'yaxis': {
+                    'title': 'Net Flow skóre',
+                    'zeroline': True,
+                    'zerolinecolor': 'black',
+                    'zerolinewidth': 1,
+                    'gridcolor': 'rgba(0,0,0,0.1)',
+                    'gridwidth': 1
+                },
+                'showlegend': False,
+                'margin': {'t': 50, 'b': 100},
+                'plot_bgcolor': 'rgba(255,255,255,1)',
+                'paper_bgcolor': 'rgba(255,255,255,1)',
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu výsledků ELECTRE: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu výsledků ELECTRE'
+            }
+        }
+
+#----- ELECTRE -----
+
+def vytvor_graf_concordance_electre(matice_souhlasu, varianty):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující matici souhlasu ELECTRE.
+    
+    Args:
+        matice_souhlasu: 2D matice hodnot souhlasu mezi variantami
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření grafu
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': matice_souhlasu,
+                'x': varianty,
+                'y': varianty,
+                'colorscale': 'YlGnBu',
+                'zmin': 0,
+                'zmax': 1,
+                'xgap':2,        
+                'ygap':2,        
+                'zsmooth':False,
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in matice_souhlasu],
+                'texttemplate': '%{text}',
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Index souhlasu'
+                }
+            }],
+            'layout': {
+                'title': 'Matice souhlasu (Concordance matrix)',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'bottom'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice souhlasu: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu matice souhlasu'
+            }
+        }
+
+def vytvor_graf_discordance_electre(matice_nesouhlasu, varianty):
+    """
+    Vytvoří teplotní mapu (heatmap) zobrazující matici nesouhlasu ELECTRE.
+    
+    Args:
+        matice_nesouhlasu: 2D matice hodnot nesouhlasu mezi variantami
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        fig = {
+            'data': [{
+                'type': 'heatmap',
+                'z': matice_nesouhlasu,
+                'x': varianty,
+                'y': varianty,
+                'colorscale': 'YlOrRd',
+                'zmin': 0,
+                'zmax': 1,
+                'xgap':2, 
+                'ygap':2,      
+                'zsmooth':False, 
+                'text': [[f'{val:.3f}' if isinstance(val, (int, float)) else val 
+                          for val in row] for row in matice_nesouhlasu],
+                'texttemplate': '%{text}',
+                'hoverinfo': 'text',
+                'showscale': True,
+                'colorbar': {
+                    'title': 'Index nesouhlasu'
+                }
+            }],
+            'layout': {
+                'title': 'Matice nesouhlasu (Discordance matrix)',
+                'xaxis': {
+                    'title': 'Varianta j',
+                    'side': 'bottom'
+                },
+                'yaxis': {
+                    'title': 'Varianta i'
+                },
+                'margin': {'t': 50, 'b': 100, 'l': 100, 'r': 50}
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu matice nesouhlasu: {str(e)}")
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu matice nesouhlasu'
+            }
+        }
+
+def vytvor_graf_outranking_relace(outranking_matrix, varianty):
+    """
+    Vytvoří síťový graf znázorňující outrankingové relace (vztahy převahy) mezi variantami
+    z ELECTRE analýzy.
+    
+    Args:
+        outranking_matrix: 2D binární matice převahy mezi variantami (0/1)
+        varianty: Seznam názvů variant
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření uzlů (nodes) pro graf
+        node_x = []
+        node_y = []
+        node_hover_texts = []
+        
+        # Spočítáme počet převyšujících a převyšovaných variant pro každý uzel
+        prevysuje_count = []
+        prevysovano_count = []
+        
+        for i in range(len(varianty)):
+            # Počet variant, které tato varianta převyšuje
+            prevysuje = sum(outranking_matrix[i])
+            prevysuje_count.append(prevysuje)
+            
+            # Počet variant, které převyšují tuto variantu
+            prevysovano = sum(outranking_matrix[j][i] for j in range(len(varianty)))
+            prevysovano_count.append(prevysovano)
+        
+        # Pomocí kruhového layoutu rozmístíme uzly
+        n_variants = len(varianty)
+        radius = 1.0
+        for i, varianta in enumerate(varianty):
+            angle = 2 * math.pi * i / n_variants  # Úhel pro rozmístění do kruhu
+            x = radius * math.cos(angle)
+            y = radius * math.sin(angle)
+            
+            node_x.append(x)
+            node_y.append(y)
+            
+            # Vytvoření bohatšího hover textu s informacemi o převyšování
+            hover_text = f"<b>{varianta}</b><br>" + \
+                         f"Převyšuje: {prevysuje_count[i]} variant<br>" + \
+                         f"Je převyšována: {prevysovano_count[i]} variantami<br>" + \
+                         f"Net Flow: {prevysuje_count[i] - prevysovano_count[i]}"
+            node_hover_texts.append(hover_text)
+        
+        # Vytvoření hran (edges) pro graf
+        edge_x = []
+        edge_y = []
+        edge_annotations = []
+        
+        for i in range(n_variants):
+            for j in range(n_variants):
+                if i != j and outranking_matrix[i][j] == 1:
+                    # Pro každý vztah převahy vytvoříme šipku
+                    x0, y0 = node_x[i], node_y[i]
+                    x1, y1 = node_x[j], node_y[j]
+                    
+                    # Mírně upravíme koncové body šipky aby nezasahovaly do uzlů
+                    edge_length = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+                    
+                    dx = (x1 - x0) / edge_length
+                    dy = (y1 - y0) / edge_length
+                    
+                    x0_adj = x0 + dx * (radius * 0.3)
+                    y0_adj = y0 + dy * (radius * 0.3)
+                    x1_adj = x1 - dx * (radius * 0.3)
+                    y1_adj = y1 - dy * (radius * 0.3)
+                    
+                    # Přidání hrany do seznamu
+                    edge_x.extend([x0_adj, x1_adj, None])
+                    edge_y.extend([y0_adj, y1_adj, None])
+                    
+                    # Přidání šipky jako anotace
+                    edge_annotations.append({
+                        'ax': x0_adj,
+                        'ay': y0_adj,
+                        'axref': 'x',
+                        'ayref': 'y',
+                        'x': x1_adj,
+                        'y': y1_adj,
+                        'xref': 'x',
+                        'yref': 'y',
+                        'showarrow': True,
+                        'arrowhead': 2,
+                        'arrowsize': 1.5,
+                        'arrowwidth': 2,
+                        'arrowcolor': '#636363'
+                    })
+        
+        # Nastavení velikosti uzlů podle jejich "důležitosti" (Net Flow)
+        node_sizes = [15 + 10 * abs(prevysuje_count[i] - prevysovano_count[i]) for i in range(n_variants)]
+        
+        # Nastavení barev uzlů podle jejich Net Flow (zelená pro pozitivní, červená pro negativní)
+        node_colors = []
+        for i in range(n_variants):
+            net_flow = prevysuje_count[i] - prevysovano_count[i]
+            if net_flow > 0:
+                intensity = min(255, 100 + 20 * net_flow)
+                node_colors.append(f'rgba(0, {intensity}, 0, 0.8)')
+            elif net_flow < 0:
+                intensity = min(255, 100 + 20 * abs(net_flow))
+                node_colors.append(f'rgba({intensity}, 0, 0, 0.8)')
+            else:
+                node_colors.append('rgba(100, 100, 100, 0.8)')  # Šedá pro neutrální
+        
+        # Vytvoření grafu
+        fig = {
+            'data': [
+                # Hrany
+                {
+                    'x': edge_x,
+                    'y': edge_y,
+                    'mode': 'lines',
+                    'line': {
+                        'width': 1,
+                        'color': '#888'
+                    },
+                    'hoverinfo': 'none'
+                },
+                # Uzly
+                {
+                    'x': node_x,
+                    'y': node_y,
+                    'mode': 'markers+text',
+                    'marker': {
+                        'size': node_sizes,
+                        'color': node_colors,
+                        'line': {
+                            'width': 2,
+                            'color': 'darkblue'
+                        }
+                    },
+                    'text': varianty,
+                    'textposition': 'middle center',
+                    'hoverinfo': 'text',
+                    'hovertext': node_hover_texts
+                }
+            ],
+            'layout': {
+                'title': 'Outranking relace (šipka znázorňuje převyšování)',
+                'showlegend': False,
+                'xaxis': {
+                    'showgrid': False,
+                    'zeroline': False,
+                    'showticklabels': False,
+                    'range': [-1.3, 1.3]
+                },
+                'yaxis': {
+                    'showgrid': False,
+                    'zeroline': False,
+                    'showticklabels': False,
+                    'range': [-1.3, 1.3],
+                    'scaleanchor': 'x',
+                    'scaleratio': 1
+                },
+                'annotations': edge_annotations,
+                'hovermode': 'closest',
+                'margin': {'t': 50, 'b': 20, 'l': 20, 'r': 20},
+                'plot_bgcolor': 'white'
+            }
+        }
+        
+        return fig
+        
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu outrankingových relací: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu outrankingových relací'
             }
         }

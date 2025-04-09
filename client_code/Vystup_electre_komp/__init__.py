@@ -155,6 +155,13 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
         )
         self.plot_outranking.visible = True
 
+        # Graf outrankingových relací
+        self.plot_electre_outranking.figure = Vizualizace.vytvor_graf_outranking_relace(
+            self.vysledky_vypoctu["electre_vysledky"]["outranking_matrix"],
+            self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+        )
+        self.plot_electre_outranking.visible = True
+
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při vytváření grafů: {str(e)}")
         self._skryj_grafy()
