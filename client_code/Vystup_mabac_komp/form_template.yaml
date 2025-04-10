@@ -13,7 +13,7 @@ components:
   type: Label
 - layout_properties: {grid_position: 'SFOOTW,RYUJXN'}
   name: plot_mabac_vysledek
-  properties: {}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'CCLTFS,CWLJZM'}
   name: spacer_2
@@ -21,15 +21,15 @@ components:
   type: Spacer
 - layout_properties: {grid_position: 'OTXIKK,NXEUAY'}
   name: plot_mabac_vzdalenosti
-  properties: {}
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'ZFTMSJ,YTTGUC'}
   name: spacer_3
   properties: {height: 32}
   type: Spacer
 - layout_properties: {grid_position: 'JTNVNY,LFNJGX'}
-  name: plot_mabac_heat_mapa
-  properties: {}
+  name: plot_mabac_radar
+  properties: {height: '730'}
   type: Plot
 - layout_properties: {grid_position: 'FMFMAX,IOTKRG'}
   name: spacer_5

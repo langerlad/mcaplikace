@@ -132,14 +132,14 @@ class Vystup_mabac_komp(Vystup_mabac_kompTemplate):
         )
         self.plot_mabac_vzdalenosti.visible = True
 
-        # Teplotní mapa pro vzálenosti od hraničních hodnot
-        self.plot_mabac_heat_mapa.figure = Vizualizace.vytvor_heat_mapu(
+        # Radarový graf 
+        self.plot_mabac_radar.figure = Vizualizace.vytvor_radar_graf_mabac(
+            self.vysledky_vypoctu["mabac_vysledky"],
             serazene_varianty,  # Použití seřazených variant
             self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-            q_matrix_serazena,
-            "MABAC - hodnoty Q (vzdálenosti od G)"
+            self.vysledky_vypoctu["vazena_matice"]
         )
-        self.plot_mabac_heat_mapa.visible = True
+        self.plot_mabac_radar.visible = True
 
         # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
         kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
@@ -211,6 +211,6 @@ class Vystup_mabac_komp(Vystup_mabac_kompTemplate):
     """Skryje všechny grafy ve formuláři."""
     self.plot_mabac_vysledek.visible = False
     self.plot_mabac_vzdalenosti.visible = False
-    self.plot_mabac_heat_mapa.visible = False
+    self.plot_mabac_radar.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False

@@ -9,6 +9,169 @@ import math
 from . import Utils
 
 
+def vytvor_radar_graf_mabac(mabac_vysledky, varianty, kriteria, vazena_matice=None):
+    """
+    Vytvoří radarový graf pro vizualizaci MABAC výsledků.
+    
+    Args:
+        mabac_vysledky: Slovník s výsledky MABAC analýzy
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        vazena_matice: Vážená matice hodnot (volitelný parametr)
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Použijeme buď předanou váženou matici nebo ji zkusíme najít v mabac_vysledky
+        if vazena_matice is None:
+            # Zkontrolovat, jestli je vazena_matice v mabac_vysledky
+            vazena_matice = mabac_vysledky.get('vazena_matice', [])
+            
+        g_values = mabac_vysledky.get('g_values', [])
+        
+        if not vazena_matice or not g_values:
+            return vytvor_prazdny_graf("Chybí data pro radarový graf MABAC")
+        
+        # 1) Vytvoříme zkrácené názvy pro osu (theta)...
+        zkracena_kriteria = []
+        for krit in kriteria:
+            if len(krit) > 15:
+                zkracena_kriteria.append(krit[:12] + "...")
+            else:
+                zkracena_kriteria.append(krit)
+        
+        # ...ale pro hover si uchováme původní (plné) názvy
+        # Aby se snadno přiřazovalo, budeme je mít ve stejném pořadí
+        plna_kriteria = list(kriteria)  # kopie
+        
+        # 2) Najdeme globální min/max pro nastavení radiální osy
+        vsechny_hodnoty = []
+        vsechny_hodnoty.extend(g_values)
+        for row in vazena_matice:
+            vsechny_hodnoty.extend(row)
+        
+        global_min = min(vsechny_hodnoty)
+        global_max = max(vsechny_hodnoty)
+        if global_min == global_max:
+            # Pokud jsou všechny hodnoty stejné, nastavíme je např. 0 a 1, aby osa nebyla degenerate
+            global_min = 0
+            global_max = 1
+        
+        offset = (global_max - global_min) * 0.1
+        radial_min = global_min - offset
+        radial_max = global_max + offset
+        
+        # Můžeme případně zajistit, aby osa nezačínala pod nulou:
+        radial_min = min(0, radial_min)
+        
+        # 3) Definice barev pro varianty (jen příklad – 10 barev, cyklicky)
+        barvy = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ]
+        
+        data = []
+        
+        # Funkce, která připraví "theta" a "customdata" = pro uzavření okruhu opakujeme první prvek
+        def uzavrit_kruh(kratke, plne):
+            return (kratke + [kratke[0]], plne + [plne[0]])
+        
+        # 4) Hraniční hodnoty G (jako referenční hodnoty)
+        short_theta, full_crit = uzavrit_kruh(zkracena_kriteria, plna_kriteria)
+        data.append({
+            'type': 'scatterpolar',
+            'r': g_values + [g_values[0]],  # Uzavření tvaru
+            'theta': short_theta,
+            'customdata': full_crit,  # Plné názvy pro hover
+            'fill': 'none',
+            'name': 'Hraniční hodnoty (G)',
+            'line': {'color': 'black', 'width': 2},
+            # V hoveru zobrazíme název kritéria + hodnotu
+            'hovertemplate': (
+                "Kritérium: %{customdata}<br>"
+                "Hodnota G: %{r:.4f}<extra></extra>"
+            )
+        })
+        
+        # 5) Každá varianta
+        for i, varianta in enumerate(varianty):
+            if i >= len(vazena_matice):
+                continue  # ochrana, kdyby nebylo dost řádků ve vazena_matice
+            
+            hodnoty = vazena_matice[i]
+            
+            # Uzavřeme první hodnotu, abychom vytvořili "kruh"
+            uzavrene_hodnoty = hodnoty + [hodnoty[0]]
+            
+            barva_idx = i % len(barvy)
+            barva = barvy[barva_idx]
+            
+            r = int(barva[1:3], 16)
+            g = int(barva[3:5], 16)
+            b = int(barva[5:7], 16)
+            fill_color = f'rgba({r},{g},{b},0.15)'  # lehce průhledná výplň
+            
+            data.append({
+                'type': 'scatterpolar',
+                'r': uzavrene_hodnoty,
+                'theta': short_theta,
+                'customdata': full_crit,
+                'fill': 'toself',
+                'fillcolor': fill_color,
+                'name': varianta,
+                'line': {'color': barva, 'width': 2},
+                'hovertemplate': (
+                    f"Varianta: {varianta}<br>"
+                    "Kritérium: %{customdata}<br>"
+                    "Hodnota: %{r:.4f}<extra></extra>"
+                )
+            })
+        
+        # 6) Sestavení layoutu
+        fig = {
+            'data': data,
+            'layout': {
+                'title': 'Porovnání variant s hraničními hodnotami MABAC (Radar)',
+                'polar': {
+                    'radialaxis': {
+                        'visible': True,
+                        'showticklabels': True,
+                        'range': [radial_min, radial_max],
+                    },
+                    'angularaxis': {
+                        'tickfont': {'size': 10},
+                        # Případně rotation, direction, atd.
+                    }
+                },
+                'showlegend': True,
+                'legend': {
+                    'orientation': 'h',
+                    'y': -0.15,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'font': {'size': 10}
+                },
+                'margin': {'t': 80, 'b': 100, 'l': 80, 'r': 80},
+                'annotations': [
+                    {
+                        'text': 'Popisky kritérií jsou zkrácené, plné názvy uvidíte v hoveru.',
+                        'xref': 'paper',
+                        'yref': 'paper',
+                        'x': 0,
+                        'y': -0.1,
+                        'showarrow': False,
+                        'font': {'size': 10, 'color': 'gray'}
+                    }
+                ]
+            }
+        }
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření radarového grafu MABAC: {str(e)}")
+        return vytvor_prazdny_graf("Chyba při vytváření radarového grafu")
+
 def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta, nazev_metody=""):
     """
     Vytvoří sloupcový graf výsledků analýzy.
@@ -227,18 +390,21 @@ def vytvor_radar_graf(varianty, kriteria, norm_hodnoty):
             }
         }
 
-def vytvor_graf_citlivosti_skore(analyza_citlivosti, varianty):
+def vytvor_graf_citlivosti_skore(analyza_citlivosti, varianty, vsechna_kriteria=None, vsechny_analyzy=None):
     """
-    Vytvoří graf analýzy citlivosti pro celkové skóre.
+    Vytvoří graf analýzy citlivosti pro celkové skóre s dropdown menu pro výběr kritéria.
     
     Args:
-        analyza_citlivosti: Výsledky analýzy citlivosti
+        analyza_citlivosti: Výsledky analýzy citlivosti pro výchozí kritérium
         varianty: Seznam názvů variant
+        vsechna_kriteria: Seznam všech kritérií pro dropdown (volitelný)
+        vsechny_analyzy: Slovník s výsledky analýzy pro všechna kritéria (volitelný)
     
     Returns:
         dict: Plotly figure configuration
     """
     try:
+        # Základní graf pro aktuální kritérium
         vahy_rozsah = analyza_citlivosti['vahy_rozsah']
         citlivost_skore = analyza_citlivosti['citlivost_skore']
         zvolene_kriterium = analyza_citlivosti['zvolene_kriterium']
@@ -256,16 +422,59 @@ def vytvor_graf_citlivosti_skore(analyza_citlivosti, varianty):
                 'y': [citlivost_skore[j][i] for j in range(len(vahy_rozsah))],
                 'marker': {
                     'size': 8
-                }
+                },
+                'visible': True
             })
+        
+        # Přidání dat pro ostatní kritéria (pokud jsou k dispozici)
+        if vsechna_kriteria and vsechny_analyzy:
+            # Data pro dropdown menu
+            menu_buttons = []
             
+            # Pro každé kritérium
+            for k_idx, krit in enumerate(vsechna_kriteria):
+                if krit == zvolene_kriterium:
+                    # Přeskočíme aktuální kritérium, to je už zahrnuto výše
+                    continue
+                
+                # Získáme analýzu pro toto kritérium
+                if krit in vsechny_analyzy:
+                    ak = vsechny_analyzy[krit]
+                    
+                    # Přidáme data do grafu jako skryté série
+                    for i, varianta in enumerate(varianty):
+                        data.append({
+                            'type': 'scatter',
+                            'mode': 'lines+markers',
+                            'name': varianta,
+                            'x': ak['vahy_rozsah'],
+                            'y': [ak['citlivost_skore'][j][i] for j in range(len(ak['vahy_rozsah']))],
+                            'marker': {'size': 8},
+                            'visible': False,
+                            'legendgroup': krit
+                        })
+                    
+                    # Vytvoříme tlačítko pro toto kritérium
+                    visible_array = [False] * (len(varianty) * len(vsechna_kriteria))
+                    # Nastavíme viditelnost pouze pro série tohoto kritéria
+                    for idx in range(len(varianty)):
+                        visible_array[(k_idx * len(varianty)) + idx] = True
+                    
+                    menu_buttons.append(
+                        dict(
+                            args=[{'visible': visible_array}],
+                            label=krit,
+                            method="update"
+                        )
+                    )
+        
         # Vytvoření grafu
         fig = {
             'data': data,
             'layout': {
-                'title': f'Analýza citlivosti - vliv změny váhy kritéria "{zvolene_kriterium}" na celkové skóre',
+                'title': 'Analýza citlivosti - vliv změny váhy kritéria na celkové skóre',
                 'xaxis': {
-                    'title': f'Váha kritéria {zvolene_kriterium}',
+                    'title': 'Váha kritéria',
                     'tickformat': '.1f'
                 },
                 'yaxis': {
@@ -280,11 +489,40 @@ def vytvor_graf_citlivosti_skore(analyza_citlivosti, varianty):
                     'rows': 1, 
                     'columns': 1
                 },
-                'margin': {'t': 50, 'b': 80}
+                'margin': {'t': 120, 'b': 100}
             }
         }
         
+        # Přidáme dropdown menu, pokud máme data pro více kritérií
+        if vsechna_kriteria and vsechny_analyzy and len(menu_buttons) > 0:
+            fig['layout']['updatemenus'] = [
+                {
+                    'buttons': menu_buttons,
+                    'direction': 'down',
+                    'showactive': True,
+                    'x': 0.1,
+                    'y': 1.05,
+                    'xanchor': 'left',
+                    'yanchor': 'top'
+                }
+            ]
+            # Přidáme anotaci jako popisek pro dropdown
+            fig['layout']['annotations'] = [
+                {
+                    'text': 'Vyberte kritérium:',
+                    'x': 0.03,
+                    'y': 1.09,
+                    'xref': 'paper',
+                    'yref': 'paper',
+                    'showarrow': False,
+                    'font': {
+                        'size': 13
+                    }
+                }
+            ]
+        
         return fig
+    
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při vytváření grafu citlivosti skóre: {str(e)}")
         # Vrátíme prázdný graf
@@ -295,13 +533,15 @@ def vytvor_graf_citlivosti_skore(analyza_citlivosti, varianty):
             }
         }
 
-def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
+def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty, vsechna_kriteria=None, vsechny_analyzy=None):
     """
     Vytvoří graf analýzy citlivosti pro pořadí variant.
     
     Args:
         analyza_citlivosti: Výsledky analýzy citlivosti
         varianty: Seznam názvů variant
+        vsechna_kriteria: Seznam všech kritérií pro dropdown (volitelný)
+        vsechny_analyzy: Slovník s výsledky analýzy pro všechna kritéria (volitelný)
     
     Returns:
         dict: Plotly figure configuration
@@ -324,16 +564,57 @@ def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
                 'y': [citlivost_poradi[j][i] for j in range(len(vahy_rozsah))],
                 'marker': {
                     'size': 8
-                }
+                },
+                'visible': True
             })
+        
+        # Přidání dat pro ostatní kritéria (pokud jsou k dispozici)
+        menu_buttons = []
+        if vsechna_kriteria and vsechny_analyzy:
+            # Pro každé kritérium (kromě aktuálního)
+            for k_idx, krit in enumerate(vsechna_kriteria):
+                if krit == zvolene_kriterium:
+                    # Přeskočíme aktuální kritérium, to je už zahrnuto výše
+                    continue
+                
+                # Získáme analýzu pro toto kritérium
+                if krit in vsechny_analyzy:
+                    ak = vsechny_analyzy[krit]
+                    
+                    # Přidáme data do grafu jako skryté série
+                    for i, varianta in enumerate(varianty):
+                        data.append({
+                            'type': 'scatter',
+                            'mode': 'lines+markers',
+                            'name': varianta,
+                            'x': ak['vahy_rozsah'],
+                            'y': [ak['citlivost_poradi'][j][i] for j in range(len(ak['vahy_rozsah']))],
+                            'marker': {'size': 8},
+                            'visible': False,
+                            'legendgroup': krit
+                        })
+                    
+                    # Vytvoříme tlačítko pro toto kritérium
+                    visible_array = [False] * (len(varianty) * len(vsechna_kriteria))
+                    # Nastavíme viditelnost pouze pro série tohoto kritéria
+                    for idx in range(len(varianty)):
+                        visible_array[(k_idx * len(varianty)) + idx] = True
+                    
+                    menu_buttons.append(
+                        dict(
+                            args=[{'visible': visible_array}],
+                            label=krit,
+                            method="update"
+                        )
+                    )
             
         # Vytvoření grafu
         fig = {
             'data': data,
             'layout': {
-                'title': f'Analýza citlivosti - vliv změny váhy kritéria "{zvolene_kriterium}" na pořadí variant',
+                'title': 'Analýza citlivosti - vliv změny váhy kritéria na pořadí variant',
                 'xaxis': {
-                    'title': f'Váha kritéria {zvolene_kriterium}',
+                    'title': 'Váha kritéria',
                     'tickformat': '.1f'
                 },
                 'yaxis': {
@@ -352,9 +633,37 @@ def vytvor_graf_citlivosti_poradi(analyza_citlivosti, varianty):
                     'rows': 1, 
                     'columns': 1
                 },
-                'margin': {'t': 50, 'b': 80}
+                'margin': {'t': 120, 'b': 80}
             }
         }
+        
+        # Přidáme dropdown menu, pokud máme data pro více kritérií
+        if vsechna_kriteria and vsechny_analyzy and len(menu_buttons) > 0:
+            fig['layout']['updatemenus'] = [
+                {
+                    'buttons': menu_buttons,
+                    'direction': 'down',
+                    'showactive': True,
+                    'x': 0.1,
+                    'y': 1.05,
+                    'xanchor': 'left',
+                    'yanchor': 'top'
+                }
+            ]
+            # Přidáme anotaci jako popisek pro dropdown
+            fig['layout']['annotations'] = [
+                {
+                    'text': 'Vyberte kritérium:',
+                    'x': 0.03,
+                    'y': 1.09,
+                    'xref': 'paper',
+                    'yref': 'paper',
+                    'showarrow': False,
+                    'font': {
+                        'size': 13
+                    }
+                }
+            ]
         
         return fig
     except Exception as e:
