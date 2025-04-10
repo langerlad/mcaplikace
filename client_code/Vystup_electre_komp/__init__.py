@@ -200,4 +200,4 @@ class Vystup_electre_komp(Vystup_electre_kompTemplate):
     self.plot_electre_vysledky.visible = False
     self.plot_sablona_skladba.visible = False
     self.plot_discordance.visible = False
-    self.plot_outranking.visible = False
+    self.plot_electre_outranking.visible = False

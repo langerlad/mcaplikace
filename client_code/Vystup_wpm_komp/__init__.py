@@ -252,7 +252,7 @@ class Vystup_wpm_komp(Vystup_wpm_kompTemplate):
   def _skryj_grafy(self):
     """Skryje všechny grafy ve formuláři."""
     self.plot_wpm_vysledek.visible = False
-    self.plot_wpm_heat_mapa.visible = False
+    self.plot_wpm_relativni_skore.visible = False
+    self.plot_pomery_variant.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False
-    self.plot_pomery_variant.visible = False
