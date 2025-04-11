@@ -36,17 +36,14 @@ def vytvor_analyzu_pdf(analyza_id, metoda="WSM"):
         metoda: Použitá metoda (WSM, WPM, atd.)
         
     Returns:
-        Media: PDF dokument
+        PDF dokument
     """
-    # Načtení dat analýzy
     analyza_data = nacti_analyzu(analyza_id)
     
-    # Vytvoření názvu souboru
     nazev = analyza_data.get("nazev", "Analyza")
     bezpecny_nazev = nazev.replace(" ", "_").replace("/", "_").replace("\\", "_")
     nazev_souboru = f"{bezpecny_nazev}_{metoda}.pdf"
     
-    # Určení, který formulář se má použít podle metody
     if metoda == "WSM":
         formular = "Vystup_wsm_komp"
     elif metoda == "WPM":
@@ -60,59 +57,12 @@ def vytvor_analyzu_pdf(analyza_id, metoda="WSM"):
     else:
         raise ValueError(f"Nepodporovaná metoda: {metoda}")
     
-    # Konfigurace PDF rendereru s optimalizovanými nastaveními
     pdf_renderer = anvil.pdf.PDFRenderer(
         filename=nazev_souboru,
-        # Nastavení A4 na šířku (landscape) pro lepší zobrazení velkých tabulek a grafů
         page_size="A4",
-        landscape=True,
-        # Menší okraje pro maximální prostor pro obsah
-        margin_top="1cm",
-        margin_bottom="1cm",
-        margin_left="1cm",
-        margin_right="1cm",
-        # Nastavení chování stránkování - zabraňuje dělení grafů a tabulek na více stránek
-        css="""
-        /* Zamezení dělení grafů na více stránek */
-        .plot {
-            page-break-inside: avoid;
-        }
-        
-        /* Zamezení dělení tabulek na více stránek */
-        .mcapp-table-container {
-            page-break-inside: avoid;
-        }
-        
-        /* Úprava velikosti tabulek pro lepší zobrazení */
-        .mcapp-table {
-            font-size: 8pt;
-            width: 100%;
-        }
-        
-        /* Zmenšení polštářů v buňkách tabulky pro úsporu místa */
-        .mcapp-table th, .mcapp-table td {
-            padding: 2px 4px;
-        }
-        
-        /* Zalomení stránek před novými sekcemi */
-        .mcapp-section {
-            page-break-before: always;
-        }
-        
-        /* První sekce nemá zalomení před sebou */
-        .mcapp-section:first-child {
-            page-break-before: avoid;
-        }
-        
-        /* HTML komponenta se nevejde na stránku - výška bude omezena */
-        .html-component {
-            max-height: 100%;
-            overflow: visible;
-        }
-        """
-    )
-    
-    # Vygenerování PDF
+        landscape=False,
+    )    
+  
     pdf = pdf_renderer.render_form(formular, analyza_id=analyza_id)
     
     return pdf

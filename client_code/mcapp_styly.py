@@ -319,6 +319,61 @@ def ziskej_css_styly():
       color: #757575;
       margin-left: 10px;
     }
+
+    /* Specifické styly pro tisk a PDF export */
+    @media print {
+      /* Vypnutí skrolování u tabulek */
+      .mcapp-table-container {
+        overflow: visible !important;
+        width: auto !important;
+        height: auto !important;
+      }
+      
+      /* Zmenšení písma v tabulkách aby se vešly na stránku */
+      .mcapp-table {
+        font-size: 9pt !important;
+      }
+      
+      /* Zmenšení odsazení buněk v tabulkách */
+      .mcapp-table th, .mcapp-table td {
+        padding: 3px 5px !important;
+      }
+      
+      /* Zabránění rozdělení tabulek a grafů na více stránek */
+      .mcapp-table-container, .plot, .mcapp-card {
+        page-break-inside: avoid !important;
+      }
+      
+      /* Vždy zobrazit obsah detailů (nepoužívat skrývání/zobrazování) */
+      .details-content {
+        display: block !important;
+      }
+      
+      /* Skrytí tlačítek a prvků interakce */
+      .toggle-hint, .export_panel {
+        display: none !important;
+      }
+      
+      /* Vložení stránkování */
+      .mcapp-section {
+        page-break-before: always;
+      }
+      
+      /* První sekce nemá stránkování */
+      .mcapp-section:first-child {
+        page-break-before: auto;
+      }
+      
+      /* Zabránění prázdným stránkám */
+      .mcapp-section:last-child {
+        page-break-after: avoid;
+      }
+      
+      /* Zajištění, že PDF má bílé pozadí */
+      body, .mcapp-wsm-results {
+        background-color: white !important;
+      }
+    }
     """
 
 def vloz_styly_do_html(html_obsah):
