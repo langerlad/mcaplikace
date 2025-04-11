@@ -15,8 +15,9 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
         # Inicializace správce stavu
         self.spravce = Spravce_stavu.Spravce_stavu()
         
-        # Nastavení handleru pro aktualizaci seznamu analýz
+        # Nastavení handlerů pro aktualizaci seznamu analýz
         self.repeating_panel_dashboard.set_event_handler('x-refresh', self.nahraj_analyzy)
+        self.data_grid_dash.set_event_handler('x-refresh', self.nahraj_analyzy)
         
         # Načtení analýz při startu
         self.nahraj_analyzy()
@@ -42,14 +43,14 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
                 # Žádné analýzy k zobrazení
                 self.label_no_analyzy.visible = True
                 self.repeating_panel_dashboard.visible = False
+                self.data_grid_dash.visible = False
                 Utils.zapsat_info("Žádné analýzy nenalezeny")
                 return
             
             # Máme analýzy k zobrazení
             self.label_no_analyzy.visible = False
-            self.repeating_panel_dashboard.visible = True
             
-            # Formátování dat pro repeating panel
+            # Formátování dat pro repeating panel (původní implementace)
             self.repeating_panel_dashboard.items = [
                 {
                     'id': a['id'],
@@ -59,6 +60,23 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
                     'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else ""
                 } for a in analyzy
             ]
+            
+            # Formátování dat pro data grid - klíčové je, že předáváme všechny potřebné informace
+            # podle toho, jak to vidíme v Administrace_komp
+            self.data_grid_dash.items = [
+                {
+                    # ID musí být vždy přítomno pro fungování akcí
+                    'id': a['id'],
+                    # Mapování pro zobrazení v UI podle data_key v data_grid_dash
+                    'column_1': a['nazev'],  # Sloupec Název
+                    'column_2': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else "",  # Sloupec Upraveno
+                    'column_3': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else ""  # Sloupec Vytvořeno
+                } for a in analyzy
+            ]
+            
+            # Zobrazíme datagrid a skryjeme repeating panel pro testování
+            self.repeating_panel_dashboard.visible = True
+            self.data_grid_dash.visible = True
             
             Utils.zapsat_info(f"Načteno {len(analyzy)} analýz")
             

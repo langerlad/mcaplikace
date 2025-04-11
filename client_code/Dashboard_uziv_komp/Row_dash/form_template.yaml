@@ -1,13 +1,19 @@
 components:
-- layout_properties: {column: JKSDUP}
+- data_bindings:
+  - {code: 'self.item[''nazev'']', property: text, writeback: false}
+  layout_properties: {column: JKSDUP}
   name: label_nazev
   properties: {}
   type: Label
-- layout_properties: {column: VJQQOR}
+- data_bindings:
+  - {code: 'self.item[''datum_upravy'']', property: text, writeback: false}
+  layout_properties: {column: VJQQOR}
   name: label_upraveno
   properties: {}
   type: Label
-- layout_properties: {column: OJLQEN}
+- data_bindings:
+  - {code: 'self.item[''datum_vytvoreni'']', property: text, writeback: false}
+  layout_properties: {column: OJLQEN}
   name: label_vytvoreno
   properties: {}
   type: Label

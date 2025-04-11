@@ -20,6 +20,7 @@ components:
   - name: repeating_panel_dash
     properties: {item_template: Dashboard_uziv_komp.Row_dash}
     type: RepeatingPanel
+  event_bindings: {}
   layout_properties: {grid_position: 'QWZBQP,UZNJKN'}
   name: data_grid_dash
   properties:
@@ -30,6 +31,7 @@ components:
     - {data_key: column_1, id: SGKOCM, title: Akce}
   type: DataGrid
 container:
+  event_bindings: {}
   properties: {col_widths: '{"QWOBMY":30,"VUFSKI":30,"JMMVBS":20}'}
   type: ColumnPanel
 is_package: true
