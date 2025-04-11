@@ -322,26 +322,47 @@ def ziskej_css_styly():
 
     /* Specifické styly pro tisk a PDF export */
     @media print {
-      /* Vypnutí skrolování u tabulek */
+      /* Vypnutí skrolování u tabulek - zajistí zobrazení celých tabulek */
       .mcapp-table-container {
         overflow: visible !important;
         width: auto !important;
         height: auto !important;
       }
       
-      /* Zmenšení písma v tabulkách aby se vešly na stránku */
+      /* Optimalizace velikosti tabulek */
       .mcapp-table {
-        font-size: 9pt !important;
+        font-size: 8pt !important;
+        width: 100% !important;
+        max-width: none !important;
       }
       
       /* Zmenšení odsazení buněk v tabulkách */
       .mcapp-table th, .mcapp-table td {
-        padding: 3px 5px !important;
+        padding: 2px 4px !important;
       }
       
-      /* Zabránění rozdělení tabulek a grafů na více stránek */
-      .mcapp-table-container, .plot, .mcapp-card {
+      /* Zamezení rozdělení tabulek, karet a sekcí přes stránky */
+      .mcapp-table-container, .mcapp-card, .mcapp-section {
         page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      
+      /* Plotly grafy - obecné třídy používané Plotly knihovnou */
+      .js-plotly-plot, .plotly-graph-div, .plot-container, [data-component-type="Plot"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+      }
+      
+      /* Anvil Plot komponenty - přesnější cílení */
+      .anvil-component[data-component-type="Plot"], 
+      .anvil-container > [id^="plotly-"],
+      .anvil-component-container > div[class*="plotly"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        overflow: visible !important;
       }
       
       /* Vždy zobrazit obsah detailů (nepoužívat skrývání/zobrazování) */
@@ -350,28 +371,24 @@ def ziskej_css_styly():
       }
       
       /* Skrytí tlačítek a prvků interakce */
-      .toggle-hint, .export_panel {
+      .toggle-hint, .btn, button {
         display: none !important;
-      }
-      
-      /* Vložení stránkování */
-      .mcapp-section {
-        page-break-before: always;
-      }
-      
-      /* První sekce nemá stránkování */
-      .mcapp-section:first-child {
-        page-break-before: auto;
-      }
-      
-      /* Zabránění prázdným stránkám */
-      .mcapp-section:last-child {
-        page-break-after: avoid;
       }
       
       /* Zajištění, že PDF má bílé pozadí */
       body, .mcapp-wsm-results {
         background-color: white !important;
+      }
+      
+      /* Nastavení pro kontejnery Anvil */
+      .anvil-container {
+        width: 100% !important;
+        overflow: visible !important;
+      }
+      
+      /* Zajistit, že všechny skrolovací elementy zobrazí celý obsah */
+      * {
+        overflow: visible !important;
       }
     }
     """
