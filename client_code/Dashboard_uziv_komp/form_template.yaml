@@ -16,6 +16,19 @@ components:
   name: repeating_panel_dashboard
   properties: {item_template: Dashboard_uziv_komp.Analyza_Row}
   type: RepeatingPanel
+- components:
+  - name: repeating_panel_dash
+    properties: {item_template: Dashboard_uziv_komp.RowTemplate1}
+    type: RepeatingPanel
+  layout_properties: {grid_position: 'QWZBQP,UZNJKN'}
+  name: data_grid_dash
+  properties:
+    columns:
+    - {data_key: column_1, expand: false, id: JKSDUP, title: Název, width: 393}
+    - {data_key: column_2, expand: false, id: VJQQOR, title: Upraveno, width: '120'}
+    - {data_key: column_3, expand: false, id: OJLQEN, title: Vytvořeno, width: '120'}
+    - {data_key: column_1, id: SGKOCM, title: Akce}
+  type: DataGrid
 container:
   properties: {col_widths: '{"QWOBMY":30,"VUFSKI":30,"JMMVBS":20}'}
   type: ColumnPanel
