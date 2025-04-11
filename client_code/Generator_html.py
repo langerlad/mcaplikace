@@ -2566,3 +2566,118 @@ def vytvor_sekci_vysledku_mabac(mabac_vysledky):
         </div>
     </div>
     """
+
+# Funkce pro generování PDF
+def vytvor_pdf_z_html(html_obsah, nazev_analyzy="Analýza", metoda="WSM"):
+    """
+    Vytvoří PDF dokument z HTML obsahu analýzy.
+    
+    Args:
+        html_obsah: HTML obsah pro konverzi do PDF
+        nazev_analyzy: Název analýzy pro pojmenování souboru
+        metoda: Použitá metoda analýzy
+        
+    Returns:
+        Objekt Media pro stažení PDF
+    """
+    from anvil import Media
+    from anvil.pdf import render_html
+    
+    # Úprava HTML obsahu specificky pro PDF
+    # Odstraníme případné interaktivní prvky, které nefungují v PDF
+    # a přidáme další styly specifické pro PDF
+    html_pro_pdf = html_obsah
+    
+    # Odstranění JavaScriptu
+    import re
+    html_pro_pdf = re.sub(r'<script[^>]*>.*?</script>', '', html_pro_pdf, flags=re.DOTALL)
+    
+    # Vložení stylů do HTML obsahu
+    from . import mcapp_styly
+    html_s_css = mcapp_styly.vloz_styly_do_html(html_pro_pdf)
+    
+    # Přidání dalších stylů specifických pro PDF
+    pdf_styly = """
+    <style>
+    @page {
+      margin: 1cm;
+    }
+    body {
+      font-size: 11pt;
+      background-color: white !important;
+      color: black !important;
+    }
+    .mcapp-wsm-results {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /* Odstranění některých interaktivních prvků pro PDF */
+    .toggle-hint {
+      display: none;
+    }
+    /* Vždy zobrazit obsah místo toggle */
+    .details-content {
+      display: block !important;
+    }
+    /* Zajistit, aby tabulky nebyly oříznuté */
+    .mcapp-table-container {
+      width: 100%;
+      overflow: visible;
+    }
+    .mcapp-table {
+      font-size: 9pt;
+      width: 100%;
+      page-break-inside: avoid;
+    }
+    .mcapp-table th, .mcapp-table td {
+      padding: 4px 6px;
+    }
+    /* Zalomení stránek před novými sekcemi */
+    .mcapp-section {
+      page-break-before: auto;
+      page-break-after: auto;
+      page-break-inside: avoid;
+    }
+    /* Přidání záhlaví a patičky */
+    .pdf-header {
+      text-align: center;
+      font-size: 8pt;
+      color: #888;
+      position: running(header);
+    }
+    .pdf-footer {
+      text-align: center;
+      font-size: 8pt;
+      color: #888;
+      position: running(footer);
+    }
+    @page {
+      @top-center { content: element(header) }
+      @bottom-center { content: element(footer) }
+    }
+    </style>
+    """
+    
+    # Přidání patičky s názvem analýzy a datumem
+    import datetime
+    aktualni_datum = datetime.datetime.now().strftime("%d.%m.%Y")
+    
+    # Záhlaví a patička pro PDF
+    zahlavi_paticka = f"""
+    <div class="pdf-header">{nazev_analyzy} - {metoda} - {aktualni_datum}</div>
+    <div class="pdf-footer">Strana <span id="page"></span></div>
+    """
+    
+    # Spojení všeho dohromady
+    kompletni_html = html_s_css + pdf_styly + zahlavi_paticka
+    
+    # Vygenerování PDF z HTML
+    pdf_media = render_html(kompletni_html)
+    
+    # Vytvoření názvu souboru
+    bezpecny_nazev = nazev_analyzy.replace(" ", "_").replace("/", "_").replace("\\", "_")
+    nazev_souboru = f"{bezpecny_nazev}_{metoda}.pdf"
+    
+    # Vrácení objektu Media s nastaveným názvem souboru
+    return Media(pdf_media, content_type="application/pdf", name=nazev_souboru)
