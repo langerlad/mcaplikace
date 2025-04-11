@@ -10,12 +10,12 @@ components:
     event_bindings: {click: button_vypocet_click}
     layout_properties: {grid_position: 'WUIAWA,CUIMWE'}
     name: button_vypocet
-    properties: {align: center, icon: 'fa:bar-chart', role: secondary-color, text: Analyzovat, tooltip: Analyzovat data}
+    properties: {align: center, icon: 'fa:bar-chart', role: secondary-color, text: Analyzovat, tooltip: Vizualizace dat podle vybrané metody}
     type: Button
   - event_bindings: {click: button_upravit_click}
     layout_properties: {grid_position: 'WUIAWA,QJGUTW'}
     name: button_upravit
-    properties: {align: right, icon: 'fa:edit', role: primary-color, text: '', tooltip: Editovat analýzu}
+    properties: {align: right, icon: 'fa:edit', role: primary-color, text: '', tooltip: Editovat vstupní data}
     type: Button
   - event_bindings: {click: button_klonovat_click}
     layout_properties: {grid_position: 'WUIAWA,HLTDBX'}
@@ -25,7 +25,7 @@ components:
   - event_bindings: {click: button_smazat_click}
     layout_properties: {grid_position: 'WUIAWA,HJZWGM'}
     name: button_smazat
-    properties: {align: left, icon: 'fa:trash-o', role: primary-color, text: ''}
+    properties: {align: left, icon: 'fa:trash-o', role: primary-color, text: '', tooltip: Odstranit analýzu}
     type: Button
   - layout_properties: {grid_position: 'KONRHK,PQWIBQ'}
     name: label_5
@@ -50,11 +50,15 @@ components:
   - event_bindings: {click: link_zoom_edit_click}
     layout_properties: {grid_position: 'KONRHK,ABUPUF'}
     name: link_zoom_edit
-    properties: {align: center, icon: 'fa:code', text: JSON detail}
+    properties: {align: center, background: '', icon: 'fa:code', text: JSON detail, tooltip: Vstupní data - JSON}
+    type: Link
+  - layout_properties: {grid_position: 'KONRHK,DNWIEC'}
+    name: link_1
+    properties: {icon: 'fa:file-excel-o', text: Stáhnout analýzu, tooltip: Export analýzy do excelu}
     type: Link
   layout_properties: {grid_position: 'XBCGQH,EGBQBF'}
   name: card_1
-  properties: {col_widths: '{"EEHTOB":8,"BBHAXF":17,"JMYEDJ":60,"HJZWGM":9,"QJGUTW":7,"HLTDBX":10,"CUIMWE":20,"PQWIBQ":10,"ABUPUF":11}', role: card}
+  properties: {col_widths: '{"EEHTOB":5,"BBHAXF":15,"JMYEDJ":60,"HJZWGM":9,"QJGUTW":7,"HLTDBX":10,"CUIMWE":20,"PQWIBQ":15,"ABUPUF":10,"OBYGFB":10,"DNWIEC":11}', role: card}
   type: ColumnPanel
 container:
   properties: {tooltip: Odstranit analýzu}
