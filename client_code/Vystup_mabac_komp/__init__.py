@@ -125,10 +125,11 @@ class Vystup_mabac_komp(Vystup_mabac_kompTemplate):
         )
 
         # Graf pro vizualizaci vzdáleností od hraničních oblastí (G)
-        self.plot_mabac_vzdalenosti.figure = Vizualizace.vytvor_skladany_sloupovy_graf(
+        self.plot_mabac_vzdalenosti.figure = Vizualizace.vytvor_graf_mabac_vzdalenosti_kriterii(
             serazene_varianty,  # Použití seřazených variant
             self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"],
-            q_matrix_serazena
+            q_matrix_serazena,
+            self.vysledky_vypoctu["typy_kriterii"]  # Přidáno pro zobrazení typů kritérií
         )
         self.plot_mabac_vzdalenosti.visible = True
 

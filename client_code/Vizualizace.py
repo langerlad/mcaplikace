@@ -9,6 +9,132 @@ import math
 from . import Utils
 
 
+def vytvor_graf_mabac_vzdalenosti_kriterii(varianty, kriteria, q_matrix, typy_kriterii=None):
+    """
+    Vytvoří sloupcový graf zobrazující vzdálenosti od hraniční aproximační oblasti (G)
+    pro jednotlivá kritéria v metodě MABAC.
+    
+    Args:
+        varianty: Seznam názvů variant
+        kriteria: Seznam názvů kritérií
+        q_matrix: 2D matice vzdáleností od hraničních hodnot [varianty][kriteria]
+        typy_kriterii: Seznam typů kritérií ("max" nebo "min") pro popisy v legendě
+        
+    Returns:
+        dict: Plotly figure configuration
+    """
+    try:
+        # Vytvoření datových sérií pro každé kritérium
+        data = []
+        
+        # Definice barev pro kritéria
+        colors = ['#3498db', '#f39c12', '#2ecc71', '#e74c3c', '#9b59b6', 
+                 '#1abc9c', '#d35400', '#34495e', '#7f8c8d', '#2c3e50']
+        
+        # Pro každé kritérium vytvoříme jednu sérii dat
+        for j, kriterium in enumerate(kriteria):
+            hodnoty_kriteria = []
+            
+            # Připravíme hodnoty pro toto kritérium u všech variant
+            for i, var in enumerate(varianty):
+                if i < len(q_matrix) and j < len(q_matrix[i]):
+                    hodnoty_kriteria.append(q_matrix[i][j])
+                else:
+                    hodnoty_kriteria.append(0)  # Výchozí hodnota, pokud data chybí
+            
+            # Přidáme typ kritéria do názvu, pokud je k dispozici
+            nazev_kriteria = kriterium
+            if typy_kriterii and j < len(typy_kriterii):
+                nazev_kriteria = f"{kriterium} ({typy_kriterii[j]})"
+            
+            # Barva pro toto kritérium (cyklické použití barev)
+            color = colors[j % len(colors)]
+            
+            data.append({
+                'type': 'bar',
+                'name': nazev_kriteria,
+                'x': varianty,
+                'y': hodnoty_kriteria,
+                'text': [f'{h:.2f}' for h in hodnoty_kriteria],
+                'textposition': 'auto',
+                'marker': {'color': color},
+                'hovertemplate': '%{x}<br>' + f'{kriterium}: ' + '%{y:.3f}<extra></extra>'
+            })
+        
+        # Určení min/max hodnot pro nastavení rozsahu osy Y
+        all_values = [val for serie in data for val in serie['y']]
+        min_val = min(all_values) if all_values else 0
+        max_val = max(all_values) if all_values else 0
+        
+        # Přidání prostoru nad a pod grafy (10% rozsahu)
+        y_padding = (max_val - min_val) * 0.1 if max_val != min_val else 0.1
+        y_min = min(0, min_val - y_padding)  # Vždy zahrnout nulu
+        y_max = max(max_val + y_padding, 0.1)  # Minimální výška grafu
+            
+        # Vytvoření grafu
+        fig = {
+            'data': data,
+            'layout': {
+                'title': 'Vzdálenosti od hraniční aproximační oblasti pro jednotlivá kritéria',
+                'barmode': 'group',  # Skupinový sloupcový graf
+                'bargroupgap': 0.3,  # Větší mezera mezi skupinami sloupců (variantami)
+                'bargap': 0.1,       # Mezera mezi sloupci (kritérii)
+                'xaxis': {
+                    'title': 'Varianty',
+                    'tickangle': -45 if len(varianty) > 4 else 0,
+                    'showgrid': False  # Vypneme standardní grid
+                },
+                'yaxis': {
+                    'title': 'Vzdálenost od BAO',
+                    'range': [y_min, y_max],
+                    'zeroline': True,
+                    'zerolinecolor': 'black',
+                    'zerolinewidth': 1
+                },
+                'showlegend': True,
+                'legend': {
+                    'title': 'Kritéria',
+                    'orientation': 'h',  # Horizontální legenda
+                    'y': -0.3,  # Umístění pod grafem - více místa
+                    'x': 0.5,
+                    'xanchor': 'center'
+                },
+                'margin': {'t': 50, 'b': 180},  # Zvětšený spodní okraj pro legendu
+                'shapes': []  # Přidáme vlastní vertikální čáry
+            }
+        }
+        
+        # Přidáme vertikální čáry mezi variantami
+        if len(varianty) > 1:
+            # Výpočet pozic pro vertikální čáry
+            for i in range(1, len(varianty)):
+                # Pozice čáry mezi variantami je v polovině mezery
+                x_pos = i - 0.5
+                
+                fig['layout']['shapes'].append({
+                    'type': 'line',
+                    'x0': x_pos,
+                    'x1': x_pos,
+                    'y0': y_min,  # Od spodní hranice grafu
+                    'y1': y_max,  # Po horní hranici
+                    'line': {
+                        'color': 'rgba(0,0,0,0.3)',
+                        'width': 1,
+                        'dash': 'dash'  # Přerušovaná čára pro lepší vizuální oddělení
+                    }
+                })
+        
+        return fig
+    except Exception as e:
+        Utils.zapsat_chybu(f"Chyba při vytváření grafu vzdáleností od BAO: {str(e)}")
+        # Vrátíme prázdný graf
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Chyba při vytváření grafu vzdáleností od hraniční oblasti'
+            }
+        }
+
 def vytvor_radar_graf_mabac(mabac_vysledky, varianty, kriteria, vazena_matice=None):
     """
     Vytvoří radarový graf pro vizualizaci MABAC výsledků.
@@ -195,7 +321,8 @@ def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta,
         for varianta, _, hodnota in results:
             varianty.append(varianta)
             skore.append(hodnota)
-            # Nejlepší varianta bude mít zelenou, nejhorší červenou
+            # Nejlepší varianta bude mít zelenou, nejhorší červenou, ostatní modrou
+            # Pro metody, kde záporné hodnoty jsou špatné (např. MABAC)
             if varianta == nejlepsi_varianta:
                 colors.append('#2ecc71')  # zelená
             elif varianta == nejhorsi_varianta:
@@ -203,6 +330,15 @@ def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta,
             else:
                 colors.append('#3498db')  # modrá
         
+        # Zjištění min/max hodnot pro nastavení rozsahu osy Y
+        min_skore = min(skore)
+        max_skore = max(skore)
+        
+        # Přidání určitého prostoru nad a pod grafy (10% rozsahu)
+        y_padding = (max_skore - min_skore) * 0.1 if max_skore != min_skore else 0.1
+        y_min = min(0, min_skore - y_padding)  # Vždy zahrnout nulu
+        y_max = max_skore + y_padding
+                
         # Vytvoření grafu
         fig = {
             'data': [{
@@ -212,18 +348,21 @@ def vytvor_sloupovy_graf_vysledku(results, nejlepsi_varianta, nejhorsi_varianta,
                 'marker': {
                     'color': colors
                 },
-                'text': [f'{s:.3f}' for s in skore],  # Zobrazení hodnot nad sloupci
+                'text': [f'{s:.4f}' for s in skore],  # Zobrazení hodnot nad/pod sloupci
                 'textposition': 'auto',
             }],
             'layout': {
-                'title': f'Celkové skóre variant{f" ({nazev_metody})" if nazev_metody else ""}',
+                'title': f'Celkové hodnoty kriteriální funkce (S){f" ({nazev_metody})" if nazev_metody else ""}',
                 'xaxis': {
                     'title': 'Varianty',
                     'tickangle': -45 if len(varianty) > 4 else 0  # Natočení popisků pro lepší čitelnost
                 },
                 'yaxis': {
-                    'title': 'Skóre',
-                    'range': [0, max(skore) * 1.1] if skore else [0, 1]  # Trochu místa nad sloupci pro hodnoty
+                    'title': 'Hodnota S',
+                    'range': [y_min, y_max],  # Dynamický rozsah na základě dat
+                    'zeroline': True,         # Zobrazení čáry na nule
+                    'zerolinecolor': 'black', # Barva čáry na nule
+                    'zerolinewidth': 1        # Tloušťka čáry na nule
                 },
                 'showlegend': False,
                 'margin': {'t': 50, 'b': 100}  # Větší okraje pro popisky

@@ -150,26 +150,41 @@ class Vystup_topsis_komp(Vystup_topsis_kompTemplate):
         # Analýza citlivosti - povolená pouze pokud máme více než jedno kritérium
         kriteria = self.vysledky_vypoctu["norm_vysledky"]["nazvy_kriterii"]
         if len(kriteria) > 1:
-            # Výpočet analýzy citlivosti pro první kritérium
-            analyza_citlivosti = Vypocty.vypocitej_analyzu_citlivosti(
-                self.vysledky_vypoctu["norm_vysledky"]["normalizovana_matice"],
-                self.vysledky_vypoctu["vahy"],
-                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
-                kriteria,
-                metoda="topsis",
-                typy_kriterii=self.vysledky_vypoctu["typy_kriterii"]
-            )
-
-            # Grafy citlivosti
+            # Připravíme analýzy citlivosti pro všechna kritéria
+            vsechny_analyzy = {}
+            
+            # Pro každé kritérium
+            for i, kriterium in enumerate(kriteria):
+                # Výpočet analýzy citlivosti pro toto kritérium
+                analyza = Vypocty.vypocitej_analyzu_citlivosti(
+                    self.vysledky_vypoctu["norm_vysledky"]["normalizovana_matice"],
+                    self.vysledky_vypoctu["vahy"],
+                    self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+                    kriteria,
+                    metoda="topsis",
+                    typy_kriterii=self.vysledky_vypoctu["typy_kriterii"],
+                    vyber_kriteria=i  # Index aktuálního kritéria
+                )
+                
+                vsechny_analyzy[kriterium] = analyza
+            
+            # Výchozí analýza pro první kritérium pro zpětnou kompatibilitu
+            analyza_citlivosti = vsechny_analyzy[kriteria[0]]
+            
+            # Grafy citlivosti s dropdown menu
             self.plot_citlivost_skore.figure = Vizualizace.vytvor_graf_citlivosti_skore(
                 analyza_citlivosti, 
-                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+                kriteria,  # Seznam všech kritérií
+                vsechny_analyzy  # Výsledky analýzy pro všechna kritéria
             )
             self.plot_citlivost_skore.visible = True
-
+            
             self.plot_citlivost_poradi.figure = Vizualizace.vytvor_graf_citlivosti_poradi(
                 analyza_citlivosti, 
-                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"]
+                self.vysledky_vypoctu["norm_vysledky"]["nazvy_variant"],
+                kriteria,
+                vsechny_analyzy
             )
             self.plot_citlivost_poradi.visible = True
         else:
