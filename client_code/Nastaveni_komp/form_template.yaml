@@ -8,6 +8,60 @@ components:
   properties: {height: 32}
   type: Spacer
 - components:
+  - layout_properties: {grid_position: 'PRVOXY,HLFUUS'}
+    name: label_4
+    properties: {bold: true, text: 'Výběr metody pro stanovení vah  kritérií:'}
+    type: Label
+  - layout_properties: {grid_position: 'NWNXFT,FUDWPX MMRWAT,KYZSTO'}
+    name: radio_button_1
+    properties: {bold: true, text: Přímé přiřazení vah}
+    type: RadioButton
+  - layout_properties: {grid_position: 'NWNXFT,FUDWPX ZBOUUE,UBEMRE'}
+    name: radio_button_2
+    properties: {bold: true, text: Párové srovnání (AHP metodika)}
+    type: RadioButton
+  - layout_properties: {grid_position: 'NWNXFT,FUDWPX BVZDNI,MQZOIF'}
+    name: radio_button_3
+    properties: {bold: true, text: Entropie (Entropy weight method)}
+    type: RadioButton
+  - layout_properties: {grid_position: 'NWNXFT,AKSUVS GWOHUI,SWWSZL'}
+    name: label_5
+    properties: {text: 'uživatel sám určí váhy tak, aby jejich součet byl 1'}
+    type: Label
+  - layout_properties: {grid_position: 'NWNXFT,AKSUVS TYQMUC,PGLZTD'}
+    name: label_6
+    properties: {text: 'uživatel každé dvě kritéria vzájemně porovná, a z těchto hodnocení se pak dopočítají váhy'}
+    type: Label
+  - layout_properties: {grid_position: 'NWNXFT,AKSUVS HFEUNF,MOTOVA'}
+    name: label_7
+    properties: {text: 'čím větší rozptyl/hodnotová různorodost v daném kritériu, tím větší váhu kritériu přiřadí'}
+    type: Label
+  - layout_properties: {grid_position: 'KOSCUO,KDFDMR'}
+    name: spacer_4
+    properties: {height: 32}
+    type: Spacer
+  - event_bindings: {click: button_ulozit_nastaveni_click}
+    layout_properties: {grid_position: 'CYWSGI,PNSPGW'}
+    name: button_ulozit_nastaveni_1
+    properties:
+      align: right
+      bold: false
+      icon: fa:save
+      role: primary-color
+      spacing:
+        margin: [null, '80', null, null]
+        padding: [null, '16', null, null]
+      text: Uložit nastavení
+    type: Button
+  layout_properties: {grid_position: 'PDHUSM,SRUXRL'}
+  name: card_2
+  properties: {col_widths: '{"FUDWPX":20,"AKSUVS":40}', role: card}
+  type: ColumnPanel
+- layout_properties: {grid_position: 'NWJZQC,IENLRC'}
+  name: spacer_3
+  properties: {height: 32}
+  type: Spacer
+- components:
   - layout_properties: {grid_position: 'DDTEYP,EIPPEU'}
     name: label_1
     properties: {bold: true, text: 'Parametry pro metodu ELECTRE:'}
@@ -45,6 +99,10 @@ components:
       spacing:
         margin: [null, '80', null, null]
     type: ColumnPanel
+  - layout_properties: {grid_position: 'YUYEUX,PNDKRF'}
+    name: spacer_5
+    properties: {height: 32}
+    type: Spacer
   - event_bindings: {click: button_ulozit_nastaveni_click}
     layout_properties: {grid_position: 'PZGEJC,CGADIB'}
     name: button_ulozit_nastaveni
