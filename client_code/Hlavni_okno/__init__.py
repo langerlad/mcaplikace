@@ -46,7 +46,7 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     Navigace.go('administrace')
 
   def link_ucet_click(self, **event_args):
-    Navigace.go('ucet')
+    Navigace.go('domu')
 
   # Nahraje komponentu do pravého panelu
   def nahraj_komponentu(self, komp):

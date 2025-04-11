@@ -20,7 +20,6 @@ from .Info_komp import Info_komp
 from .Nastaveni_komp import Nastaveni_komp
 from .HERO_komp import HERO_komp
 from .Dashboard_uziv_komp import Dashboard_uziv_komp
-from .Ucet_komp import Ucet_komp
 from .Vystup_wsm_komp import Vystup_wsm_komp
 from .Vystup_wpm_komp import Vystup_wpm_komp
 from .Vystup_topsis_komp import Vystup_topsis_komp
@@ -69,12 +68,6 @@ KONFIGURACE_NAVIGACE = {
         'vyzaduje_prihlaseni': True,
         'vyzaduje_admin': True,
         'oznaceni_nav': 'administrace',
-        'kontrola_rozpracovane': True
-    },
-    'ucet': {
-        'komponenta': Ucet_komp,
-        'vyzaduje_prihlaseni': True,
-        'oznaceni_nav': 'ucet',
         'kontrola_rozpracovane': True
     },
     'vystup_wsm': {
