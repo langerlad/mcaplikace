@@ -473,17 +473,15 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
           
           # Mapování textových hodnot na číselné (pro AHP)
           hodnoty_mapa = {
-              "Je stejně důležité jako": 1,
-              "Je mírně důležitější než": 3,
-              "Je středně důležitější než": 5,
-              "Je silně důležitější než": 7, 
-              "Je velmi silně důležitější než": 8,
-              "Je extrémně důležitější než": 9,
-              "Je mírně méně důležité než": 1/3,
-              "Je středně méně důležité než": 1/5,
-              "Je silně méně důležité než": 1/7,
-              "Je velmi silně méně důležité než": 1/8,
-              "Je extrémně méně důležité než": 1/9
+              "obě kritéria jsou rovnocenná (1)": 1,
+              "je trochu důležitější (3) než": 3,
+              "je středně důležitější (5) než": 5,
+              "je mnohem důležitější (7) než": 7, 
+              "je extrémně důležitější (9) než": 9,
+              "Je je trochu méně důležité (1/3)": 1/3,
+              "Je středně méně důležité než (1/5)": 1/5,
+              "je mnohem méně důležité (1/7) než": 1/7,
+              "je extrémně méně důležité (1/9) než": 1/9
           }
           
           # Získáme číselnou hodnotu a uložíme do ahp_hodnoty
