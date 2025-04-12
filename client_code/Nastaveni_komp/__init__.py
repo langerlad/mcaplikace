@@ -11,7 +11,7 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
     self.init_components(**properties)
     self.spravce = Spravce_stavu.Spravce_stavu()
     
-    # Načtení hodnot při inicializaci
+    # Nacti aktuální nastavení při inicializaci
     self.nacti_nastaveni()
     
   def nacti_nastaveni(self):
@@ -20,7 +20,7 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
       # Přidáme debug výpis
       Utils.zapsat_info("Začínám načítat nastavení v Nastaveni_komp")
       
-      # Získání aktuálních hodnot
+      # Získání aktuálních hodnot z načteného uživatele
       nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
       
       Utils.zapsat_info(f"Načtené nastavení ze serveru: {nastaveni}")
@@ -30,12 +30,29 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
         self.text_box_index_souhlasu.text = str(nastaveni.get('electre_index_souhlasu', '0.7'))
         self.text_box_index_nesouhlasu.text = str(nastaveni.get('electre_index_nesouhlasu', '0.3'))
         
+        # Načtení metody stanovení vah
+        stanoveni_vah = nastaveni.get('stanoveni_vah', 'manual')
+        
+        # Nastavení správného radio buttonu
+        if stanoveni_vah == 'manual':
+          self.radio_button_manual.selected = True
+        elif stanoveni_vah == 'rank':
+          self.radio_button_rank.selected = True
+        elif stanoveni_vah == 'ahp':
+          self.radio_button_ahp.selected = True
+        elif stanoveni_vah == 'entropy':
+          self.radio_button_entropie.selected = True
+        else:
+          # Výchozí - manuální
+          self.radio_button_manual.selected = True
+        
         # Debug výpis aktuálně nastavených hodnot
-        Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}")
+        Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}, stanoveni_vah={stanoveni_vah}")
       else:
         # Nastavení výchozích hodnot
         self.text_box_index_souhlasu.text = '0.7'
         self.text_box_index_nesouhlasu.text = '0.3'
+        self.radio_button_manual.selected = True
         Utils.zapsat_info("Nastaveny výchozí hodnoty, protože nastavení ze serveru je None")
         
       self.label_chyba.visible = False
@@ -62,29 +79,49 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
             self.label_chyba.text = str(e)
             self.label_chyba.visible = True
             return
+        
+        # Zjištění zvolené metody stanovení vah
+        stanoveni_vah = 'manual'  # Výchozí hodnota
+        
+        if self.radio_button_manual.selected:
+            stanoveni_vah = 'manual'
+        elif self.radio_button_rank.selected:
+            stanoveni_vah = 'rank'
+        elif self.radio_button_ahp.selected:
+            stanoveni_vah = 'ahp'
+        elif self.radio_button_entropie.selected:
+            stanoveni_vah = 'entropy'
+        
+        # Debug výpis
+        Utils.zapsat_info(f"Ukládám metodu stanovení vah: {stanoveni_vah}")
       
         # Uložení nastavení
         nastaveni = {
-          'electre_index_souhlasu': index_souhlasu,
-          'electre_index_nesouhlasu': index_nesouhlasu
+            'electre_index_souhlasu': index_souhlasu,
+            'electre_index_nesouhlasu': index_nesouhlasu,
+            'stanoveni_vah': stanoveni_vah
         }
         
-        anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)
+        # Serverové volání pro uložení
+        uspech = anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)
+        
+        if not uspech:
+            raise ValueError("Nepodařilo se uložit nastavení na server")
         
         # Aktualizace správce stavu - vynutíme nové načtení
-        self.spravce.nacti_nastaveni_uzivatele()
+        # Důležité: musíme explicitně znovu načíst nastavení z DB
+        aktualni = self.spravce.nacti_nastaveni_uzivatele()
         
-        # Ověříme, že hodnoty byly správně aktualizovány
-        aktualni = self.spravce.ziskej_nastaveni_electre()
-        Utils.zapsat_info(f"Ověření aktualizace: souhlas={aktualni['index_souhlasu']}, nesouhlas={aktualni['index_nesouhlasu']}")
+        # Debug výpis pro kontrolu
+        Utils.zapsat_info(f"Aktualizované hodnoty ve správci stavu po opětovném načtení: {aktualni}")
         
         # Informování uživatele o úspěchu
         alert("Nastavení bylo úspěšně uloženo")
+        
+        # Znovu načteme formulář pro kontrolu
+        self.nacti_nastaveni()
         
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při ukládání nastavení: {str(e)}")
         self.label_chyba.text = f"Chyba při ukládání nastavení: {str(e)}"
         self.label_chyba.visible = True
-
-
-

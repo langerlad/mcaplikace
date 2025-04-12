@@ -435,36 +435,32 @@ def nacti_uzivatelske_nastaveni():
         email = current_user['email']
         zapsat_info(f"Přihlášený uživatel: {email}")
         
-        # Explicitní načtení celého řádku z tabulky users
-        from anvil.tables import app_tables
+        # Přímé načtení uživatelského řádku
         user_row = app_tables.users.get(email=email)
         
         if not user_row:
             zapsat_info(f"Nenalezen řádek pro uživatele {email}")
             return None
         
-        # Přímé získání hodnot z databázového řádku
+        # Vytvoření slovníku s nastavením - přímý přístup ke sloupcům
         try:
-            # Přímý přístup ke sloupcům
-            index_souhlasu = user_row['electre_index_souhlasu']
-            index_nesouhlasu = user_row['electre_index_nesouhlasu']
-            
-            zapsat_info(f"Načtené hodnoty přímo z DB: souhlasu={index_souhlasu}, nesouhlasu={index_nesouhlasu}")
-            
-            # Sestavení výsledku
+            # Je důležité získat skutečné hodnoty z databáze
             result = {
-                'electre_index_souhlasu': float(index_souhlasu) if index_souhlasu is not None else 0.7,
-                'electre_index_nesouhlasu': float(index_nesouhlasu) if index_nesouhlasu is not None else 0.3
+                'electre_index_souhlasu': float(user_row['electre_index_souhlasu'] or 0.7),
+                'electre_index_nesouhlasu': float(user_row['electre_index_nesouhlasu'] or 0.3),
+                'stanoveni_vah': user_row.get('stanoveni_vah', 'manual')  # Použijeme .get pro případ, že sloupec neexistuje
             }
             
-            zapsat_info(f"Vracím nastavení: {result}")
+            # Výpis pro kontrolu
+            zapsat_info(f"Skutečné hodnoty načtené z DB: {result}")
             return result
             
         except Exception as e:
             zapsat_chybu(f"Chyba při přístupu k sloupcům: {str(e)}")
             return {
                 'electre_index_souhlasu': 0.7,
-                'electre_index_nesouhlasu': 0.3
+                'electre_index_nesouhlasu': 0.3,
+                'stanoveni_vah': 'manual'
             }
     
     except Exception as e:
@@ -491,6 +487,7 @@ def uloz_uzivatelske_nastaveni(nastaveni):
         # Explicitně získáme hodnoty a ujistíme se, že se nepoužívají výchozí hodnoty
         index_souhlasu = nastaveni.get('electre_index_souhlasu')
         index_nesouhlasu = nastaveni.get('electre_index_nesouhlasu')
+        stanoveni_vah = nastaveni.get('stanoveni_vah', 'manual')
         
         # Kontrola, zda hodnoty nejsou None
         if index_souhlasu is None:
@@ -508,11 +505,16 @@ def uloz_uzivatelske_nastaveni(nastaveni):
         if not (0 <= index_nesouhlasu <= 1):
             raise ValueError("Index nesouhlasu musí být mezi 0 a 1")
         
+        # Kontrola platnosti metody stanovení vah
+        if stanoveni_vah not in ['manual', 'rank', 'ahp', 'entropy']:
+            stanoveni_vah = 'manual'  # Pokud hodnota není platná, použijeme výchozí
+            
         # Uložení nastavení do tabulky users
         uzivatel['electre_index_souhlasu'] = index_souhlasu
         uzivatel['electre_index_nesouhlasu'] = index_nesouhlasu
+        uzivatel['stanoveni_vah'] = stanoveni_vah
         
-        zapsat_info(f"Uloženo nastavení pro uživatele {uzivatel['email']}: {index_souhlasu}, {index_nesouhlasu}")
+        zapsat_info(f"Uloženo nastavení pro uživatele {uzivatel['email']}: souhlas={index_souhlasu}, nesouhlas={index_nesouhlasu}, stanoveni_vah={stanoveni_vah}")
         return True
         
     except Exception as e:

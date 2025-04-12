@@ -43,8 +43,12 @@ class Spravce_stavu:
       
         self._nastaveni_uzivatele = {
         'electre_index_souhlasu': 0.7,
-        'electre_index_nesouhlasu': 0.3
+        'electre_index_nesouhlasu': 0.3,
+        'stanoveni_vah': 'manual'
        }
+
+        # Metoda stanovení vah
+        self._metoda_stanoveni_vah = 'manual'
         
         Utils.zapsat_info("Spravce_stavu inicializován s novou strukturou dat")
     
@@ -399,7 +403,7 @@ class Spravce_stavu:
 
     def nacti_nastaveni_uzivatele(self):
         """
-        Načte a uloží nastavení přihlášeného uživatele.
+        Načte a uloží nastavení přihlášeného uživatele přímo z databáze.
         
         Returns:
             dict: Slovník s nastaveními uživatele nebo výchozí hodnoty
@@ -407,50 +411,82 @@ class Spravce_stavu:
         try:
             # Vynucené nové načtení nastavení ze serveru
             nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
-            # Kontrola, zda je uživatel přihlášen
-            if not self.je_prihlasen():
-                # Vrátíme výchozí hodnoty
-                return {
-                    'electre_index_souhlasu': 0.7,
-                    'electre_index_nesouhlasu': 0.3
-                }
             
-            # Načtení nastavení ze serveru
-            nastaveni = anvil.server.call('nacti_uzivatelske_nastaveni')
+            # Debug výpis pro kontrolu
+            Utils.zapsat_info(f"Načteno nastavení ze serveru v nacti_nastaveni_uzivatele: {nastaveni}")
             
-            # Pokud nastavení neexistuje, použijeme výchozí hodnoty
+            # Výchozí hodnoty pro případ chyby
+            vychozi_hodnoty = {
+                'electre_index_souhlasu': 0.7,
+                'electre_index_nesouhlasu': 0.3,
+                'stanoveni_vah': 'manual'
+            }
+            
+            # Pokud nastavení neexistuje nebo uživatel není přihlášen, vrátíme výchozí hodnoty
             if not nastaveni:
-                nastaveni = {
-                    'electre_index_souhlasu': 0.7,
-                    'electre_index_nesouhlasu': 0.3
-                }
-                
-            # Uložíme nastavení do správce stavu
-            self._nastaveni_uzivatele = nastaveni
-                
-            return self._nastaveni_uzivatele
+                # Uložíme výchozí hodnoty do instance
+                self._nastaveni_uzivatele = vychozi_hodnoty
+                self._metoda_stanoveni_vah = 'manual'
+                return vychozi_hodnoty
             
+            # Uložíme nastavení do instance
+            self._nastaveni_uzivatele = nastaveni
+            self._metoda_stanoveni_vah = nastaveni.get('stanoveni_vah', 'manual')
+            
+            # Vrátíme nastavení
+            return nastaveni
+                
         except Exception as e:
             Utils.zapsat_chybu(f"Chyba při načítání nastavení uživatele: {str(e)}")
-            # Vrátíme výchozí hodnoty
-            return {
+            # Nastavení výchozích hodnot v případě chyby
+            vychozi_hodnoty = {
                 'electre_index_souhlasu': 0.7,
-                'electre_index_nesouhlasu': 0.3
+                'electre_index_nesouhlasu': 0.3,
+                'stanoveni_vah': 'manual'
             }
-      
-    def ziskej_nastaveni_electre(self):
+            self._nastaveni_uzivatele = vychozi_hodnoty
+            self._metoda_stanoveni_vah = 'manual'
+            return vychozi_hodnoty
+          
+        def ziskej_nastaveni_electre(self):
+            """
+            Získá nastavení pro metodu ELECTRE.
+            Vždy načte aktuální hodnoty ze serveru.
+            
+            Returns:
+                dict: Slovník s parametry pro ELECTRE
+            """
+            # Vždy získáme aktuální nastavení ze serveru
+            aktualni_nastaveni = self.nacti_nastaveni_uzivatele()
+            
+            # Vrátíme parametry pro ELECTRE
+            return {
+                'index_souhlasu': aktualni_nastaveni.get('electre_index_souhlasu', 0.7),
+                'index_nesouhlasu': aktualni_nastaveni.get('electre_index_nesouhlasu', 0.3)
+            }
+
+    def ziskej_metodu_stanoveni_vah(self):
         """
-        Získá nastavení pro metodu ELECTRE.
-        Vždy načte aktuální hodnoty ze serveru.
+        Získá metodu stanovení vah pro kritéria.
+        Pokud není nastavení nacteno, načte ho ze serveru.
         
         Returns:
-            dict: Slovník s parametry pro ELECTRE
+            str: Kód metody stanovení vah ('manual', 'rank', 'ahp', 'entropy')
         """
-        # Vždy získáme aktuální nastavení ze serveru
+        # Pokud už máme nastavení načtené, použijeme ho
+        if hasattr(self, '_metoda_stanoveni_vah') and self._metoda_stanoveni_vah:
+            return self._metoda_stanoveni_vah
+        
+        # Jinak načteme aktuální nastavení ze serveru
         aktualni_nastaveni = self.nacti_nastaveni_uzivatele()
         
-        # Vrátíme parametry pro ELECTRE
-        return {
-            'index_souhlasu': aktualni_nastaveni.get('electre_index_souhlasu', 0.7),
-            'index_nesouhlasu': aktualni_nastaveni.get('electre_index_nesouhlasu', 0.3)
-        }
+        # Vrátíme vybranou metodu stanovení vah nebo výchozí hodnotu
+        metoda = aktualni_nastaveni.get('stanoveni_vah', 'manual')
+        
+        # Uložíme si metodu pro pozdější použití
+        self._metoda_stanoveni_vah = metoda
+        
+        # Debug výpis pro kontrolu
+        Utils.zapsat_info(f"Získána metoda stanovení vah: {metoda}")
+        
+        return metoda
