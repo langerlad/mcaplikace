@@ -75,8 +75,8 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
             ]
             
             # Zobrazíme datagrid a skryjeme repeating panel pro testování
-            self.repeating_panel_dashboard.visible = True
-            self.data_grid_dash.visible = True
+            # self.repeating_panel_dashboard.visible = True
+            # self.data_grid_dash.visible = True
             
             Utils.zapsat_info(f"Načteno {len(analyzy)} analýz")
             

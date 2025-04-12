@@ -340,9 +340,9 @@ def vytvor_komplexni_excel_report(analyza_id):
         nazev = analyza_data.get("nazev", "Analyza")
         bezpecny_nazev = nazev.replace(" ", "_").replace("/", "_").replace("\\", "_")
         
-        excel_media = Media(
-            output.getvalue(), 
+        excel_media = anvil.BlobMedia(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content=output.getvalue(), 
             name=f"{bezpecny_nazev}_komplexni_analyza.xlsx"
         )
         
@@ -1091,6 +1091,40 @@ def topsis_vypocet(matice, vahy, varianty, kriteria, typy_kriterii):
 # METODA ELECTRE
 # ========================
 
+def ziskej_nastaveni_electre():
+    """
+    Získá nastavení ELECTRE přímo z databáze pro aktuálního uživatele.
+    
+    Returns:
+        dict: Slovník s parametry {'index_souhlasu': float, 'index_nesouhlasu': float}
+    """
+    try:
+        # Získání aktuálního uživatele
+        uzivatel = anvil.users.get_user()
+        if not uzivatel:
+            # Pokud není uživatel přihlášen, vrátíme výchozí hodnoty
+            return {'index_souhlasu': 0.7, 'index_nesouhlasu': 0.3}
+        
+        # Získání parametrů přímo z databáze
+        index_souhlasu = uzivatel.get('electre_index_souhlasu')
+        index_nesouhlasu = uzivatel.get('electre_index_nesouhlasu')
+        
+        # Kontrola a nastavení výchozích hodnot
+        if index_souhlasu is None:
+            index_souhlasu = 0.7
+        if index_nesouhlasu is None:
+            index_nesouhlasu = 0.3
+            
+        return {
+            'index_souhlasu': float(index_souhlasu),
+            'index_nesouhlasu': float(index_nesouhlasu)
+        }
+        
+    except Exception as e:
+        # Při chybě použijeme výchozí hodnoty
+        zapsat_chybu(f"Chyba při načítání ELECTRE parametrů: {str(e)}")
+        return {'index_souhlasu': 0.7, 'index_nesouhlasu': 0.3}
+
 def vypocitej_electre_analyzu(analyza_data):
     """
     Centralizovaná funkce pro výpočet ELECTRE analýzy z dat.
@@ -1115,12 +1149,10 @@ def vypocitej_electre_analyzu(analyza_data):
         matice, typy_kriterii, varianty, kriteria, vahy = priprav_data_z_json(analyza_data)
         
         # 2. Získání parametrů ELECTRE z nastavení uživatele
-        from . import Spravce_stavu
-        spravce = Spravce_stavu.Spravce_stavu()
-        electre_params = spravce.ziskej_nastaveni_electre()
+        electre_params = ziskej_nastaveni_electre()
         index_souhlasu = electre_params['index_souhlasu'] 
         index_nesouhlasu = electre_params['index_nesouhlasu']
-        
+
         # 3. Normalizace matice pomocí min-max metody pro další výpočty
         norm_vysledky = normalizuj_matici_minmax(matice, typy_kriterii, varianty, kriteria)
         norm_matice = norm_vysledky['normalizovana_matice']

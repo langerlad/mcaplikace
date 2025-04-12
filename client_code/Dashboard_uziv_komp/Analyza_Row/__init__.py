@@ -265,29 +265,32 @@ class Analyza_Row(Analyza_RowTemplate):
             alert(f"Chyba při klonování analýzy: {str(e)}")
 
     def link_export_click(self, **event_args):
-      """Obsluha kliknutí na ikonu exportu do Excelu"""
-      try:
-          # Kontrola, zda máme ID analýzy
-          if not self.item and not hasattr(self.item, 'id'):
-              alert("Není k dispozici žádná analýza pro export.")
-              return
-          
-          # Zobrazení indikátoru průběhu
-          self.export_icon.icon = "fa:spinner fa-spin"
-          self.export_icon.tooltip = "Generuji Excel..."
-          self.export_icon.enabled = False
-          
-          # Volání serverové funkce pro komplexní export
-          excel = anvil.server.call('vytvor_komplexni_excel_report', self.item.id)
-          
-          # Stažení Excel souboru
-          download(excel)
-          
-      except Exception as e:
-          Utils.zapsat_chybu(f"Chyba při exportu: {str(e)}")
-          alert(f"Chyba při generování Excel reportu: {str(e)}")
-      finally:
-          # Obnovení ikony
-          self.export_icon.icon = "fa:file-excel-o"
-          self.export_icon.tooltip = "Exportovat do Excelu"
-          self.export_icon.enabled = True
+        """
+        Zpracuje požadavek na export analýzy do Excelu.
+        """
+        try:
+            Utils.zapsat_info(f"Požadavek na export analýzy s ID: {self.item['id']}")
+            
+            if not self.item and not hasattr(self.item, 'id'):
+                alert("Není k dispozici žádná analýza pro export.")
+                return
+        
+            # Zobrazení indikátoru průběhu
+            self.link_export.icon = "fa:spinner"
+            self.link_export.tooltip = "Generuji Excel..."
+            self.link_export.enabled = False
+            
+            # Volání serverové funkce pro komplexní export
+            excel = anvil.server.call('vytvor_komplexni_excel_report', self.item['id'])
+            
+            # Stažení Excel souboru
+            download(excel)
+            
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při exportu: {str(e)}")
+            alert(f"Chyba při generování Excel reportu: {str(e)}")
+        finally:
+            # Obnovení ikony
+            self.link_export.icon = "fa:file-excel-o"
+            self.link_export.tooltip = "Stáhnout celý výpočet do Excelu"
+            self.link_export.enabled = True

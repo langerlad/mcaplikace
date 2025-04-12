@@ -212,12 +212,12 @@ class Row_dash(Row_dashTemplate):
                 return
         
             # Zobrazení indikátoru průběhu
-            self.export_icon.icon = "fa:spinner fa-spin"
-            self.export_icon.tooltip = "Generuji Excel..."
-            self.export_icon.enabled = False
+            self.link_export.icon = "fa:spinner"
+            self.link_export.tooltip = "Generuji Excel..."
+            self.link_export.enabled = False
             
             # Volání serverové funkce pro komplexní export
-            excel = anvil.server.call('vytvor_komplexni_excel_report', self.item.id)
+            excel = anvil.server.call('vytvor_komplexni_excel_report', self.item['id'])
             
             # Stažení Excel souboru
             download(excel)
@@ -227,9 +227,9 @@ class Row_dash(Row_dashTemplate):
             alert(f"Chyba při generování Excel reportu: {str(e)}")
         finally:
             # Obnovení ikony
-            self.export_icon.icon = "fa:file-excel-o"
-            self.export_icon.tooltip = "Exportovat do Excelu"
-            self.export_icon.enabled = True
+            self.link_export.icon = "fa:file-excel-o"
+            self.link_export.tooltip = "Stáhnout celý výpočet do Excelu"
+            self.link_export.enabled = True
 
     def zobraz_dialog_vyberu_metody(self):
         """

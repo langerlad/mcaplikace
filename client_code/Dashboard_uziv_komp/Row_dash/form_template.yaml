@@ -18,15 +18,10 @@ components:
   properties: {}
   type: Label
 - components:
-  - event_bindings: {click: link_export_click}
-    layout_properties: {grid_position: 'TFZKGP,HHHUZF'}
-    name: link_export
-    properties: {align: center, foreground: '', icon: 'fa:file-excel-o', tooltip: Stáhnout celý výpočet}
-    type: Link
   - event_bindings: {click: link_vizualizace_click}
     layout_properties: {grid_position: 'TFZKGP,QKNFGP'}
     name: link_vizualizace
-    properties: {align: center, icon: 'fa:bar-chart', tooltip: Zobrazit výpočet podle zvolené metody}
+    properties: {align: center, bold: false, icon: 'fa:bar-chart', tooltip: Zobrazit výpočet podle zvolené metody}
     type: Link
   - event_bindings: {click: link_upravit_click}
     layout_properties: {grid_position: 'TFZKGP,RMYIIK'}
@@ -37,6 +32,11 @@ components:
     layout_properties: {grid_position: 'TFZKGP,ILIKZM'}
     name: link_klonovat
     properties: {align: center, icon: 'fa:clone', tooltip: Klonovat tuto analýzu}
+    type: Link
+  - event_bindings: {click: link_export_click}
+    layout_properties: {grid_position: 'TFZKGP,LXGBWD'}
+    name: link_export
+    properties: {align: center, foreground: '', icon: 'fa:file-excel-o', tooltip: Stáhnout celý výpočet do Excelu}
     type: Link
   - event_bindings: {click: link_json_click}
     layout_properties: {grid_position: 'TFZKGP,ZHGVBZ'}
@@ -50,7 +50,7 @@ components:
     type: Link
   layout_properties: {column: SGKOCM}
   name: column_panel_1
-  properties: {col_widths: '{"HHHUZF":10,"QKNFGP":10,"RMYIIK":10,"ILIKZM":10,"ZHGVBZ":10,"DMYDAY":10}'}
+  properties: {col_widths: '{"QKNFGP":10,"RMYIIK":10,"ILIKZM":10,"ZHGVBZ":10,"DMYDAY":10}'}
   type: ColumnPanel
 container: {type: DataRowPanel}
 is_package: true
