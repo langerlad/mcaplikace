@@ -83,8 +83,9 @@ components:
     properties: {height: 32}
     type: Spacer
   - components:
-    - name: repeating_panel_kriteria
-      properties: {item_template: Wizard_komp.Kriterium_Row}
+    - layout_properties: {}
+      name: repeating_panel_kriteria
+      properties: {item_template: Wizard_ahp_komp.Kriterium_Row_ahp}
       type: RepeatingPanel
     layout_properties: {grid_position: 'UEEROT,ERJJNR'}
     name: data_grid_kriteria

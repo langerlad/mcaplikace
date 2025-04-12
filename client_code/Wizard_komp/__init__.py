@@ -176,10 +176,13 @@ class Wizard_komp(Wizard_kompTemplate):
     # Získáme kritéria ve správném formátu pro UI
     kriteria = []
     for nazev, data in self.spravce.ziskej_kriteria().items():
+        vaha_hodnota = float(data.get("vaha", 0))
+        # Zaokrouhlíme na 5 desetinných míst
+        vaha_text = f"{vaha_hodnota:.5f}"
         kriteria.append({
             "nazev_kriteria": nazev,
             "typ": data.get("typ", "max"),
-            "vaha": data.get("vaha", 0)
+            "vaha": vaha_text
         })
     
     self.repeating_panel_kriteria.items = kriteria
