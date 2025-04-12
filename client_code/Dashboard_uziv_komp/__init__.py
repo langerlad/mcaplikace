@@ -63,14 +63,14 @@ class Dashboard_uziv_komp(Dashboard_uziv_kompTemplate):
             
             # Formátování dat pro data grid - klíčové je, že předáváme všechny potřebné informace
             # podle toho, jak to vidíme v Administrace_komp
-            self.data_grid_dash.items = [
+            self.repeating_panel_dash.items = [
                 {
                     # ID musí být vždy přítomno pro fungování akcí
                     'id': a['id'],
                     # Mapování pro zobrazení v UI podle data_key v data_grid_dash
-                    'column_1': a['nazev'],  # Sloupec Název
-                    'column_2': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else "",  # Sloupec Upraveno
-                    'column_3': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else ""  # Sloupec Vytvořeno
+                    'nazev': a['nazev'],  # Sloupec Název
+                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else "",  # Sloupec Upraveno
+                    'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else ""  # Sloupec Vytvořeno
                 } for a in analyzy
             ]
             

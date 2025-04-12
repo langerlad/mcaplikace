@@ -3,7 +3,7 @@ components:
   - {code: 'self.item[''nazev'']', property: text, writeback: false}
   layout_properties: {column: JKSDUP}
   name: label_nazev
-  properties: {}
+  properties: {bold: true}
   type: Label
 - data_bindings:
   - {code: 'self.item[''datum_upravy'']', property: text, writeback: false}
