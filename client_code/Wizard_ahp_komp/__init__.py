@@ -566,3 +566,143 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
       # Přechod na další krok - varianty
       self.card_ahp.visible = False
       self.card_krok_3.visible = True
+
+  def button_spocitat_ahp_click(self, **event_args):
+      """
+      Spočítá váhy kritérií metodou AHP a zobrazí je v rich_text_ahp_vahy
+      s podrobnějším vysvětlením mezikroků i interpretací CR.
+      """
+      try:
+          # 1) Načteme a zvalidujeme seznam kritérií
+          kriteria_dict = self.spravce.ziskej_kriteria()
+          kriteria_list = list(kriteria_dict.keys())
+          n = len(kriteria_list)
+          
+          if n < 2:
+              alert("Pro výpočet AHP potřebujete alespoň 2 kritéria.")
+              return
+          
+          # Vytvoření matice A (párového srovnání)
+          A = []
+          for i in range(n):
+              radek = [1.0] * n
+              A.append(radek)
+          
+          # Naplnění matice z ahp_hodnoty (které máte uložené)
+          for i in range(n):
+              for j in range(i+1, n):
+                  krit1 = kriteria_list[i]
+                  krit2 = kriteria_list[j]
+                  hodnota = self.ahp_hodnoty.get((krit1, krit2), 1.0)
+                  A[i][j] = hodnota
+                  A[j][i] = 1.0 / hodnota
+          
+          # 2) Výpočet váhy každého řádku = geometrický průměr
+          row_prod = []
+          for i in range(n):
+              soucin = 1.0
+              for j in range(n):
+                  soucin *= A[i][j]
+              row_prod.append(soucin)
+          
+          geo_mean = [prod**(1.0/n) for prod in row_prod]
+          
+          # Normalizace tak, aby součet všech vah = 1
+          suma_vah = sum(geo_mean)
+          w = [vaha / suma_vah for vaha in geo_mean]
+          
+          # 3) Výpočet konzistence
+          # A * w
+          Aw = []
+          for i in range(n):
+              soucin = 0.0
+              for j in range(n):
+                  soucin += A[i][j] * w[j]
+              Aw.append(soucin)
+          
+          # lambda_vec = (A w) / w
+          lambda_vec = []
+          for i in range(n):
+              if w[i] != 0:
+                  lambda_vec.append(Aw[i] / w[i])
+              else:
+                  lambda_vec.append(0)
+          
+          lambda_max = sum(lambda_vec) / n
+          
+          CI = (lambda_max - n) / (n - 1) if n > 1 else 0
+          
+          RI_values = {1: 0, 2: 0, 3: 0.58, 4: 0.9, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41, 9: 1.45, 10: 1.49}
+          RI = RI_values.get(n, 1.49)
+          
+          CR = CI / RI if RI != 0 else 0
+          
+          # 4) Tvorba detailního Markdownu
+          md_vystup = "## AHP – Výpočet vah kritérií\n\n"
+          
+          # (A) Ukázka matice A
+          md_vystup += "### Matice párového srovnání (A)\n"
+          md_vystup += "Hodnoty, kde je každá buňka > 1 znamená, že řádkové kritérium je tolikrát důležitější než sloupcové.\n\n"
+          md_vystup += "| &nbsp; | " + " | ".join(kriteria_list) + " |\n"
+          md_vystup += "|---" + "|---" * n + "|\n"
+          for i in range(n):
+              row_str = f"| **{kriteria_list[i]}** "
+              for j in range(n):
+                  row_str += f"| {A[i][j]:.3f} "
+              row_str += "|\n"
+              md_vystup += row_str
+          md_vystup += "\n"
+          
+          # (B) Geometrické průměry (row_prod a geo_mean)
+          md_vystup += "### Geometrický průměr řádků\n\n"
+          md_vystup += "Zde vidíte součin hodnot v řádku (row_prod) a jejich n-tou odmocninu (geo_mean). \n\n"
+          md_vystup += "| Kritérium | Součin řádku | GeoMean |\n"
+          md_vystup += "|---|---|---|\n"
+          for i, k in enumerate(kriteria_list):
+              md_vystup += f"| **{k}** | {row_prod[i]:.4f} | {geo_mean[i]:.4f} |\n"
+          md_vystup += "\n"
+          
+          # (C) Normalizované váhy
+          md_vystup += "### Normalizované váhy (w)\n\n"
+          md_vystup += "Po normalizaci mají váhy součet 1.\n\n"
+          md_vystup += "| Kritérium | Váha |\n"
+          md_vystup += "|---|---|\n"
+          
+          # Seřazené dle váhy
+          vahy_serazene = sorted(zip(kriteria_list, w), key=lambda x: x[1], reverse=True)
+          for (krit, vaha) in vahy_serazene:
+              md_vystup += f"| **{krit}** | {vaha:.4f} |\n"
+          md_vystup += "\n"
+          
+          md_vystup += "Součet vah = 1.0000\n\n"
+          
+          # (D) Konzistence
+          md_vystup += "### Konzistence hodnocení\n"
+          md_vystup += f"- **lambda_max** = {lambda_max:.3f}\n"
+          md_vystup += f"- **CI (Consistency Index)** = {CI:.4f}\n"
+          md_vystup += f"- **RI (Random Index)** pro n={n} je {RI:.2f}\n"
+          md_vystup += f"- **CR (Consistency Ratio)** = {CR:.4f}\n\n"
+          
+          # Interpretace CR
+          if CR <= 0.1:
+              md_vystup += "> **Interpretace**: CR ≤ 0.1 značí, že hodnocení je **dostatečně konzistentní**.\n"
+          elif CR <= 0.2:
+              md_vystup += "> **Interpretace**: CR je mezi 0.1 a 0.2 – jedná se o **hraniční** konzistenci. Je možné zvážit úpravu.\n"
+          else:
+              md_vystup += "> **Interpretace**: CR > 0.2 značí, že hodnocení je **nekonzistentní**. Doporučuje se **znovu** projít párová srovnání.\n"
+          
+          # Pokud CR je až moc vysoké, upozorníme
+          if CR > 0.1:
+              md_vystup += "\n> **Upozornění**: Konzistence je nad doporučenou hranicí 0.1, zvažte úpravu párových srovnání.\n"
+          
+          # 5) Vypsat do RichText
+          self.rich_text_ahp_vahy.content = md_vystup
+          self.rich_text_ahp_vahy.visible = True
+          
+          # 6) Případně zobrazit tlačítko pro další krok
+          self.button_dalsi_ahp.visible = True
+          
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při výpočtu AHP vah: {str(e)}")
+          alert(f"Chyba při výpočtu vah: {str(e)}")
+
