@@ -30,12 +30,12 @@ components:
   - {code: 'self.item[''vaha'']', property: text, writeback: false}
   layout_properties: {column: OJLQEN}
   name: label_vaha
-  properties: {visible: false}
+  properties: {visible: true}
   type: Label
 - event_bindings: {click: link_upravit_kriterium_click}
   layout_properties: {column: VSBMVR}
   name: link_upravit_kriterium
-  properties: {align: right, icon: 'fa:pencil-square', icon_align: right_edge, text: Upravit, tooltip: Upravit hodnoty, visible: false}
+  properties: {align: right, icon: 'fa:pencil-square', icon_align: right_edge, text: Upravit, tooltip: Upravit hodnoty, visible: true}
   type: Link
 container:
   properties:
