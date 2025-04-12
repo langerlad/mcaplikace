@@ -268,3 +268,28 @@ class Vystup_topsis_komp(Vystup_topsis_kompTemplate):
     self.plot_topsis_2d.visible = False
     self.plot_citlivost_skore.visible = False
     self.plot_citlivost_poradi.visible = False
+
+  def export_link_click(self, **event_args):
+        """Obsluha kliknutí na tlačítko pro export PDF."""
+        try:
+            # Kontrola, zda máme ID analýzy
+            if not self.analyza_id:
+                alert("Není k dispozici žádná analýza pro export.")
+                return
+            
+            # Změna textu tlačítka během generování
+            self.export_link.text = "Generuji PDF..."
+            self.export_link.enabled = False
+            
+            # Volání serverové funkce pro vytvoření PDF
+            pdf = anvil.server.call('vytvor_analyzu_pdf', self.analyza_id, "TOPSIS")
+            
+            # Stažení PDF
+            download(pdf)
+            
+        except Exception as e:
+            alert(f"Chyba při generování PDF: {str(e)}")
+        finally:
+            # Obnovení tlačítka
+            self.export_link.text = "Export do PDF"
+            self.export_link.enabled = True
