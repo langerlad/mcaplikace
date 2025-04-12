@@ -30,12 +30,26 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
         self.text_box_index_souhlasu.text = str(nastaveni.get('electre_index_souhlasu', '0.7'))
         self.text_box_index_nesouhlasu.text = str(nastaveni.get('electre_index_nesouhlasu', '0.3'))
         
-        # Debug výpis aktuálně nastavených hodnot
-        Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}")
+        # Načtení metody stanovení vah
+        stanoveni_vah = nastaveni.get('stanoveni_vah', 'manual')
+        
+        # Nastavení správného radio buttonu
+        if stanoveni_vah == 'manual':
+          self.radio_button_manual.selected = True
+        elif stanoveni_vah == 'rank':
+          self.radio_button_rank.selected = True
+        elif stanoveni_vah == 'ahp':
+          self.radio_button_ahp.selected = True
+        elif stanoveni_vah == 'entropy':
+          self.radio_button_entropie.selected = True
+        else:
+          # Výchozí - manuální
+          self.radio_button_manual.selected = True        
       else:
         # Nastavení výchozích hodnot
         self.text_box_index_souhlasu.text = '0.7'
         self.text_box_index_nesouhlasu.text = '0.3'
+        self.radio_button_manual.selected = True
         Utils.zapsat_info("Nastaveny výchozí hodnoty, protože nastavení ze serveru je None")
         
       self.label_chyba.visible = False
@@ -62,11 +76,24 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
             self.label_chyba.text = str(e)
             self.label_chyba.visible = True
             return
-      
-        # Uložení nastavení
+          
+        # Zjištění zvolené metody stanovení vah
+        if self.radio_button_manual.selected:
+          stanoveni_vah = 'manual'
+        elif self.radio_button_rank.selected:
+          stanoveni_vah = 'rank'
+        elif self.radio_button_ahp.selected:
+          stanoveni_vah = 'ahp'
+        elif self.radio_button_entropie.selected:
+          stanoveni_vah = 'entropy'
+        else:
+          stanoveni_vah = 'manual'  # Výchozí hodnota
+        
+      # Uložení nastavení
         nastaveni = {
           'electre_index_souhlasu': index_souhlasu,
-          'electre_index_nesouhlasu': index_nesouhlasu
+          'electre_index_nesouhlasu': index_nesouhlasu,
+          'stanoveni_vah': stanoveni_vah
         }
         
         anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)

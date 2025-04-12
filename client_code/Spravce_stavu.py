@@ -454,3 +454,17 @@ class Spravce_stavu:
             'index_souhlasu': aktualni_nastaveni.get('electre_index_souhlasu', 0.7),
             'index_nesouhlasu': aktualni_nastaveni.get('electre_index_nesouhlasu', 0.3)
         }
+
+def ziskej_metodu_stanoveni_vah(self):
+    """
+    Získá metodu stanovení vah pro kritéria.
+    Vždy načte aktuální hodnoty ze serveru.
+    
+    Returns:
+        str: Kód metody stanovení vah ('manual', 'rank', 'ahp', 'entropy')
+    """
+    # Vždy získáme aktuální nastavení ze serveru
+    aktualni_nastaveni = self.nacti_nastaveni_uzivatele()
+    
+    # Vrátíme vybranou metodu stanovení vah nebo výchozí hodnotu
+    return aktualni_nastaveni.get('stanoveni_vah', 'manual')

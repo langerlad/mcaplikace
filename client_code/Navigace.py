@@ -151,6 +151,27 @@ def go(stranka, **parametry):
             komp.nahraj_komponentu(komponenta())
             return
 
+        # Speciální případ pro přidání nové analýzy - vybíráme správný wizard podle metody stanovení vah
+        if stranka == 'pridat_analyzu':
+            komp = ziskej_komponentu()
+            
+            # Zjistíme metodu stanovení vah
+            metoda_vah = spravce.ziskej_metodu_stanoveni_vah()
+            
+            # Určíme, který wizard použít
+            if metoda_vah == 'ahp':
+                # Pro AHP použijeme speciální formulář
+                from .Wizard_ahp_komp import Wizard_ahp_komp
+                wizard_komponenta = Wizard_ahp_komp
+            else:
+                # Pro ostatní metody použijeme standardní formulář
+                wizard_komponenta = konfig['komponenta']
+                
+            # Načteme komponentu s případnými parametry
+            vsechny_parametry = {**(konfig.get('parametry', {})), **parametry}
+            komp.nahraj_komponentu(wizard_komponenta(**vsechny_parametry))
+            return
+      
         # Standardní navigace
         komp = ziskej_komponentu()
         # Sloučení výchozích parametrů z konfigurace s předanými parametry
