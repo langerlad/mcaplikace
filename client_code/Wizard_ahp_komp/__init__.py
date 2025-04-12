@@ -426,18 +426,16 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
                   
                   # Dropdown s volbami
                   volby = [
-                      "Je stejně důležité jako",
-                      "Je mírně důležitější než",
-                      "Je středně důležitější než",
-                      "Je silně důležitější než", 
-                      "Je velmi silně důležitější než",
-                      "Je extrémně důležitější než",
-                      "Je mírně méně důležité než",
-                      "Je středně méně důležité než",
-                      "Je silně méně důležité než",
-                      "Je velmi silně méně důležité než",
-                      "Je extrémně méně důležité než"
-                  ]
+                      "obě kritéria jsou rovnocenná (1)",
+                      "je trochu důležitější (3) než",
+                      "je středně důležitější (5) než",
+                      "je mnohem důležitější (7) než", 
+                      "je extrémně důležitější (9) než",
+                      "Je je trochu méně důležité (1/3)",
+                      "Je středně méně důležité než (1/5)",
+                      "je mnohem méně důležité (1/7) než",
+                      "je extrémně méně důležité (1/9) než"
+                      ]
                   
                   dropdown = DropDown(items=volby)
                   dropdown.selected_value = volby[0]  # Výchozí hodnota (stejně důležité)
