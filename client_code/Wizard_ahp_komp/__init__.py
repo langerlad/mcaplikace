@@ -351,9 +351,14 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
     self.card_krok_1.visible = True
     self.card_krok_2.visible = False
 
+  def button_zpet_ahp_click(self, **event_args):
+    """Při návratu z AHP na kritéria"""
+    self.card_ahp.visible = False
+    self.card_krok_2.visible = True
+
   def button_zpet_3_click(self, **event_args):
     # Při návratu z variant na kritéria
-    self.card_krok_2.visible = True
+    self.card_ahp.visible = True
     self.card_krok_3.visible = False
 
   def button_zpet_4_click(self, **event_args):
