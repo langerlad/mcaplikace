@@ -130,6 +130,35 @@ components:
     name: label_ahp_b
     properties: {bold: true, text: 'Zadejte párová srovnání AHP:'}
     type: Label
+  - components: []
+    layout_properties: {grid_position: 'HNVDUT,BPDSWK'}
+    name: rich_text_ahp_instrukce
+    properties:
+      content: |
+        #### ℹ️ Instrukce pro párové porovnání (AHP metoda):
+
+        Pro každou dvojici kritérií určete, které kritérium je důležitější a jak moc:
+    type: RichText
+  - layout_properties: {grid_position: 'IOANJE,JUUCNG'}
+    name: spacer_7
+    properties: {height: 32}
+    type: Spacer
+  - layout_properties: {grid_position: 'KVGEBF,YJCRQK'}
+    name: column_panel_ahp_matice
+    properties: {}
+    type: ColumnPanel
+  - layout_properties: {grid_position: 'QFMKPK,CUGAJL'}
+    name: spacer_8
+    properties: {height: 32}
+    type: Spacer
+  - layout_properties: {grid_position: 'PZTPXQ,YQFXOB'}
+    name: button_spocitat_ahp
+    properties: {align: right, role: primary-color, text: Spčítat váhy}
+    type: Button
+  - layout_properties: {grid_position: 'FCWCKC,IHWKCZ'}
+    name: label_chyba_ahp
+    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
+    type: Label
   - event_bindings: {click: button_zrusit_click}
     layout_properties: {grid_position: 'WMXXVW,YDGVAG'}
     name: button_zrusit_ahp
@@ -140,7 +169,7 @@ components:
     name: button_zpet_ahp
     properties: {align: right, icon: 'fa:arrow-left', role: primary-color, text: Zpět}
     type: Button
-  - event_bindings: {click: button_dalsi_2_click}
+  - event_bindings: {click: button_dalsi_ahp_click}
     layout_properties: {grid_position: 'WMXXVW,HFMVFD'}
     name: button_dalsi_ahp
     properties: {align: right, icon: 'fa:arrow-right', icon_align: right, role: primary-color, text: Další krok}

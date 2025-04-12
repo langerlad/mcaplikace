@@ -24,6 +24,7 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
 
     # Skrýváme karty (kroky) na začátku
     self.card_krok_2.visible = False
+    self.card_ahp.visible = False
     self.card_krok_3.visible = False
     self.card_krok_4.visible = False
 
@@ -162,15 +163,6 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
       return "Zadejte název kritéria."
     if not self.drop_down_typ.selected_value:
       return "Vyberte typ kritéria."
-    if not self.text_box_vaha.text:
-      return Konstanty.ZPRAVY_CHYB["NEPLATNA_VAHA"]
-    try:
-      vaha_text = self.text_box_vaha.text.replace(",", ".")
-      self.vaha = float(vaha_text)
-      if not (0 <= self.vaha <= 1):
-        return Konstanty.ZPRAVY_CHYB["NEPLATNA_VAHA"]
-    except ValueError:
-      return Konstanty.ZPRAVY_CHYB["NEPLATNA_VAHA"]
     return None
 
   def nacti_kriteria(self, **event_args):
@@ -200,6 +192,9 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
     self.label_chyba_2.visible = False
     self.card_krok_2.visible = False
     self.card_ahp.visible = True
+
+    # Vytvoříme matici párového porovnání
+    self.vytvor_ahp_matici()
 
   def kontrola_souctu_vah(self):
     """Kontroluje, zda součet všech vah kritérií je roven 1"""
@@ -392,3 +387,182 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
       # I v případě chyby se pokusíme vyčistit stav a přejít na domovskou stránku
       self.spravce.vycisti_data_analyzy()
       Navigace.go("domu")
+
+
+  # AHP porovnání
+  
+  def vytvor_ahp_matici(self):
+      """Vytvoří dynamickou matici párového porovnání pro AHP metodu."""
+      try:
+          # Získáme seznam kritérií
+          kriteria = self.spravce.ziskej_kriteria()
+          nazvy_kriterii = list(kriteria.keys())
+          
+          # Kontrola, zda máme alespoň 2 kritéria
+          if len(nazvy_kriterii) < 2:
+              self.label_chyba_ahp.text = "Pro AHP metodu jsou potřeba alespoň 2 kritéria."
+              self.label_chyba_ahp.visible = True
+              return
+              
+          # Vyčistíme předchozí obsah panelu
+          self.column_panel_ahp_matice.clear()
+          
+          # Inicializujeme pole pro ukládání hodnot
+          self.ahp_hodnoty = {}
+          
+          # Pro každou dvojici kritérií vytvoříme řádek v matici
+          for i in range(len(nazvy_kriterii)):
+              for j in range(i+1, len(nazvy_kriterii)):
+                  krit1 = nazvy_kriterii[i]
+                  krit2 = nazvy_kriterii[j]
+                  
+                  # Vytvoříme řádek pro porovnání
+                  radek_panel = FlowPanel()
+                  radek_panel.spacing = "large"
+                  
+                  # Kritérium 1
+                  label_krit1 = Label(text=krit1, bold=True)
+                  radek_panel.add_component(label_krit1)
+                  
+                  # Dropdown s volbami
+                  volby = [
+                      "Je stejně důležité jako",
+                      "Je mírně důležitější než",
+                      "Je středně důležitější než",
+                      "Je silně důležitější než", 
+                      "Je velmi silně důležitější než",
+                      "Je extrémně důležitější než",
+                      "Je mírně méně důležité než",
+                      "Je středně méně důležité než",
+                      "Je silně méně důležité než",
+                      "Je velmi silně méně důležité než",
+                      "Je extrémně méně důležité než"
+                  ]
+                  
+                  dropdown = DropDown(items=volby)
+                  dropdown.selected_value = volby[0]  # Výchozí hodnota (stejně důležité)
+                  dropdown.tag = (krit1, krit2)  # Uložíme si ID porovnávaných kritérií
+                  dropdown.set_event_handler('change', self.ahp_dropdown_change)
+                  radek_panel.add_component(dropdown)
+                  
+                  # Kritérium 2
+                  label_krit2 = Label(text=krit2, bold=True)
+                  radek_panel.add_component(label_krit2)
+                  
+                  # Přidáme řádek do panelu
+                  self.column_panel_ahp_matice.add_component(radek_panel)
+                  
+                  # Inicializujeme hodnotu v ahp_hodnoty (1 = stejně důležité)
+                  self.ahp_hodnoty[(krit1, krit2)] = 1
+                  
+          # Přidáme tlačítko pro výpočet vah
+          self.column_panel_ahp_matice.add_component(Spacer(height=32))
+          
+          Utils.zapsat_info(f"AHP matice vytvořena pro {len(nazvy_kriterii)} kritérií, celkem {len(self.ahp_hodnoty)} porovnání")
+                  
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při vytváření AHP matice: {str(e)}")
+          self.label_chyba_ahp.text = f"Chyba při vytváření AHP matice: {str(e)}"
+          self.label_chyba_ahp.visible = True
+  
+  def ahp_dropdown_change(self, **event_args):
+      """Handler pro změnu hodnoty v dropdown menu AHP matice."""
+      try:
+          dropdown = event_args['sender']
+          krit1, krit2 = dropdown.tag  # Získáme ID kritérií
+          
+          # Mapování textových hodnot na číselné (pro AHP)
+          hodnoty_mapa = {
+              "Je stejně důležité jako": 1,
+              "Je mírně důležitější než": 3,
+              "Je středně důležitější než": 5,
+              "Je silně důležitější než": 7, 
+              "Je velmi silně důležitější než": 8,
+              "Je extrémně důležitější než": 9,
+              "Je mírně méně důležité než": 1/3,
+              "Je středně méně důležité než": 1/5,
+              "Je silně méně důležité než": 1/7,
+              "Je velmi silně méně důležité než": 1/8,
+              "Je extrémně méně důležité než": 1/9
+          }
+          
+          # Získáme číselnou hodnotu a uložíme do ahp_hodnoty
+          hodnota = hodnoty_mapa.get(dropdown.selected_value, 1)
+          self.ahp_hodnoty[(krit1, krit2)] = hodnota
+          
+          Utils.zapsat_info(f"AHP hodnota pro {krit1} vs {krit2} nastavena na {hodnota}")
+          
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při změně AHP hodnoty: {str(e)}")
+  
+  def vypocitej_ahp_vahy(self):
+      """Vypočítá váhy kritérií pomocí AHP metody."""
+      try:
+          # Získáme seznam kritérií
+          kriteria = self.spravce.ziskej_kriteria()
+          nazvy_kriterii = list(kriteria.keys())
+          pocet_kriterii = len(nazvy_kriterii)
+          
+          # Vytvoříme matici porovnání
+          matice = []
+          for i in range(pocet_kriterii):
+              radek = []
+              for j in range(pocet_kriterii):
+                  if i == j:
+                      # Diagonála matice
+                      radek.append(1)
+                  elif i < j:
+                      # Hodnota z párového porovnání
+                      hodnota = self.ahp_hodnoty.get((nazvy_kriterii[i], nazvy_kriterii[j]), 1)
+                      radek.append(hodnota)
+                  else:  # i > j
+                      # Reciproká hodnota
+                      hodnota = self.ahp_hodnoty.get((nazvy_kriterii[j], nazvy_kriterii[i]), 1)
+                      radek.append(1/hodnota)
+              matice.append(radek)
+              
+          # Výpočet vah (metoda geometrického průměru)
+          # 1. Výpočet geometrických průměrů řádků
+          geom_prumery = []
+          for radek in matice:
+              soucin = 1
+              for hodnota in radek:
+                  soucin *= hodnota
+              geom_prumer = soucin ** (1/pocet_kriterii)
+              geom_prumery.append(geom_prumer)
+              
+          # 2. Normalizace na součet 1
+          soucet_prumeru = sum(geom_prumery)
+          normalizovane_vahy = [prumer/soucet_prumeru for prumer in geom_prumery]
+          
+          # Debug výpis
+          Utils.zapsat_info(f"AHP váhy vypočítány: {dict(zip(nazvy_kriterii, normalizovane_vahy))}")
+          
+          # Uložení vah do kritérií
+          for i, nazev in enumerate(nazvy_kriterii):
+              vaha = normalizovane_vahy[i]
+              self.spravce.uprav_kriterium(nazev, nazev, kriteria[nazev]['typ'], vaha)
+              
+          return True
+          
+      except Exception as e:
+          Utils.zapsat_chybu(f"Chyba při výpočtu AHP vah: {str(e)}")
+          self.label_chyba_ahp.text = f"Chyba při výpočtu AHP vah: {str(e)}"
+          self.label_chyba_ahp.visible = True
+          return False
+
+  def button_dalsi_ahp_click(self, **event_args):
+      """Zpracuje kliknutí na tlačítko Další u AHP matice."""
+      # Kontrola, zda jsou vyplněna všechna porovnání
+      if not self.ahp_hodnoty:
+          self.label_chyba_ahp.text = "Nejsou vyplněna všechna párová porovnání."
+          self.label_chyba_ahp.visible = True
+          return
+          
+      # Výpočet vah z AHP matice
+      if not self.vypocitej_ahp_vahy():
+          return  # Chyba při výpočtu
+          
+      # Přechod na další krok - varianty
+      self.card_ahp.visible = False
+      self.card_krok_3.visible = True
