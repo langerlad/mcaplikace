@@ -18,54 +18,11 @@ import functools
 from typing import Dict, List, Optional, Any
 import anvil.server
 import anvil.users
-import anvil.pdf
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from anvil import Media
 
 # ============= Pomocné funkce pro error handling =============
-
-@anvil.server.callable
-def vytvor_analyzu_pdf(analyza_id, metoda="WSM"):
-    """
-    Vytvoří PDF s výsledky analýzy s optimalizací pro velké tabulky a grafy.
-    
-    Args:
-        analyza_id: ID analýzy
-        metoda: Použitá metoda (WSM, WPM, atd.)
-        
-    Returns:
-        PDF dokument
-    """
-    analyza_data = nacti_analyzu(analyza_id)
-    
-    nazev = analyza_data.get("nazev", "Analyza")
-    bezpecny_nazev = nazev.replace(" ", "_").replace("/", "_").replace("\\", "_")
-    nazev_souboru = f"{bezpecny_nazev}_{metoda}.pdf"
-    
-    if metoda == "WSM":
-        formular = "Vystup_wsm_komp"
-    elif metoda == "WPM":
-        formular = "Vystup_wpm_komp"
-    elif metoda == "TOPSIS":
-        formular = "Vystup_topsis_komp"
-    elif metoda == "ELECTRE":
-        formular = "Vystup_electre_komp"
-    elif metoda == "MABAC":
-        formular = "Vystup_mabac_komp"
-    else:
-        raise ValueError(f"Nepodporovaná metoda: {metoda}")
-    
-    pdf_renderer = anvil.pdf.PDFRenderer(
-        filename=nazev_souboru,
-        page_size="A4",
-        landscape=False,
-    )    
-  
-    pdf = pdf_renderer.render_form(formular, analyza_id=analyza_id)
-    
-    return pdf
 
 def zapsat_info(zprava):
     """Pomocná funkce pro serverové logování info zpráv"""
