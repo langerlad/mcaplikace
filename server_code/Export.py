@@ -14,7 +14,35 @@ from anvil import Media
 from . import CRUD_analyzy
 from . import Vypocty
 
+# ============= Pomocné funkce pro error handling =============
+
+def zapsat_info(zprava):
+    """Pomocná funkce pro serverové logování info zpráv"""
+    logging.info(f"[INFO] {zprava}")
+    
+def zapsat_chybu(zprava):
+    """Pomocná funkce pro serverové logování chyb"""
+    logging.error(f"[CHYBA] {zprava}")
+
+def handle_errors(func):
+    """
+    Dekorátor pro jednotné zpracování chyb v serverových funkcích.
+    Zachytí výjimky, zaloguje je a přehodí klientovi.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            zprava = f"Chyba v {func.__name__}: {str(e)}"
+            zapsat_chybu(zprava)
+            raise ValueError(zprava) from e
+    return wrapper
+
+# =============== Exportní funkce ===============
+
 @anvil.server.callable
+@handle_errors
 def vytvor_analyzu_pdf(analyza_id, metoda="WSM"):
     """
     Vytvoří PDF s výsledky analýzy s optimalizací pro velké tabulky a grafy.
@@ -55,30 +83,8 @@ def vytvor_analyzu_pdf(analyza_id, metoda="WSM"):
     
     return pdf
 
-def zapsat_info(zprava):
-    """Pomocná funkce pro serverové logování info zpráv"""
-    logging.info(f"[INFO] {zprava}")
-    
-def zapsat_chybu(zprava):
-    """Pomocná funkce pro serverové logování chyb"""
-    logging.error(f"[CHYBA] {zprava}")
-
-def handle_errors(func):
-    """
-    Dekorátor pro jednotné zpracování chyb v serverových funkcích.
-    Zachytí výjimky, zaloguje je a přehodí klientovi.
-    """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            zprava = f"Chyba v {func.__name__}: {str(e)}"
-            zapsat_chybu(zprava)
-            raise ValueError(zprava) from e
-    return wrapper
-
 @anvil.server.callable
+@handle_errors
 def vytvor_komplexni_excel_report(analyza_id):
     """
     Vytvoří komplexní Excel soubor obsahující výsledky všech metod 

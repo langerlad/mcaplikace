@@ -207,13 +207,29 @@ class Row_dash(Row_dashTemplate):
         try:
             Utils.zapsat_info(f"Požadavek na export analýzy s ID: {self.item['id']}")
             
-            # Zde implementujte export analýzy do excelu
-            # Zatím jen zalogujeme a zobrazíme informaci
-            alert("Funkce exportu do Excelu zatím není plně implementována.")
+            if not self.item and not hasattr(self.item, 'id'):
+                alert("Není k dispozici žádná analýza pro export.")
+                return
+        
+            # Zobrazení indikátoru průběhu
+            self.export_icon.icon = "fa:spinner fa-spin"
+            self.export_icon.tooltip = "Generuji Excel..."
+            self.export_icon.enabled = False
+            
+            # Volání serverové funkce pro komplexní export
+            excel = anvil.server.call('vytvor_komplexni_excel_report', self.item.id)
+            
+            # Stažení Excel souboru
+            download(excel)
             
         except Exception as e:
-            Utils.zapsat_chybu(f"Chyba při exportu analýzy: {str(e)}")
-            alert(f"Chyba při exportu analýzy: {str(e)}")
+            Utils.zapsat_chybu(f"Chyba při exportu: {str(e)}")
+            alert(f"Chyba při generování Excel reportu: {str(e)}")
+        finally:
+            # Obnovení ikony
+            self.export_icon.icon = "fa:file-excel-o"
+            self.export_icon.tooltip = "Exportovat do Excelu"
+            self.export_icon.enabled = True
 
     def zobraz_dialog_vyberu_metody(self):
         """
