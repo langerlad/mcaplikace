@@ -107,7 +107,7 @@ components:
     properties: {height: 32}
     type: Spacer
   layout_properties: {grid_position: 'PDHUSM,SRUXRL'}
-  name: card_2
+  name: card_stanoveni_vah
   properties: {col_widths: '{}', role: card}
   type: ColumnPanel
 - layout_properties: {grid_position: 'NWJZQC,IENLRC'}
