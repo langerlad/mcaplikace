@@ -172,43 +172,22 @@ class Administrace_komp(Administrace_kompTemplate):
                         user_data['je_admin']
                     )
                     
-                    # Kontrola typu výsledku - může být boolean nebo slovník
-                    if isinstance(vysledek, dict) and vysledek.get("uspech") and vysledek.get("varovani"):
-                        # Zobrazíme varování, pokud existuje, ale uživatel byl vytvořen
-                        alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.\n\nVarování: {vysledek['varovani']}")
+                    if vysledek:
+                        # Obnovíme seznam uživatelů
+                        self.nacti_uzivatele()
                         
-                        # Mohlo dojít k odhlášení, zkusíme ověřit stav uživatele
-                        if not self.spravce.je_admin():
-                            # Administrátorská práva byla ztracena, přesměrování na přihlašovací stránku
-                            alert("Vaše administrátorská relace vypršela. Přihlaste se prosím znovu.")
-                            from .. import Navigace
-                            Navigace.go('domu')
-                            return
-                    elif vysledek:
-                        # Standardní úspěšná odpověď
+                        # Obnovíme stav uživatele, abychom zajistili, že vytvoření uživatele
+                        # neovlivnilo přihlášeného admin uživatele
+                        self.spravce.nacti_uzivatele()
+                        
+                        # Informujeme administrátora
                         alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.")
-                    else:
-                        # Neznámá odpověď - považujeme za neúspěch
-                        alert(f"Vytvoření uživatele {user_data['email']} se nezdařilo.")
-                        continue  # Zůstat ve formuláři
-                    
-                    # Pokusíme se obnovit seznam uživatelů - ale nejprve ověříme práva
-                    if self.spravce.je_admin():
-                        try:
-                            self.nacti_uzivatele()
-                        except Exception as e:
-                            Utils.zapsat_chybu(f"Chyba při obnovování seznamu uživatelů: {str(e)}")
-                    
-                    # Obnovíme stav uživatele, abychom zajistili, že vytvoření uživatele
-                    # neovlivnilo přihlášeného admin uživatele
-                    self.spravce.nacti_uzivatele()
-                    
-                    # Ukončíme cyklus - uživatel byl vytvořen
-                    break
+                        break
                         
                 except Exception as e:
                     Utils.zapsat_chybu(f"Chyba při vytváření uživatele: {str(e)}")
-                    pridej_form.zobraz_chybu(str(e))
+                    pridej_form.label_chyba.text = str(e)
+                    pridej_form.label_chyba.visible = True
 
     # def button_pridat_uzivatele_click(self, **event_args):
     #     """Handler pro tlačítko přidání nového uživatele."""     

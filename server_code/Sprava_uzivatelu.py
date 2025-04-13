@@ -140,9 +140,9 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
         bool: True pokud byl uživatel úspěšně vytvořen
     """
     try:
-        # Kontrola, zda je aktuální uživatel admin
-        aktualni_uzivatel = anvil.users.get_user()
-        if not aktualni_uzivatel or aktualni_uzivatel['role'] != 'admin':
+        # Uložení aktuálního uživatele (administrátora)
+        puvodni_admin = anvil.users.get_user()
+        if not puvodni_admin or puvodni_admin.get('role') != 'admin':
             raise ValueError("Pouze administrátor může vytvářet nové uživatele")
         
         # Validace emailu
@@ -157,33 +157,19 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
         existujici_uzivatel = app_tables.users.get(email=email)
         if existujici_uzivatel:
             raise ValueError("Uživatel s tímto emailem již existuje")
-
-        # Důležité: Uložíme si ID a email aktuálního administrátora, abychom
-        # mohli poté ověřit, že nedošlo k omylem k jeho odhlášení nebo změně role
-        admin_id = aktualni_uzivatel.get_id()
-      
+        
         # Vytvoření uživatele
         uzivatel = anvil.users.signup_with_email(email, heslo)
         
-        # Nastavení role
+        # Nastavení role a výchozích parametrů
         uzivatel['role'] = 'admin' if je_admin else 'uživatel'
-        
-        # Nastavení výchozích parametrů
         nastav_vychozi_nastaveni_uzivatele(uzivatel)
-
-        # Ověření, že jsme stále přihlášeni jako původní admin
-        aktualni_uzivatel = anvil.users.get_user()
-        if not aktualni_uzivatel or aktualni_uzivatel.get_id() != admin_id:
-            # Uživatel byl odhlášen nebo změněn - došlo k autorizační chybě
-            # Pokusíme se znovu přihlásit jako původní admin
-            zapsat_chybu("Uživatel byl odhlášen při vytváření nového účtu. Pokus o obnovení přihlášení.")
-            # Zde nemůžeme provést přihlášení, ale můžeme vrátit speciální zprávu
-            return {
-                "uspech": True,
-                "varovani": "Během vytváření účtu došlo k odhlášení. Prosím, přihlaste se znovu."
-            }
         
         zapsat_info(f"Administrátor vytvořil nového uživatele: {email}, role: {'admin' if je_admin else 'uživatel'}")
+        
+        # Obnovení původního admin přihlášení
+        anvil.users.force_login(puvodni_admin)
+      
         return True
     except Exception as e:
         zapsat_chybu(f"Chyba při vytváření uživatele: {str(e)}")

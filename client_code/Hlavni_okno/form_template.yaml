@@ -17,16 +17,6 @@ components:
     name: link_odhlasit
     properties: {text: Odhlásit se}
     type: Link
-  - event_bindings: {click: link_registrace_click}
-    layout_properties: {}
-    name: link_registrace
-    properties: {text: Registrace}
-    type: Link
-  - event_bindings: {click: link_prihlasit_click}
-    layout_properties: {}
-    name: link_prihlasit
-    properties: {text: Přihlásit se}
-    type: Link
   layout_properties: {slot: nav-right}
   name: navbar
   properties: {}
