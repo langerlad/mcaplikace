@@ -2,7 +2,7 @@ components:
 - event_bindings: {click: export_link_click}
   layout_properties: {grid_position: 'YYOBYI,DTHRYJ'}
   name: export_link
-  properties: {align: right, bold: true, icon: 'fa:file-pdf-o', role: null, text: Export do PDF}
+  properties: {align: right, bold: true, icon: 'fa:file-pdf-o', role: null, text: Export do PDF, visible: false}
   type: Link
 - layout_properties: {grid_position: 'OSEYYS,ICXJBQ'}
   name: html_1
