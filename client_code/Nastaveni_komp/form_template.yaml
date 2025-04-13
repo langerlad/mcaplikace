@@ -108,6 +108,21 @@ components:
     name: spacer_6
     properties: {height: 32}
     type: Spacer
+  - layout_properties: {grid_position: 'SVAZCD,AZDMJP'}
+    name: rich_text_2
+    properties:
+      content: |-
+        #### 💡Tip: Stanovení vah metodou entropie
+
+        Tato metoda určí váhy kritérií **automaticky** na základě rozptylu hodnot v jednotlivých kritériích.
+
+        #### Jak to funguje?
+
+        - Kritérium, které má **velké rozdíly** v hodnotách mezi variantami (vysoká variabilita), bude mít **vyšší váhu**.
+        - Kritérium, kde jsou hodnoty u všech variant **podobné** (nízká variabilita), bude mít **nižší váhu**.
+
+        Tento přístup je vhodný, když chcete ponechat stanovení vah na objektivním výpočtu a nevkládat svůj subjektivní názor na důležitost jednotlivých kritérií. Váhy budou vypočteny až po zadání všech hodnot v posledním kroku.
+    type: RichText
   layout_properties: {grid_position: 'PDHUSM,SRUXRL'}
   name: card_stanoveni_vah
   properties: {col_widths: '{}', role: card}

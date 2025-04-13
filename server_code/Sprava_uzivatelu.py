@@ -515,7 +515,7 @@ def uloz_uzivatelske_nastaveni(nastaveni):
             raise ValueError("Index nesouhlasu musí být mezi 0 a 1")
         
         # Kontrola platnosti metody stanovení vah
-        if stanoveni_vah not in ['manual', 'rank', 'ahp', 'entropy']:
+        if stanoveni_vah not in ['manual', 'rank', 'ahp', 'entropie']:
             stanoveni_vah = 'manual'  # Pokud hodnota není platná, použijeme výchozí
             
         # Uložení nastavení do tabulky users

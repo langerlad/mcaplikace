@@ -40,7 +40,7 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
           self.radio_button_rank.selected = True
         elif stanoveni_vah == 'ahp':
           self.radio_button_ahp.selected = True
-        elif stanoveni_vah == 'entropy':
+        elif stanoveni_vah == 'entropie':
           self.radio_button_entropie.selected = True
         else:
           # Výchozí - manuální
@@ -91,29 +91,16 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
         elif self.radio_button_ahp.selected:
             stanoveni_vah = 'ahp'
         elif self.radio_button_entropie.selected:
-            stanoveni_vah = 'entropy'
-      
-        # Uložení nastavení
-          
-        # Zjištění zvolené metody stanovení vah
-        if self.radio_button_manual.selected:
-          stanoveni_vah = 'manual'
-        elif self.radio_button_rank.selected:
-          stanoveni_vah = 'rank'
-        elif self.radio_button_ahp.selected:
-          stanoveni_vah = 'ahp'
-        elif self.radio_button_entropie.selected:
-          stanoveni_vah = 'entropy'
-        else:
-          stanoveni_vah = 'manual'  # Výchozí hodnota
+            stanoveni_vah = 'entropie'
         
-      # Uložení nastavení
+        # Uložení nastavení
         nastaveni = {     
           'electre_index_souhlasu': index_souhlasu,
           'electre_index_nesouhlasu': index_nesouhlasu,
           'stanoveni_vah': stanoveni_vah
           }
-        
+        # Debug výpis
+        Utils.zapsat_info(f"Ukládám nastavení: {nastaveni}") 
         # Serverové volání pro uložení
         uspech = anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)
         

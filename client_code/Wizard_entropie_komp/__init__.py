@@ -281,28 +281,28 @@ class Wizard_entropie_komp(Wizard_entropie_kompTemplate):
 
     self.Matice_var.items = matice_data
 
-  def button_ulozit_4_click(self, **event_args):
-    """Uloží kompletní analýzu na server, pokud je matice validní."""
-    if not self.validuj_matici():
-      return
+  # def button_ulozit_4_click(self, **event_args):
+  #   """Uloží kompletní analýzu na server, pokud je matice validní."""
+  #   if not self.validuj_matici():
+  #     return
 
-    try:
-      # Uložení analýzy na server přes správce stavu
-      if self.spravce.uloz_analyzu_na_server():
-        self.mode = Konstanty.STAV_ANALYZY["ULOZENY"]
-        alert(Konstanty.ZPRAVY_CHYB["ANALYZA_ULOZENA"])
+  #   try:
+  #     # Uložení analýzy na server přes správce stavu
+  #     if self.spravce.uloz_analyzu_na_server():
+  #       self.mode = Konstanty.STAV_ANALYZY["ULOZENY"]
+  #       alert(Konstanty.ZPRAVY_CHYB["ANALYZA_ULOZENA"])
 
-        # Vyčistíme data ve správci stavu
-        self.spravce.vycisti_data_analyzy()
+  #       # Vyčistíme data ve správci stavu
+  #       self.spravce.vycisti_data_analyzy()
 
-        Navigace.go("domu")
-      else:
-        raise ValueError("Nepodařilo se uložit analýzu.")
-    except Exception as e:
-      error_msg = f"Chyba při ukládání: {str(e)}"
-      Utils.zapsat_chybu(error_msg)
-      self.label_chyba_4.text = error_msg
-      self.label_chyba_4.visible = True
+  #       Navigace.go("domu")
+  #     else:
+  #       raise ValueError("Nepodařilo se uložit analýzu.")
+  #   except Exception as e:
+  #     error_msg = f"Chyba při ukládání: {str(e)}"
+  #     Utils.zapsat_chybu(error_msg)
+  #     self.label_chyba_4.text = error_msg
+  #     self.label_chyba_4.visible = True
 
   def validuj_matici(self):
     """Validuje a ukládá hodnoty matice do správce stavu."""
@@ -386,4 +386,148 @@ class Wizard_entropie_komp(Wizard_entropie_kompTemplate):
 
   # Entropie
 
+  def vypocitej_vahy_entropii(self):
+    """
+    Vypočítá váhy kritérií metodou entropie na základě zadaných hodnot v matici.
+    
+    Metoda entropie stanoví váhy kritérií na základě míry variability hodnot v kritériích:
+    1. Normalizujeme hodnoty v matici pro každé kritérium
+    2. Vypočítáme entropii pro každé kritérium
+    3. Vypočítáme míru diverzity (1 - entropie)
+    4. Normalizujeme výsledné hodnoty diverzity, abychom získali váhy
+    
+    Returns:
+        dict: Slovník s vypočtenými váhami pro každé kritérium
+    """
+    import math
 
+    try:
+      # Nejprve získáme všechny hodnoty z matice
+      varianty = self.spravce.ziskej_varianty()
+      kriteria = self.spravce.ziskej_kriteria()
+      
+      # Kontrola, zda máme dostatečný počet variant a kritérií
+      if len(varianty) < 2:
+        raise ValueError("Pro výpočet vah metodou entropie jsou potřeba alespoň 2 varianty.")
+      if len(kriteria) < 2:
+        raise ValueError("Pro výpočet vah metodou entropie jsou potřeba alespoň 2 kritéria.")
+      
+      # Vytvoření matice hodnot
+      matice = []
+      for var_nazev, var_data in varianty.items():
+        radek = []
+        for krit_nazev in kriteria.keys():
+          hodnota = var_data.get(krit_nazev, 0)
+          if hodnota <= 0:
+            hodnota = 0.001  # Zabránění nulám nebo záporným hodnotám
+          radek.append(float(hodnota))
+        matice.append(radek)
+      
+      # 1. Normalizace matice pro každé kritérium (sloupec)
+      norm_matice = []
+      for radek in matice:
+        norm_radek = []
+        for j in range(len(kriteria)):
+          sloupec = [matice[i][j] for i in range(len(varianty))]
+          soucet_sloupec = sum(sloupec)
+          if soucet_sloupec <= 0:
+            norm_hodnota = 1.0 / len(varianty)  # Rovnoměrné rozdělení při nulách
+          else:
+            norm_hodnota = radek[j] / soucet_sloupec
+          norm_radek.append(norm_hodnota)
+        norm_matice.append(norm_radek)
+      
+      # 2. Výpočet entropie pro každé kritérium
+      entropie = []
+      k = 1 / math.log(len(varianty))  # Konstanta pro normalizaci entropie
+      
+      for j in range(len(kriteria)):
+        e_j = 0
+        for i in range(len(varianty)):
+          # Vynecháme nulové hodnoty při výpočtu entropie (log(0) je nedefinováno)
+          if norm_matice[i][j] > 0:
+            e_j -= norm_matice[i][j] * math.log(norm_matice[i][j])
+        e_j *= k
+        entropie.append(e_j)
+      
+      # 3. Výpočet míry diverzity (1 - entropie)
+      diverzita = [1 - e for e in entropie]
+      
+      # 4. Normalizace diverzity na váhy (suma vah = 1)
+      suma_diverzity = sum(diverzita)
+      
+      # Kontrola, zda suma diverzity není nulová
+      if suma_diverzity <= 0:
+        # Pokud je suma nulová, použijeme rovnoměrné váhy
+        vahy = {krit: 1.0 / len(kriteria) for krit in kriteria.keys()}
+      else:
+        vahy = {}
+        for i, krit in enumerate(kriteria.keys()):
+          vahy[krit] = diverzita[i] / suma_diverzity
+      
+      # Debug výpis
+      Utils.zapsat_info(f"Vypočtené váhy metodou entropie: {vahy}")
+      
+      return vahy
+      
+    except Exception as e:
+      Utils.zapsat_chybu(f"Chyba při výpočtu vah metodou entropie: {str(e)}")
+      self.label_chyba_4.text = f"Chyba při výpočtu vah: {str(e)}"
+      self.label_chyba_4.visible = True
+      return None
+
+  def button_ulozit_4_click(self, **event_args):
+    """
+    Uloží kompletní analýzu na server, pokud je matice validní.
+    Pro metodu entropie nejprve provede výpočet vah na základě zadaných hodnot.
+    """
+    if not self.validuj_matici():
+      return
+
+    try:
+      # Nejprve vypočítáme váhy metodou entropie
+      vahy = self.vypocitej_vahy_entropii()
+      if vahy is None:
+        raise ValueError("Nepodařilo se vypočítat váhy metodou entropie")
+      
+      # Aktualizujeme váhy kritérií ve správci stavu
+      kriteria = self.spravce.ziskej_kriteria()
+      for nazev_krit, vaha in vahy.items():
+        self.spravce.uprav_kriterium(
+          nazev_krit,
+          nazev_krit,
+          kriteria[nazev_krit]['typ'],
+          vaha
+        )
+      
+      # Kontrola součtu vah - pro jistotu
+      je_validni, zprava = self.kontrola_souctu_vah()
+      if not je_validni:
+        raise ValueError(zprava)
+      
+      # Zobrazíme uživateli informaci o vypočtených váhách
+      vahy_text = "\n".join([f"{krit}: {vaha:.4f}" for krit, vaha in vahy.items()])
+      confirm_message = f"Byly vypočteny následující váhy kritérií metodou entropie:\n\n{vahy_text}\n\nPokračovat s uložením analýzy?"
+      if not Utils.zobraz_potvrzovaci_dialog(confirm_message):
+        return
+      
+      # Uložení analýzy na server přes správce stavu
+      if self.spravce.uloz_analyzu_na_server():
+        self.mode = Konstanty.STAV_ANALYZY["ULOZENY"]
+        alert(Konstanty.ZPRAVY_CHYB["ANALYZA_ULOZENA"])
+
+        # Vyčistíme data ve správci stavu
+        self.spravce.vycisti_data_analyzy()
+
+        Navigace.go("domu")
+      else:
+        raise ValueError("Nepodařilo se uložit analýzu.")
+        
+    except Exception as e:
+      error_msg = f"Chyba při ukládání: {str(e)}"
+      Utils.zapsat_chybu(error_msg)
+      self.label_chyba_4.text = error_msg
+      self.label_chyba_4.visible = True
+
+
+  
