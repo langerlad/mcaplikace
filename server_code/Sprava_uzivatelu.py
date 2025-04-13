@@ -16,6 +16,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from . import CRUD_analyzy
 
 # ============= Konfigurace / konstanty =============
 
@@ -130,52 +131,57 @@ def registruj_noveho_uzivatele(email, heslo):
 @handle_errors
 def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
     """
-    Vytvoří nového uživatele z administračního rozhraní.
-    Pouze pro administrátory.
+    Vytvoří nového uživatele z administrátorského rozhraní.
     
     Args:
-        email: Email uživatele
-        heslo: Heslo uživatele
-        je_admin: True pokud uživatel má být admin
-        
+        email: Email nového uživatele
+        heslo: Heslo pro nový účet
+        je_admin: True pokud má být uživatel administrátor
+    
     Returns:
-        bool: True pokud byl uživatel úspěšně vytvořen
+        dict: Informace o vytvořeném uživateli nebo None při chybě
     """
     try:
-        # Uložení aktuálního uživatele (administrátora)
-        puvodni_admin = anvil.users.get_user()
-        if not puvodni_admin or puvodni_admin.get('role') != 'admin':
-            raise ValueError("Pouze administrátor může vytvářet nové uživatele")
+        print(f"Vytvářím nového uživatele: {email}")
+
+        # CRITICAL: Save the current user before creating a new one
+        puvodni_uzivatel = anvil.users.get_user()
+
+        # Kontrola, zda uživatel již neexistuje
+        existujici = app_tables.users.get(email=email)
+        if existujici:
+            raise ValueError(f"Uživatel s emailem {email} již existuje")
         
-        # Validace emailu
-        if not email or '@' not in email:
-            raise ValueError("Zadejte platný email")
+        # Vytvoření uživatele pomocí signup_with_email
+        novy_uzivatel = anvil.users.signup_with_email(email, heslo, remember=False)
         
-        # Validace hesla
-        if not heslo or len(heslo) < 6:
-            raise ValueError("Heslo musí mít alespoň 6 znaků")
+        # Nastavení data vytvoření a aktivace účtu
+        novy_uzivatel['signed_up'] = datetime.datetime.now()
+        novy_uzivatel['enabled'] = True
         
-        # Kontrola, zda uživatel s tímto emailem již existuje
-        existujici_uzivatel = app_tables.users.get(email=email)
-        if existujici_uzivatel:
-            raise ValueError("Uživatel s tímto emailem již existuje")
-        
-        # Vytvoření uživatele
-        uzivatel = anvil.users.signup_with_email(email, heslo, remember=False)
-        
-        # Nastavení role a výchozích parametrů
-        uzivatel['role'] = 'admin' if je_admin else 'uživatel'
-        nastav_vychozi_nastaveni_uzivatele(uzivatel)
-        
-        zapsat_info(f"Administrátor vytvořil nového uživatele: {email}, role: {'admin' if je_admin else 'uživatel'}")
-        
-        # Obnovení původního admin přihlášení
-        anvil.users.force_login(puvodni_admin)
+        # Nastavení role pokud je admin
+        if je_admin:
+            novy_uzivatel['role'] = 'admin'
+
+        # CRITICAL: Log back in as the original admin user
+        if puvodni_uzivatel:
+            # We use the internal login mechanism to restore the session
+            anvil.users.force_login(puvodni_uzivatel)
       
-        return True
+        print(f"Uživatel {email} úspěšně vytvořen")
+        
+        # Vytvořit jednoduchý slovník místo použití get()
+        return {
+            'email': email,
+            'signed_up': novy_uzivatel['signed_up'],
+            'enabled': True,
+            'role': 'admin' if je_admin else None
+        }
+        
     except Exception as e:
-        zapsat_chybu(f"Chyba při vytváření uživatele: {str(e)}")
-        raise ValueError(f"Chyba při vytváření uživatele: {str(e)}")
+        print(f"Chyba při vytváření uživatele: {str(e)}")
+        logging.error(f"Chyba při vytváření uživatele {email}: {str(e)}")
+        raise ValueError(f"Nepodařilo se vytvořit uživatele: {str(e)}")
         
 @anvil.server.callable
 @handle_errors
@@ -258,85 +264,81 @@ def nacti_analyzy_uzivatele_admin(email):
 def smaz_uzivatele(email):
     """
     Smaže uživatele a všechny jeho analýzy.
-    Pouze pro administrátory.
     
     Args:
-        email: Email uživatele, kterého chceme smazat
-        
+        email: Email uživatele ke smazání
+    
     Returns:
         bool: True pokud byl uživatel úspěšně smazán
     """
-    try:
-        # Kontrola, zda je aktuální uživatel admin
-        aktualni_uzivatel = anvil.users.get_user()
-        if not aktualni_uzivatel or aktualni_uzivatel['role'] != 'admin':
-            raise ValueError("Pouze administrátor může mazat uživatele")
+    zapsat_info(f"Mažu uživatele: {email}")
+    
+    uzivatel = app_tables.users.get(email=email)
+
+    # Kontrola, zda nejde o aktuálně přihlášeného uživatele
+    aktualni_uzivatel = anvil.users.get_user()
+    if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
+        raise ValueError("Nelze smazat vlastní účet, se kterým jste aktuálně přihlášeni.")
+    
+    if not uzivatel:
+        raise ValueError(f"Uživatel {email} nebyl nalezen")
         
-        # Načtení uživatele podle emailu
-        uzivatel = app_tables.users.get(email=email)
-        if not uzivatel:
-            raise ValueError(f"Uživatel s emailem {email} neexistuje")
-        
-        # Kontrola, zda uživatel nemá speciální ochranu
-        if uzivatel.get('protected', False):
-            raise ValueError("Tohoto uživatele nelze smazat")
-        
-        # Smazání analýz uživatele
-        analyzy = app_tables.analyzy.search(uzivatel=uzivatel)
-        for a in analyzy:
-            a.delete()
-        zapsat_info(f"Smazány všechny analýzy uživatele {email}")
-        
-        # Smazání uživatele
-        uzivatel.delete()
-        zapsat_info(f"Smazán uživatel {email}")
-        
-        return True
-    except Exception as e:
-        zapsat_chybu(f"Chyba při mazání uživatele: {str(e)}")
-        raise ValueError(f"Chyba při mazání uživatele: {str(e)}")
+    # Nejprve získáme všechny analýzy uživatele
+    analyzy = app_tables.analyzy.search(uzivatel=uzivatel)
+    pocet_analyz = 0
+    
+    # Použijeme existující, otestovanou funkci pro mazání jednotlivých analýz
+    for analyza in analyzy:
+        analyza_id = analyza.get_id()
+        try:
+            CRUD_analyzy.smaz_analyzu(analyza_id)
+            pocet_analyz += 1
+        except Exception as e:
+            zapsat_chybu(f"Chyba při mazání analýzy {analyza_id}: {str(e)}")
+            # Pokračujeme s dalšími analýzami
+    
+    # Nakonec smažeme samotného uživatele
+    uzivatel.delete()
+    zapsat_info(f"Uživatel {email} a {pocet_analyz} analýz úspěšně smazáno")
+    
+    return True
         
 @anvil.server.callable
 @handle_errors
 def zmenit_roli_uzivatele(email, nova_role):
     """
     Změní roli uživatele.
-    Pouze pro administrátory.
     
     Args:
-        email: Email uživatele, jehož roli chceme změnit
-        nova_role: Nová role (admin/uživatel)
-        
+        email: Email uživatele
+        nova_role: Nová role uživatele ('admin' nebo 'uživatel')
+    
     Returns:
         bool: True pokud byla role úspěšně změněna
     """
     try:
-        # Kontrola, zda je aktuální uživatel admin
+        print(f"Měním roli uživatele {email} na: {nova_role}")
+        
+        # Kontrola, zda nejde o aktuálně přihlášeného uživatele
         aktualni_uzivatel = anvil.users.get_user()
-        if not aktualni_uzivatel or aktualni_uzivatel['role'] != 'admin':
-            raise ValueError("Pouze administrátor může měnit role uživatelů")
+        if aktualni_uzivatel and aktualni_uzivatel['email'] == email:
+            raise ValueError("Nemůžete měnit roli vlastního účtu.")
         
-        # Načtení uživatele podle emailu
         uzivatel = app_tables.users.get(email=email)
+        
         if not uzivatel:
-            raise ValueError(f"Uživatel s emailem {email} neexistuje")
-        
-        # Validace nové role
-        if nova_role not in ['admin', 'uživatel']:
-            raise ValueError(f"Neplatná role: {nova_role}")
-        
-        # Kontrola, zda uživatel nemá speciální ochranu
-        if uzivatel.get('protected', False) and nova_role != 'admin':
-            raise ValueError("Tomuto uživateli nelze odebrat administrátorská práva")
-        
+            raise ValueError(f"Uživatel {email} nebyl nalezen")
+            
         # Změna role
         uzivatel['role'] = nova_role
-        zapsat_info(f"Změněna role uživatele {email} na {nova_role}")
         
+        print(f"Role uživatele {email} úspěšně změněna na {nova_role}")
         return True
+        
     except Exception as e:
-        zapsat_chybu(f"Chyba při změně role uživatele: {str(e)}")
-        raise ValueError(f"Chyba při změně role uživatele: {str(e)}")
+        print(f"Chyba při změně role uživatele: {str(e)}")
+        logging.error(f"Chyba při změně role uživatele {email}: {str(e)}")
+        raise ValueError(f"Nepodařilo se změnit roli uživatele: {str(e)}")
 
 # =============== Správa uživatelských účtů ===============
 
