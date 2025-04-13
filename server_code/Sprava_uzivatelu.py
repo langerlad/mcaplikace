@@ -107,7 +107,6 @@ def registruj_noveho_uzivatele(email, heslo):
         if email.lower() in [e.lower() for e in ADMIN_EMAILY] or not app_tables.users.search():
             # Je v seznamu administrátorů nebo je prvním uživatelem
             uzivatel['role'] = 'admin'
-            uzivatel['protected'] = email.lower() in [e.lower() for e in ADMIN_EMAILY]  # Ochrana pro admin účty
             zapsat_info(f"Registrován nový administrátor: {email}")
         else:
             # Běžný uživatel
