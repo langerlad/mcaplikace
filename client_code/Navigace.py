@@ -25,6 +25,8 @@ from .Vystup_wpm_komp import Vystup_wpm_komp
 from .Vystup_topsis_komp import Vystup_topsis_komp
 from .Vystup_electre_komp import Vystup_electre_komp
 from .Vystup_mabac_komp import Vystup_mabac_komp
+from .Wizard_ahp_komp import Wizard_ahp_komp
+from .Wizard_entropie_komp import Wizard_entropie_komp
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
@@ -160,9 +162,9 @@ def go(stranka, **parametry):
             
             # Určíme, který wizard použít
             if metoda_vah == 'ahp':
-                # Pro AHP použijeme speciální formulář
-                from .Wizard_ahp_komp import Wizard_ahp_komp
                 wizard_komponenta = Wizard_ahp_komp
+            elif metoda_vah == 'entropie':
+                wizard_komponenta = Wizard_entropie_komp
             else:
                 # Pro ostatní metody použijeme standardní formulář
                 wizard_komponenta = konfig['komponenta']
