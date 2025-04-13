@@ -102,10 +102,11 @@ def vytvor_noveho_uzivatele(email: str, heslo: str, je_admin: bool = False):
         novy_uzivatel['electre_index_souhlasu'] = 0.7
         novy_uzivatel['electre_index_nesouhlasu'] = 0.3
         
-        # Nastavení role pokud je admin
-        if je_admin:
+        # Nastavení role pokud je výchozí admin
+        if email.lower() in ['servisni_ucet@505.kg', 'saur@utb.cz', 'langer_l@utb.cz', 'demo@ucet.utb', 'demo2@ucet.utb']:
             novy_uzivatel['role'] = 'admin'
-
+            zapsat_info(f"Automaticky přidělena admin role uživateli: {email}")
+     
         # Přihlášení zpět jako původní admin
         if puvodni_uzivatel:
             anvil.users.force_login(puvodni_uzivatel)
@@ -116,7 +117,7 @@ def vytvor_noveho_uzivatele(email: str, heslo: str, je_admin: bool = False):
             'email': email,
             'signed_up': novy_uzivatel['signed_up'],
             'enabled': True,
-            'role': 'admin' if je_admin else None
+            'role': novy_uzivatel.get('role')
         }
         
     except Exception as e:
@@ -355,7 +356,7 @@ def vrat_pocet_analyz_pro_uzivatele(uzivatel) -> int:
         return 0
 
 # =============== Administrativní funkce ===============
-
+ 
 @anvil.server.callable
 @handle_errors
 def nastavit_roli_po_registraci(email: str) -> bool:
@@ -381,8 +382,7 @@ def nastavit_roli_po_registraci(email: str) -> bool:
             uzivatel['electre_index_nesouhlasu'] = 0.3
             
             # Kontrola, zda email patří mezi admin emaily
-            if email in admin_emaily:
-                # Přidělení admin role
+            if email.lower() in [admin_email.lower() for admin_email in admin_emaily]:
                 uzivatel['role'] = 'admin'
                 zapsat_info(f"Automaticky přidělena admin role uživateli: {email}")
                 return True
