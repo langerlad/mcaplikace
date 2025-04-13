@@ -5,6 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from anvil import open_form
 from .. import Spravce_stavu, Utils
 
 class Prihlaseni(PrihlaseniTemplate):
@@ -33,9 +34,12 @@ class Prihlaseni(PrihlaseniTemplate):
         # Kontrola, zda již je uživatel přihlášen
         uzivatel = self.spravce.nacti_uzivatele()
         if uzivatel:
-            from anvil import open_form
-            open_form('Hlavni_okno')
-    
+            self.presmeruj_do_aplikace()
+
+    def presmeruj_do_aplikace(self):
+        """Přesměruje uživatele do hlavní aplikace"""
+        open_form('Hlavni_okno')
+  
     def link_prepni_na_signup_click(self, **event_args):
         """Přepne formulář na registraci"""
         self.panel_login.visible = False
@@ -48,6 +52,7 @@ class Prihlaseni(PrihlaseniTemplate):
     
     def button_prihlasit_click(self, **event_args):
         """Obsluha přihlášení"""
+        self.label_chyba_login.visible = False
         email = self.text_box_email.text
         heslo = self.text_box_heslo.text
         
@@ -62,8 +67,7 @@ class Prihlaseni(PrihlaseniTemplate):
             if uzivatel:
                 # Úspěšné přihlášení, aktualizace stavu
                 self.spravce.nacti_uzivatele()
-                from anvil import open_form
-                open_form('Hlavni_okno')
+                self.presmeruj_do_aplikace()
             else:
                 self.label_chyba_login.text = "Neplatný email nebo heslo"
                 self.label_chyba_login.visible = True
@@ -75,6 +79,7 @@ class Prihlaseni(PrihlaseniTemplate):
     
     def button_registrovat_click(self, **event_args):
         """Obsluha registrace nového uživatele"""
+        self.label_chyba_signup.visible = False
         email = self.text_box_email_reg.text
         heslo = self.text_box_heslo_reg.text
         heslo2 = self.text_box_heslo2_reg.text
@@ -103,13 +108,12 @@ class Prihlaseni(PrihlaseniTemplate):
                 
         try:
             # Volání serverové funkce pro vytvoření uživatele
-            result = anvil.server.call('vytvor_noveho_uzivatele', email, heslo)
+            result = anvil.server.call('registruj_noveho_uzivatele', email, heslo)
             if result:
                 # Uživatel byl vytvořen, aktualizujeme stav a přesměrujeme do aplikace
                 Utils.zapsat_info(f"Uživatel {email} úspěšně vytvořen")
                 self.spravce.nacti_uzivatele()
-                from anvil import open_form
-                open_form('Hlavni_okno')
+                self.presmeruj_do_aplikace()
             else:
                 self.label_chyba_signup.text = "Registrace se nezdařila"
                 self.label_chyba_signup.visible = True

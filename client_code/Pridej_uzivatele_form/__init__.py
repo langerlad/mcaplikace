@@ -1,5 +1,6 @@
 # -------------------------------------------------------
 # Form: Pridej_uzivatele_form
+# Formulář pro vytvoření nového uživatele administrátorem
 # -------------------------------------------------------
 from ._anvil_designer import Pridej_uzivatele_formTemplate
 from anvil import *
