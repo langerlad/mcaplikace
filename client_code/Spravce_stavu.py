@@ -490,3 +490,35 @@ class Spravce_stavu:
         Utils.zapsat_info(f"Získána metoda stanovení vah: {metoda}")
         
         return metoda
+        # Vrátíme parametry pro ELECTRE
+        return {
+            'index_souhlasu': aktualni_nastaveni.get('electre_index_souhlasu', 0.7),
+            'index_nesouhlasu': aktualni_nastaveni.get('electre_index_nesouhlasu', 0.3)
+        }
+
+    def ziskej_metodu_stanoveni_vah(self):
+        """
+        Získá metodu stanovení vah pro kritéria.
+        Načte aktuální nastavení ze serveru.
+        
+        Returns:
+            str: Kód metody stanovení vah ('manual', 'rank', 'ahp', 'entropy')
+        """
+        try:
+            # Získáme aktuální nastavení ze serveru
+            nastaveni = self.nacti_nastaveni_uzivatele()
+            
+            # Pokud není uživatel přihlášen nebo nastavení není k dispozici, použijeme výchozí hodnotu
+            if not nastaveni:
+                return 'manual'
+                
+            # Vrátíme vybranou metodu stanovení vah nebo výchozí hodnotu
+            metoda = nastaveni.get('stanoveni_vah', 'manual')
+            
+            # Debug výpis pro kontrolu
+            Utils.zapsat_info(f"Získána metoda stanovení vah: {metoda}")
+            
+            return metoda
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při získávání metody stanovení vah: {str(e)}")
+            return 'manual'  # Vrátíme výchozí hodnotu v případě chyby

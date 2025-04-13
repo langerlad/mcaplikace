@@ -444,11 +444,19 @@ def nacti_uzivatelske_nastaveni():
         
         # Vytvoření slovníku s nastavením - přímý přístup ke sloupcům
         try:
-            # Je důležité získat skutečné hodnoty z databáze
+            # Přímý přístup ke sloupcům
+            index_souhlasu = user_row['electre_index_souhlasu']
+            index_nesouhlasu = user_row['electre_index_nesouhlasu']
+            stanoveni_vah = user_row['stanoveni_vah']
+            
+            zapsat_info(f"Načtené hodnoty přímo z DB: souhlasu={index_souhlasu}, nesouhlasu={index_nesouhlasu}, stanoveni_vah={stanoveni_vah}")
+
+            
+            # Sestavení výsledku
             result = {
-                'electre_index_souhlasu': float(user_row['electre_index_souhlasu'] or 0.7),
-                'electre_index_nesouhlasu': float(user_row['electre_index_nesouhlasu'] or 0.3),
-                'stanoveni_vah': user_row.get('stanoveni_vah', 'manual')  # Použijeme .get pro případ, že sloupec neexistuje
+                'electre_index_souhlasu': float(index_souhlasu) if index_souhlasu is not None else 0.7,
+                'electre_index_nesouhlasu': float(index_nesouhlasu) if index_nesouhlasu is not None else 0.3,
+                'stanoveni_vah': stanoveni_vah if stanoveni_vah else 'manual'
             }
             
             # Výpis pro kontrolu
@@ -487,7 +495,7 @@ def uloz_uzivatelske_nastaveni(nastaveni):
         # Explicitně získáme hodnoty a ujistíme se, že se nepoužívají výchozí hodnoty
         index_souhlasu = nastaveni.get('electre_index_souhlasu')
         index_nesouhlasu = nastaveni.get('electre_index_nesouhlasu')
-        stanoveni_vah = nastaveni.get('stanoveni_vah', 'manual')
+        stanoveni_vah = nastaveni.get('stanoveni_vah')
         
         # Kontrola, zda hodnoty nejsou None
         if index_souhlasu is None:
@@ -498,6 +506,7 @@ def uloz_uzivatelske_nastaveni(nastaveni):
         # Ujistíme se, že hodnoty jsou typu float
         index_souhlasu = float(index_souhlasu)
         index_nesouhlasu = float(index_nesouhlasu)
+        uzivatel['stanoveni_vah'] = stanoveni_vah
         
         # Kontrola rozsahu hodnot
         if not (0 <= index_souhlasu <= 1):

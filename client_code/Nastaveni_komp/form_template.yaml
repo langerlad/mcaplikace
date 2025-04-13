@@ -35,23 +35,6 @@ components:
     properties: {col_widths: '{"YXSYVH":20,"SQAGDN":40}'}
     type: ColumnPanel
   - components:
-    - layout_properties: {grid_position: 'ZTIOSD,PWRHXW'}
-      name: radio_button_rank
-      properties:
-        bold: true
-        spacing:
-          padding: [null, null, null, '40']
-        text: Metoda pořadí (Ranking)
-      type: RadioButton
-    - layout_properties: {grid_position: 'ZTIOSD,QJZCYB'}
-      name: label_8
-      properties: {text: 'uživatel seřadí kritéria podle důležitosti, např. 1. místo, 2. místo, 3. místo atd.'}
-      type: Label
-    layout_properties: {grid_position: 'JCNLBK,YJVBQX'}
-    name: column_panel_4
-    properties: {col_widths: '{"PWRHXW":20,"QJZCYB":40}'}
-    type: ColumnPanel
-  - components:
     - layout_properties: {grid_position: 'QMXGBL,NOXPIZ'}
       name: radio_button_ahp
       properties:
@@ -84,6 +67,25 @@ components:
     layout_properties: {grid_position: 'YRQAGK,CAPGZR'}
     name: column_panel_6
     properties: {col_widths: '{"MPMLZS":20,"OSFAWA":40}'}
+    type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'MBCMSV,RSIYZY'}
+      name: radio_button_rank
+      properties:
+        bold: true
+        enabled: false
+        spacing:
+          padding: [null, null, null, '40']
+        text: Metoda pořadí (Ranking)
+        visible: false
+      type: RadioButton
+    - layout_properties: {grid_position: 'MBCMSV,UJUNIJ'}
+      name: label_8
+      properties: {text: 'uživatel seřadí kritéria podle důležitosti, např. 1. místo, 2. místo, 3. místo atd.', visible: false}
+      type: Label
+    layout_properties: {grid_position: 'ULXCDW,QVAREJ'}
+    name: column_panel_4
+    properties: {col_widths: '{"RSIYZY":20,"UJUNIJ":40}'}
     type: ColumnPanel
   - layout_properties: {grid_position: 'KOSCUO,KDFDMR'}
     name: spacer_4

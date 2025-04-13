@@ -25,6 +25,8 @@ from .Vystup_wpm_komp import Vystup_wpm_komp
 from .Vystup_topsis_komp import Vystup_topsis_komp
 from .Vystup_electre_komp import Vystup_electre_komp
 from .Vystup_mabac_komp import Vystup_mabac_komp
+from .Wizard_ahp_komp import Wizard_ahp_komp
+from .Wizard_entropie_komp import Wizard_entropie_komp
 
 # Komponenta hlavního okna
 komponenta_hl_okna = None
@@ -151,6 +153,27 @@ def go(stranka, **parametry):
             komp.nahraj_komponentu(komponenta())
             return
 
+        # Speciální případ pro přidání nové analýzy - vybíráme správný wizard podle metody stanovení vah
+        if stranka == 'pridat_analyzu':
+            komp = ziskej_komponentu()
+            
+            # Zjistíme metodu stanovení vah
+            metoda_vah = spravce.ziskej_metodu_stanoveni_vah()
+            
+            # Určíme, který wizard použít
+            if metoda_vah == 'ahp':
+                wizard_komponenta = Wizard_ahp_komp
+            elif metoda_vah == 'entropie':
+                wizard_komponenta = Wizard_entropie_komp
+            else:
+                # Pro ostatní metody použijeme standardní formulář
+                wizard_komponenta = konfig['komponenta']
+                
+            # Načteme komponentu s případnými parametry
+            vsechny_parametry = {**(konfig.get('parametry', {})), **parametry}
+            komp.nahraj_komponentu(wizard_komponenta(**vsechny_parametry))
+            return
+      
         # Standardní navigace
         komp = ziskej_komponentu()
         # Sloučení výchozích parametrů z konfigurace s předanými parametry

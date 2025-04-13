@@ -49,7 +49,7 @@ components:
 - components:
   - layout_properties: {grid_position: 'YLREWR,CWEFBM'}
     name: label_2
-    properties: {bold: true, text: 'KROK 2a: Definujte kritéria výběru - název a typ kritéria'}
+    properties: {bold: true, text: 'KROK 2: Definujte kritéria výběru - název a typ kritéria'}
     type: Label
   - layout_properties: {grid_position: 'ZODESI,JWIUSW'}
     name: spacer_2
@@ -120,74 +120,6 @@ components:
   layout_properties: {grid_position: 'UOVTML,YGHHIB'}
   name: card_krok_2
   properties: {col_widths: '{"OHODQT":25,"CXZENQ":15,"RKVGDY":5,"YZYJRA":15,"STPCFI":30,"ISELKU":15,"HKOARL":15}', role: card, visible: true}
-  type: ColumnPanel
-- components:
-  - layout_properties: {grid_position: 'PXPAVG,UVXEBB'}
-    name: label_ahp_a
-    properties: {bold: true, text: 'KROK 2b: Definujte kritéria výběru - určení vah pomocí párového porovnání (AHP metodika)'}
-    type: Label
-  - layout_properties: {grid_position: 'CGYVCO,FYLBJO'}
-    name: label_ahp_b
-    properties: {bold: true, text: 'Zadejte párová srovnání AHP:'}
-    type: Label
-  - components: []
-    layout_properties: {grid_position: 'HNVDUT,BPDSWK'}
-    name: rich_text_ahp_instrukce
-    properties:
-      content: "\n\n#### ℹ️ Instrukce pro párové porovnání (AHP metoda):\n\nAHP (Analytic Hierarchy Process) porovnává dvojice kritérií, abyste mohli vyjádřit, jak moc je jedno kritérium důležitější než druhé. **Postupujte takto:**\n\n1. **Každá dvojice kritérií (A, B)**  \n   Zvažte, zda je A důležitější než B, B důležitější než A, nebo jsou zhruba na stejné úrovni.\n\n2. **Vyberte stupeň důležitosti**  \n   V rozbalovací nabídce zvolte, jak **velký** rozdíl v důležitosti vnímáte:  \n   - *Obě kritéria jsou stejně důležitá* (hodnota = 1)  \n   - *Trochu důležitější* (3), *středně důležitější* (5), *mnohem důležitější* (7) nebo *extrémně důležitější* (9)  \n   - Pokud je A méně důležité než B, vybírejte **„méně důležité než…“** varianty (např. 1/3, 1/5 atd.).\n\n3. **Váhy a kontrola konzistence**  \n   - Aplikace automaticky přepočítá výsledné váhy **každého kritéria**.  \n   - Současně ověří tzv. **Konzistenci (Consistency Ratio, CR)**. Pokud CR přesáhne doporučenou mez (0.1), můžete zvážit **úpravu** některých porovnání, abyste zajistili **logickou jednotnost** hodnocení.\n\n💡 **Tip**:   Pokud si nejste jisti, volte **střední** či **menší extrémy** (3, 5) namísto 9. Příliš mnoho velmi vysokých hodnot může vést k vysoké nekonzistenci.  Až dokončíte všechna párová porovnání, můžete zobrazit výsledné **váhy kritérií** a **zkontrolovat CR**.\n"
-    type: RichText
-  - layout_properties: {grid_position: 'IOANJE,JUUCNG'}
-    name: spacer_7
-    properties: {height: 32}
-    type: Spacer
-  - layout_properties: {grid_position: 'KVGEBF,YJCRQK'}
-    name: column_panel_ahp_matice
-    properties:
-      spacing:
-        padding: [null, null, null, '40']
-    type: ColumnPanel
-  - layout_properties: {grid_position: 'QFMKPK,CUGAJL'}
-    name: spacer_8
-    properties: {height: 32}
-    type: Spacer
-  - event_bindings: {click: button_spocitat_ahp_click}
-    layout_properties: {grid_position: 'PZTPXQ,YQFXOB'}
-    name: button_spocitat_ahp
-    properties: {align: right, role: primary-color, text: Spočítat váhy}
-    type: Button
-  - layout_properties: {grid_position: 'ZOKYII,UZLAKY'}
-    name: rich_text_ahp_vahy
-    properties:
-      spacing:
-        padding: [null, '40', null, '40']
-      visible: false
-    type: RichText
-  - layout_properties: {grid_position: 'FCWCKC,IHWKCZ'}
-    name: label_chyba_ahp
-    properties: {align: center, bold: true, foreground: 'theme:Secondary 700', icon: 'fa:exclamation-circle', text: CHYBOVÁ HLÁŠKA, visible: false}
-    type: Label
-  - layout_properties: {grid_position: 'PJNMGK,VGKTRD'}
-    name: spacer_9
-    properties: {height: 32}
-    type: Spacer
-  - event_bindings: {click: button_zrusit_click}
-    layout_properties: {grid_position: 'WMXXVW,YDGVAG'}
-    name: button_zrusit_ahp
-    properties: {align: left, icon: 'fa:close', role: primary-color, text: Zrušit}
-    type: Button
-  - event_bindings: {click: button_zpet_ahp_click}
-    layout_properties: {grid_position: 'WMXXVW,WXCPIT'}
-    name: button_zpet_ahp
-    properties: {align: right, icon: 'fa:arrow-left', role: primary-color, text: Zpět}
-    type: Button
-  - event_bindings: {click: button_dalsi_ahp_click}
-    layout_properties: {grid_position: 'WMXXVW,HFMVFD'}
-    name: button_dalsi_ahp
-    properties: {align: right, icon: 'fa:arrow-right', icon_align: right, role: primary-color, text: Další krok}
-    type: Button
-  layout_properties: {grid_position: 'YNZEPT,WGJQBF'}
-  name: card_ahp
-  properties: {col_widths: '{"YDGVAG":30,"WXCPIT":15,"HFMVFD":15}', role: card}
   type: ColumnPanel
 - components:
   - layout_properties: {grid_position: 'QWNITA,CFPCBX'}

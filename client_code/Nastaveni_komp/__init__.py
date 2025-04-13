@@ -46,8 +46,9 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
           # Výchozí - manuální
           self.radio_button_manual.selected = True
         
-        # Debug výpis aktuálně nastavených hodnot
-        Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}, stanoveni_vah={stanoveni_vah}")
+          # Debug výpis aktuálně nastavených hodnot
+          Utils.zapsat_info(f"Nastavené hodnoty ve formuláři: souhlasu={self.text_box_index_souhlasu.text}, nesouhlasu={self.text_box_index_nesouhlasu.text}, stanoveni_vah={stanoveni_vah}")
+          self.radio_button_manual.selected = True        
       else:
         # Nastavení výchozích hodnot
         self.text_box_index_souhlasu.text = '0.7'
@@ -91,16 +92,27 @@ class Nastaveni_komp(Nastaveni_kompTemplate):
             stanoveni_vah = 'ahp'
         elif self.radio_button_entropie.selected:
             stanoveni_vah = 'entropy'
-        
-        # Debug výpis
-        Utils.zapsat_info(f"Ukládám metodu stanovení vah: {stanoveni_vah}")
       
         # Uložení nastavení
-        nastaveni = {
-            'electre_index_souhlasu': index_souhlasu,
-            'electre_index_nesouhlasu': index_nesouhlasu,
-            'stanoveni_vah': stanoveni_vah
-        }
+          
+        # Zjištění zvolené metody stanovení vah
+        if self.radio_button_manual.selected:
+          stanoveni_vah = 'manual'
+        elif self.radio_button_rank.selected:
+          stanoveni_vah = 'rank'
+        elif self.radio_button_ahp.selected:
+          stanoveni_vah = 'ahp'
+        elif self.radio_button_entropie.selected:
+          stanoveni_vah = 'entropy'
+        else:
+          stanoveni_vah = 'manual'  # Výchozí hodnota
+        
+      # Uložení nastavení
+        nastaveni = {     
+          'electre_index_souhlasu': index_souhlasu,
+          'electre_index_nesouhlasu': index_nesouhlasu,
+          'stanoveni_vah': stanoveni_vah
+          }
         
         # Serverové volání pro uložení
         uspech = anvil.server.call('uloz_uzivatelske_nastaveni', nastaveni)
