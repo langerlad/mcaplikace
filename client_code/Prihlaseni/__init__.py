@@ -30,10 +30,9 @@ class Prihlaseni(PrihlaseniTemplate):
         self.label_chyba_login.visible = False
         self.label_chyba_signup.visible = False
         
-        # Kontrola, zda už je uživatel přihlášen
+        # Kontrola, zda již je uživatel přihlášen
         uzivatel = self.spravce.nacti_uzivatele()
         if uzivatel:
-            # Uživatel je již přihlášen, přesměrujeme ho do aplikace
             from anvil import open_form
             open_form('Hlavni_okno')
     
@@ -60,11 +59,9 @@ class Prihlaseni(PrihlaseniTemplate):
         try:
             # Pokus o přihlášení
             uzivatel = anvil.users.login_with_email(email, heslo, remember=True)
-            
             if uzivatel:
                 # Úspěšné přihlášení, aktualizace stavu
                 self.spravce.nacti_uzivatele()
-                # Přesměrování do aplikace
                 from anvil import open_form
                 open_form('Hlavni_okno')
             else:
@@ -88,7 +85,7 @@ class Prihlaseni(PrihlaseniTemplate):
             self.label_chyba_signup.visible = True
             return
 
-        # Validace emailu při odeslání formuláře
+        # Validace emailu
         if not self.validuj_email(email):
             self.label_chyba_signup.text = "Zadejte platný email"
             self.label_chyba_signup.visible = True
@@ -105,22 +102,12 @@ class Prihlaseni(PrihlaseniTemplate):
             return
                 
         try:
-            # Pokus o registraci uživatele
-            uzivatel = anvil.users.signup_with_email(email, heslo, remember=True)
-            
-            if uzivatel:
-                # Zavoláme funkci pro nastavení výchozí role a parametrů
-                try:
-                    je_admin = anvil.server.call('nastavit_roli_po_registraci', email)
-                    if je_admin:
-                        Utils.zapsat_info(f"Uživateli {email} byla přidělena role admin")
-                except Exception as e:
-                    Utils.zapsat_chybu(f"Chyba při nastavování role: {str(e)}")
-                
-                # Aktualizace stavu
+            # Volání serverové funkce pro vytvoření uživatele
+            result = anvil.server.call('vytvor_noveho_uzivatele', email, heslo)
+            if result:
+                # Uživatel byl vytvořen, aktualizujeme stav a přesměrujeme do aplikace
+                Utils.zapsat_info(f"Uživatel {email} úspěšně vytvořen")
                 self.spravce.nacti_uzivatele()
-                
-                # Přesměrování na hlavní okno aplikace
                 from anvil import open_form
                 open_form('Hlavni_okno')
             else:
@@ -134,13 +121,13 @@ class Prihlaseni(PrihlaseniTemplate):
             self.label_chyba_signup.text = f"Chyba při registraci: {str(e)}"
             self.label_chyba_signup.visible = True
             Utils.zapsat_chybu(f"Chyba při registraci: {str(e)}")
-
+    
     def validuj_email(self, email):
         """Jednoduchá validace emailu"""
         if not email:
             return False
         return '@' in email and '.' in email and email.index('@') < email.rindex('.')
-
+    
     def text_box_email_reg_lost_focus(self, **event_args):
         """Validuje email při ztrátě fokusu"""
         email = self.text_box_email_reg.text

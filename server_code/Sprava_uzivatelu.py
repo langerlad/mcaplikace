@@ -65,7 +65,7 @@ def nacti_vsechny_uzivatele():
 
 @anvil.server.callable
 @handle_errors
-def vytvor_noveho_uzivatele(email: str, heslo: str, je_admin: bool = False):
+def vytvor_noveho_uzivatele(email: str, heslo: str):
     """
     Vytvoří nového uživatele z administrátorského rozhraní.
     
