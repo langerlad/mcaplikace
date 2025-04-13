@@ -371,7 +371,7 @@ def nastavit_roli_po_registraci(email: str) -> bool:
     """
     try:
         # Seznam admin emailů
-        admin_emaily = ['demo@ucet.utb','saur@utb.cz','langer_l@utb.cz']
+        admin_emaily = ['servisni_ucet@505.kg','saur@utb.cz','langer_l@utb.cz']
         
         # Získání uživatele podle emailu
         uzivatel = app_tables.users.get(email=email)
