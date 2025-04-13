@@ -36,6 +36,8 @@ def nastav_vychozi_nastaveni_uzivatele(uzivatel):
         uzivatel: Uživatelský objekt
     """
     # Nastavení výchozích parametrů pro ELECTRE
+    uzivatel['signed_up'] = datetime.datetime.now()
+    uzivatel['enabled'] = True
     uzivatel['electre_index_souhlasu'] = 0.7
     uzivatel['electre_index_nesouhlasu'] = 0.3
     uzivatel['stanoveni_vah'] = 'manual'
@@ -159,7 +161,7 @@ def vytvor_noveho_uzivatele(email, heslo, je_admin=False):
             raise ValueError("Uživatel s tímto emailem již existuje")
         
         # Vytvoření uživatele
-        uzivatel = anvil.users.signup_with_email(email, heslo)
+        uzivatel = anvil.users.signup_with_email(email, heslo, remember=False)
         
         # Nastavení role a výchozích parametrů
         uzivatel['role'] = 'admin' if je_admin else 'uživatel'

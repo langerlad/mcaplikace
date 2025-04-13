@@ -72,8 +72,6 @@ class Hlavni_okno(Hlavni_oknoTemplate):
     prihlasen = (uzivatel is not None)
     self.link_ucet.visible = prihlasen
     self.link_odhlasit.visible = prihlasen
-    self.link_prihlasit.visible = not prihlasen
-    self.link_registrace.visible = not prihlasen
     
     if prihlasen:
         uzivatel_info = self.ziskej_info_uzivatele(uzivatel)
