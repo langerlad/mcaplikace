@@ -98,11 +98,12 @@ class Administrace_komp(Administrace_kompTemplate):
         
             self.repeating_panel_analyzy.items = [
                 {
-                    'id': a['id'],  # UPDATED: Changed a.get_id() to a['id']
+                    'id': a.get_id(),
                     'nazev': a['nazev'],
-                    'popis': a['popis'],
+                    'popis': a['data_json'].get('popis_analyzy', ''),  # Správný přístup k poli popis_analyzy
                     'datum_vytvoreni': a['datum_vytvoreni'].strftime("%d.%m.%Y") if a['datum_vytvoreni'] else '',
-                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else ''
+                    'datum_upravy': a['datum_upravy'].strftime("%d.%m.%Y") if a['datum_upravy'] else '',
+                    'zvolena_metoda': a['data_json'].get('zvolena_metoda', '')  # Pokud potřebujete i zvolenou metodu
                 }
                 for a in analyzy
             ]
@@ -189,48 +190,3 @@ class Administrace_komp(Administrace_kompTemplate):
                     pridej_form.label_chyba.text = str(e)
                     pridej_form.label_chyba.visible = True
 
-    # def button_pridat_uzivatele_click(self, **event_args):
-    #     """Handler pro tlačítko přidání nového uživatele."""     
-    #     pridej_form = Pridej_uzivatele_form()
-        
-    #     while True:
-    #         save_clicked = alert(
-    #             content=pridej_form,
-    #             title="Přidat uživatele",
-    #             large=True,
-    #             dismissible=True,
-    #             buttons=[("Vytvořit", True), ("Zrušit", False)]
-    #         )
-            
-    #         if not save_clicked:
-    #             break
-                
-    #         user_data = pridej_form.ziskej_data_uzivatele()
-    #         if user_data:
-    #             try:
-    #                 Utils.zapsat_info(f"Vytvářím nového uživatele: {user_data['email']}")
-                    
-    #                 # Zavolání serverové funkce
-    #                 vysledek = anvil.server.call(
-    #                     'vytvor_noveho_uzivatele', 
-    #                     user_data['email'], 
-    #                     user_data['heslo'], 
-    #                     user_data['je_admin']
-    #                 )
-                    
-    #                 if vysledek:
-    #                     # Obnovíme seznam uživatelů
-    #                     self.nacti_uzivatele()
-                        
-    #                     # Obnovíme stav uživatele, abychom zajistili, že vytvoření uživatele
-    #                     # neovlivnilo přihlášeného admin uživatele
-    #                     self.spravce.nacti_uzivatele()
-                        
-    #                     # Informujeme administrátora
-    #                     alert(f"Uživatel {user_data['email']} byl úspěšně vytvořen.")
-    #                     break
-                        
-    #             except Exception as e:
-    #                 Utils.zapsat_chybu(f"Chyba při vytváření uživatele: {str(e)}")
-    #                 pridej_form.label_chyba.text = str(e)
-    #                 pridej_form.label_chyba.visible = True

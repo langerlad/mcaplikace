@@ -40,7 +40,7 @@ components:
 - event_bindings: {click: link_zmena_hesla_click}
   layout_properties: {column: GPRGRE}
   name: link_zmena_hesla
-  properties: {icon: 'fa:unlock-alt', tooltip: Změnit heslo}
+  properties: {icon: 'fa:unlock-alt', tooltip: Odešle email pro reset hesla}
   type: Link
 container: {type: DataRowPanel}
 is_package: true

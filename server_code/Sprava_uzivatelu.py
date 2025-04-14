@@ -1,3 +1,4 @@
+import anvil.email
 # -------------------------------------------------------
 # Modul: Sprava_uzivatelu
 #
@@ -338,6 +339,39 @@ def zmenit_roli_uzivatele(email, nova_role):
         print(f"Chyba při změně role uživatele: {str(e)}")
         logging.error(f"Chyba při změně role uživatele {email}: {str(e)}")
         raise ValueError(f"Nepodařilo se změnit roli uživatele: {str(e)}")
+
+@anvil.server.callable
+@handle_errors
+def zmen_heslo_uzivatele(email):
+    """
+    Odešle uživateli email s odkazem pro reset hesla.
+    
+    Args:
+        email: Email uživatele
+        
+    Returns:
+        bool: True pokud byl email úspěšně odeslán
+    """
+    try:
+        # Kontrola, zda je aktuální uživatel admin
+        aktualni_uzivatel = anvil.users.get_user()
+        if not aktualni_uzivatel or aktualni_uzivatel['role'] != 'admin':
+            raise ValueError("Pouze administrátor může měnit hesla uživatelů")
+        
+        # Validace emailu
+        uzivatel = app_tables.users.get(email=email)
+        if not uzivatel:
+            raise ValueError(f"Uživatel s emailem {email} neexistuje")
+        
+        # Odešle odkaz pro reset hesla
+        anvil.users.send_password_reset_email(email)
+        
+        zapsat_info(f"Odeslán odkaz pro reset hesla uživateli {email}")
+        return True
+        
+    except Exception as e:
+        zapsat_chybu(f"Chyba při odesílání odkazu pro reset hesla: {str(e)}")
+        raise ValueError(f"Chyba při odesílání odkazu pro reset hesla: {str(e)}")
 
 # =============== Správa uživatelských účtů ===============
 

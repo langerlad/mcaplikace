@@ -89,5 +89,21 @@ class Uzivatele_Row(Uzivatele_RowTemplate):
             Utils.zapsat_info(f"Chyba, vracím checkbox na: {self.check_box_admin.checked}")
 
     def link_zmena_hesla_click(self, **event_args):
-      """This method is called when the link is clicked"""
-      pass
+        """Handler pro klik na změnu hesla uživatele."""
+        try:
+            email = self.item['email']
+            
+            # Potvrzení od uživatele
+            if Utils.zobraz_potvrzovaci_dialog(f"Opravdu chcete odeslat odkaz pro reset hesla uživateli {email}?"):
+                Utils.zapsat_info(f"Odesílání odkazu pro reset hesla uživateli: {email}")
+                
+                # Zavolání serverové funkce pro odeslání odkazu pro reset hesla
+                result = anvil.server.call('zmen_heslo_uzivatele', email)
+                
+                if result:                   
+                    # Informujeme administrátora
+                    alert(f"Odkaz pro reset hesla byl úspěšně odeslán uživateli {email}.")
+                    
+        except Exception as e:
+            Utils.zapsat_chybu(f"Chyba při odesílání odkazu pro reset hesla: {str(e)}")
+            alert(f"Chyba při odesílání odkazu pro reset hesla: {str(e)}")
