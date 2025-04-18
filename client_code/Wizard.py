@@ -1,20 +1,26 @@
-# client_code/Wizard.py
-
+# -------------------------------------------------------
+# Modul: Wizard
+# Obsahuje sdílené funkce pro všechny varianty průvodce vytvářením analýzy
+# -------------------------------------------------------
 from anvil import *
 import anvil.server
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
-from . import Navigace, Konstanty, Spravce_stavu, Utils
-
+import Utils, Konstanty, Spravce_stavu, Navigace
 
 # ========================
 # SPOLEČNÉ FUNKCE
 # ========================
 
 def load_existing_analyza(self):
-    """Načte existující analýzu pro editaci."""
+    """
+    Načte existující analýzu pro editaci.
+    
+    Args:
+        self: Instance formuláře průvodce
+    """
     try:
         # Pokud nemáme ID analýzy ze správce stavu, zkusíme ho získat ze serveru
         if not self.analyza_id:
@@ -76,7 +82,15 @@ def load_existing_analyza(self):
         Navigace.go("domu")
 
 def validace_vstupu(self):
-    """Validuje vstupní data v prvním kroku."""
+    """
+    Validuje vstupní data v prvním kroku.
+    
+    Args:
+        self: Instance formuláře průvodce
+        
+    Returns:
+        str or None: Chybová zpráva nebo None, pokud data jsou validní
+    """
     if not self.text_box_nazev.text:
         return Konstanty.ZPRAVY_CHYB["NAZEV_PRAZDNY"]
     if len(self.text_box_nazev.text) > Konstanty.VALIDACE["MAX_DELKA_NAZEV"]:
@@ -84,7 +98,13 @@ def validace_vstupu(self):
     return None
 
 def button_dalsi_click(self, **event_args):
-    """Zpracuje klik na tlačítko Další v prvním kroku."""
+    """
+    Zpracuje klik na tlačítko Další v prvním kroku.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     self.label_chyba.visible = False
     chyba = validace_vstupu(self)
     if chyba:
@@ -109,29 +129,94 @@ def button_dalsi_click(self, **event_args):
     self.card_krok_1.visible = False
     self.card_krok_2.visible = True
 
+def validace_pridej_kriterium(self):
+    """
+    Validuje data pro přidání kritéria.
+    
+    Args:
+        self: Instance formuláře průvodce
+        
+    Returns:
+        str or None: Chybová zpráva nebo None, pokud data jsou validní
+    """
+    if not self.text_box_nazev_kriteria.text:
+        return "Zadejte název kritéria."
+    if not self.drop_down_typ.selected_value:
+        return "Vyberte typ kritéria."
+    return None
+
 def nacti_kriteria(self, **event_args):
-    """Načte kritéria ze správce stavu a zobrazí je v repeating panelu."""
+    """
+    Načte kritéria ze správce stavu a zobrazí je v repeating panelu.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     # Získáme kritéria ve správném formátu pro UI
     kriteria = []
     for nazev, data in self.spravce.ziskej_kriteria().items():
-        kriteria.append(
-            {
+        # Zjistíme, zda formulář počítá s explicitními vahami
+        if hasattr(self, 'text_box_vaha') and self.text_box_vaha.visible:
+            # Pro wizard s explicitními vahami (Wizard_komp)
+            vaha_hodnota = float(data.get("vaha", 0))
+            # Zaokrouhlíme na 5 desetinných míst
+            vaha_text = f"{vaha_hodnota:.5f}"
+            kriteria.append({
+                "nazev_kriteria": nazev,
+                "typ": data.get("typ", "max"),
+                "vaha": vaha_text
+            })
+        else:
+            # Pro ostatní wizardy (AHP, entropie)
+            kriteria.append({
                 "nazev_kriteria": nazev,
                 "typ": data.get("typ", "max"),
                 "vaha": data.get("vaha", 0),
-            }
-        )
-
+            })
+    
     self.repeating_panel_kriteria.items = kriteria
 
+def kontrola_souctu_vah(self):
+    """
+    Kontroluje, zda součet všech vah kritérií je roven 1.
+    
+    Args:
+        self: Instance formuláře průvodce
+        
+    Returns:
+        tuple: (bool, str) - (True, None) pokud součet je OK, jinak (False, chybová zpráva)
+    """
+    kriteria = self.spravce.ziskej_kriteria()
+    soucet_vah = sum(float(k_data["vaha"]) for k_data in kriteria.values())
+    soucet_vah = round(soucet_vah, 3)  # Pro jistotu zaokrouhlení
+    
+    if abs(soucet_vah - 1.0) > Konstanty.VALIDACE["TOLERANCE_SOUCTU_VAH"]:
+        return False, Konstanty.ZPRAVY_CHYB["SUMA_VAH"].format(soucet_vah)
+    return True, None
+
 def validace_pridej_variantu(self):
-    """Validuje data pro přidání varianty."""
+    """
+    Validuje data pro přidání varianty.
+    
+    Args:
+        self: Instance formuláře průvodce
+        
+    Returns:
+        str or None: Chybová zpráva nebo None, pokud data jsou validní
+    """
     if not self.text_box_nazev_varianty.text:
         return "Zadejte název varianty."
     return None
 
 def button_pridej_variantu_click(self, **event_args):
-    """Zpracuje přidání nové varianty."""
+    """
+    Zpracuje přidání nové varianty.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     self.label_chyba_3.visible = False
     chyba_3 = validace_pridej_variantu(self)
     if chyba_3:
@@ -153,18 +238,31 @@ def button_pridej_variantu_click(self, **event_args):
     self.nacti_varianty()
 
 def nacti_varianty(self, **event_args):
-    """Načte varianty ze správce stavu a zobrazí je v repeating panelu."""
+    """
+    Načte varianty ze správce stavu a zobrazí je v repeating panelu.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     # Získáme varianty ve správném formátu pro UI
     varianty = []
     for nazev, data in self.spravce.ziskej_varianty().items():
-        varianty.append(
-            {"nazev_varianty": nazev, "popis_varianty": data.get("popis_varianty", "")}
-        )
-
+        varianty.append({
+            "nazev_varianty": nazev,
+            "popis_varianty": data.get("popis_varianty", "")
+        })
+    
     self.repeating_panel_varianty.items = varianty
 
 def button_dalsi_3_click(self, **event_args):
-    """Zpracuje přechod z kroku 3 (varianty) do kroku 4 (matice hodnot)."""
+    """
+    Zpracuje přechod z kroku 3 (varianty) do kroku 4 (matice hodnot).
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     varianty = self.spravce.ziskej_varianty()
     if not varianty:
         self.label_chyba_3.text = Konstanty.ZPRAVY_CHYB["MIN_VARIANTY"]
@@ -177,7 +275,13 @@ def button_dalsi_3_click(self, **event_args):
     zobraz_krok_4(self)
 
 def zobraz_krok_4(self, **event_args):
-    """Naplní RepeatingPanel (Matice_var) daty pro zadání matice hodnot."""
+    """
+    Naplní RepeatingPanel (Matice_var) daty pro zadání matice hodnot.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     varianty = self.spravce.ziskej_varianty()
     kriteria = self.spravce.ziskej_kriteria()
 
@@ -189,22 +293,30 @@ def zobraz_krok_4(self, **event_args):
             # Získáme hodnotu pro toto kritérium a variantu
             hodnota = var_data.get(nazev_krit, "")
 
-            kriteria_pro_variantu.append(
-                {"nazev_kriteria": nazev_krit, "id_kriteria": nazev_krit, "hodnota": hodnota}
-            )
+            kriteria_pro_variantu.append({
+                "nazev_kriteria": nazev_krit,
+                "id_kriteria": nazev_krit,
+                "hodnota": hodnota
+            })
 
-        matice_data.append(
-            {
-                "nazev_varianty": nazev_var,
-                "id_varianty": nazev_var,
-                "kriteria": kriteria_pro_variantu,
-            }
-        )
+        matice_data.append({
+            "nazev_varianty": nazev_var,
+            "id_varianty": nazev_var,
+            "kriteria": kriteria_pro_variantu,
+        })
 
     self.Matice_var.items = matice_data
 
 def validuj_matici(self):
-    """Validuje a ukládá hodnoty matice do správce stavu."""
+    """
+    Validuje a ukládá hodnoty matice do správce stavu.
+    
+    Args:
+        self: Instance formuláře průvodce
+        
+    Returns:
+        bool: True, pokud všechna data jsou validní, jinak False
+    """
     errors = []
 
     for var_row in self.Matice_var.get_components():
@@ -242,22 +354,50 @@ def validuj_matici(self):
     return True
 
 def button_zpet_2_click(self, **event_args):
-    # Při návratu z kritérií na první krok
+    """
+    Zpracuje přechod zpět z kroku 2 (kritéria) na krok 1 (základní údaje).
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     self.card_krok_1.visible = True
     self.card_krok_2.visible = False
 
 def button_zpet_3_click(self, **event_args):
-    # Při návratu z variant na kritéria
-    self.card_krok_2.visible = True
+    """
+    Zpracuje přechod zpět z kroku 3 (varianty) na krok 2 (kritéria).
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
+    # Kontrolujeme, jestli existuje AHP karta
+    if hasattr(self, 'card_ahp') and self.card_ahp:
+        self.card_ahp.visible = True
+    else:
+        self.card_krok_2.visible = True
     self.card_krok_3.visible = False
 
 def button_zpet_4_click(self, **event_args):
-    # Při návratu z matice na varianty
+    """
+    Zpracuje přechod zpět z kroku 4 (matice) na krok 3 (varianty).
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     self.card_krok_3.visible = True
     self.card_krok_4.visible = False
 
 def button_zrusit_click(self, **event_args):
-    """Zruší vytváření/úpravu analýzy."""
+    """
+    Zruší vytváření/úpravu analýzy.
+    
+    Args:
+        self: Instance formuláře průvodce
+        event_args: Argumenty události
+    """
     try:
         if self.mode == Konstanty.STAV_ANALYZY["NOVY"]:
             if Utils.zobraz_potvrzovaci_dialog(
