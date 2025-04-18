@@ -109,28 +109,6 @@ class Hlavni_okno(Hlavni_oknoTemplate):
         Utils.zapsat_chybu(f"Chyba při získávání informací o uživateli: {str(e)}")
         return None
   
-  # # Vytvoření účtu / přihlášení    
-  # def link_registrace_click(self, **event_args):
-  #   """
-  #   Zpracuje registraci nového uživatele.
-  #   """
-  #   uzivatel = anvil.users.signup_with_form(allow_cancel=True)
-    
-  #   if uzivatel:
-  #       # Zavolání serverové funkce pro kontrolu a přidělení admin role
-  #       try:
-  #           je_admin = anvil.server.call('nastavit_roli_po_registraci', uzivatel['email'])
-  #           if je_admin:
-  #               Utils.zapsat_info(f"Uživateli {uzivatel['email']} byla přidělena role admin")
-  #       except Exception as e:
-  #           Utils.zapsat_chybu(f"Chyba při nastavování role: {str(e)}")
-        
-  #       # Aktualizace stavu
-  #       self.spravce.nacti_uzivatele()
-        
-  #   self.nastav_ucet(uzivatel)
-  #   Navigace.go('domu')
-
   def link_odhlasit_click(self, **event_args):
     anvil.users.logout()  # Odhlášení na serveru
     self.spravce.odhlasit()  # Vyčištění stavu
@@ -143,10 +121,3 @@ class Hlavni_okno(Hlavni_oknoTemplate):
         open_form(Prihlaseni.Prihlaseni())
     except Exception as e:
         Utils.zapsat_chybu(f"Chyba při přesměrování na přihlašovací stránku: {str(e)}")
-
-  # def link_prihlasit_click(self, **event_args):
-  #   uzivatel = anvil.users.login_with_form(allow_cancel=True)
-  #   if uzivatel:
-  #       self.spravce.nacti_uzivatele()  # Aktualizace stavu
-  #   self.nastav_ucet(uzivatel)
-  #   Navigace.go('domu')

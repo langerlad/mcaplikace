@@ -281,29 +281,6 @@ class Wizard_entropie_komp(Wizard_entropie_kompTemplate):
 
     self.Matice_var.items = matice_data
 
-  # def button_ulozit_4_click(self, **event_args):
-  #   """Uloží kompletní analýzu na server, pokud je matice validní."""
-  #   if not self.validuj_matici():
-  #     return
-
-  #   try:
-  #     # Uložení analýzy na server přes správce stavu
-  #     if self.spravce.uloz_analyzu_na_server():
-  #       self.mode = Konstanty.STAV_ANALYZY["ULOZENY"]
-  #       alert(Konstanty.ZPRAVY_CHYB["ANALYZA_ULOZENA"])
-
-  #       # Vyčistíme data ve správci stavu
-  #       self.spravce.vycisti_data_analyzy()
-
-  #       Navigace.go("domu")
-  #     else:
-  #       raise ValueError("Nepodařilo se uložit analýzu.")
-  #   except Exception as e:
-  #     error_msg = f"Chyba při ukládání: {str(e)}"
-  #     Utils.zapsat_chybu(error_msg)
-  #     self.label_chyba_4.text = error_msg
-  #     self.label_chyba_4.visible = True
-
   def validuj_matici(self):
     """Validuje a ukládá hodnoty matice do správce stavu."""
     errors = []

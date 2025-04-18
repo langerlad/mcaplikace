@@ -10,7 +10,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.users
-from .. import Navigace, Konstanty, Spravce_stavu, Utils
+from .. import Navigace, Konstanty, Spravce_stavu, Utils, Wizard
 
 
 class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
@@ -38,6 +38,39 @@ class Wizard_ahp_komp(Wizard_ahp_kompTemplate):
     if self.mode == Konstanty.STAV_ANALYZY["UPRAVA"]:
       self.load_existing_analyza()
 
+  # Delegování na sdílené metody
+  def button_dalsi_click(self, **event_args):
+      Wizard.button_dalsi_click(self, **event_args)
+  
+  def nacti_kriteria(self, **event_args):
+      Wizard.nacti_kriteria(self, **event_args)
+  
+  def button_pridej_variantu_click(self, **event_args):
+      Wizard.button_pridej_variantu_click(self, **event_args)
+  
+  def nacti_varianty(self, **event_args):
+      Wizard.nacti_varianty(self, **event_args)
+  
+  def button_dalsi_3_click(self, **event_args):
+      Wizard.button_dalsi_3_click(self, **event_args)
+  
+  def validuj_matici(self):
+      return Wizard.validuj_matici(self)
+  
+  def button_zpet_2_click(self, **event_args):
+      Wizard.button_zpet_2_click(self, **event_args)
+  
+  def button_zpet_3_click(self, **event_args):
+      Wizard.button_zpet_3_click(self, **event_args)
+  
+  def button_zpet_4_click(self, **event_args):
+      Wizard.button_zpet_4_click(self, **event_args)
+  
+  def button_zrusit_click(self, **event_args):
+      Wizard.button_zrusit_click(self, **event_args)
+    
+  # Metody specifické pro tento wizard (nepoužívají sdílené funkce)
+  
   def load_existing_analyza(self):
     """Načte existující analýzu pro editaci."""
     try:
