@@ -55,6 +55,31 @@ components:
     name: spacer_2
     properties: {height: 32}
     type: Spacer
+  - layout_properties: {grid_position: 'ZNHDXL,LTATES'}
+    name: rich_text_1
+    properties:
+      content: |-
+        #### ℹ️ Instrukce pro zadávání kritérií
+
+        Kritéria jsou parametry, podle kterých budete hodnotit jednotlivé varianty.
+
+        **Postup:**
+        1. **Název kritéria** - Zadejte jedinečný název pro hodnocené kritérium (např. "Cena", "Výkon", "Spolehlivost")
+        2. **Typ** - Určete, zda je kritérium:
+           - **MAX** (maximalizační) - vyšší hodnota je lepší (např. výkon, užitek)
+           - **MIN** (minimalizační) - nižší hodnota je lepší (např. cena, spotřeba)
+        3. **Váha** - Zadejte váhu kritéria (důležitost) v rozmezí 0-1
+           - Součet vah všech kritérií musí být roven 1
+           - Čím vyšší váha, tím větší důležitost kritéria
+
+
+
+        💡 **Tip:** Váhy můžete zadávat ve formátu desetinných čísel (0.4) nebo zlomků (2/5).
+    type: RichText
+  - layout_properties: {grid_position: 'OXQKHM,AAZVRH'}
+    name: spacer_7
+    properties: {height: 32}
+    type: Spacer
   - data_bindings: []
     layout_properties: {grid_position: 'LHFDTW,OHODQT'}
     name: text_box_nazev_kriteria

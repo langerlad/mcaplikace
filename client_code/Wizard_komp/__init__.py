@@ -83,13 +83,36 @@ class Wizard_komp(Wizard_kompTemplate):
     # Specifická validace pro Wizard_komp (váhy)
     if not self.text_box_vaha.text:
       return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA']
+      
     try:    
-      vaha_text = self.text_box_vaha.text.replace(',', '.')
-      self.vaha = float(vaha_text)
+      vaha_text = self.text_box_vaha.text.strip()
+      
+      # Pokud text obsahuje lomítko, zpracujeme ho jako zlomek
+      if '/' in vaha_text:
+        try:
+          citatel, jmenovatel = vaha_text.split('/')
+          citatel = float(citatel.strip())
+          jmenovatel = float(jmenovatel.strip())
+          
+          # Ošetření dělení nulou
+          if jmenovatel == 0:
+            return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA'] + " (dělení nulou)"
+            
+          self.vaha = citatel / jmenovatel
+        except ValueError:
+          return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA'] + " (neplatný formát zlomku)"
+      else:
+        # Jinak zpracujeme jako desetinné číslo
+        vaha_text = vaha_text.replace(',', '.')
+        self.vaha = float(vaha_text)
+        
+      # Ověření rozsahu váhy (0 až 1)
       if not (0 <= self.vaha <= 1):
-        return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA']
+        return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA'] + f" (hodnota {self.vaha:.4f} není v rozsahu 0-1)"
+        
     except ValueError:
-      return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA']
+      return Konstanty.ZPRAVY_CHYB['NEPLATNA_VAHA'] + " (nelze převést na číslo)"
+      
     return None
 
   def nacti_kriteria(self, **event_args):

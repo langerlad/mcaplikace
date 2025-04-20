@@ -55,6 +55,28 @@ components:
     name: spacer_2
     properties: {height: 32}
     type: Spacer
+  - layout_properties: {grid_position: 'LOHGWG,TUODOP'}
+    name: rich_text_1
+    properties:
+      content: |-
+        #### ℹ️ Instrukce pro zadávání kritérií (metoda entropie)
+
+        Kritéria jsou parametry, podle kterých budete hodnotit jednotlivé varianty. V metodě entropie budou jejich váhy automaticky vypočítány na základě rozptylu hodnot v datech.
+
+        **Postup:**
+        1. **Název kritéria** - Zadejte jedinečný název pro hodnocené kritérium (např. "Cena", "Výkon", "Spolehlivost")
+        2. **Typ** - Určete, zda je kritérium:
+           - **MAX** (maximalizační) - vyšší hodnota je lepší (např. výkon, užitek)
+           - **MIN** (minimalizační) - nižší hodnota je lepší (např. cena, spotřeba)
+
+
+
+        💡 **Tip:** Metoda entropie přidělí větší váhu kritériím, ve kterých se hodnoty více liší. Pro korektní výpočet je důležité, aby data měla dostatečnou variabilitu.
+    type: RichText
+  - layout_properties: {grid_position: 'DUWWCE,TGDZJI'}
+    name: spacer_7
+    properties: {height: 32}
+    type: Spacer
   - data_bindings: []
     layout_properties: {grid_position: 'LHFDTW,OHODQT'}
     name: text_box_nazev_kriteria
