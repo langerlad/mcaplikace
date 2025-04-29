@@ -68,8 +68,8 @@ package_name: MCApp
 runtime_options:
   client_version: '3'
   server_persist: false
-  server_spec: {base: python310-standard}
-  server_spec_disabled: {base: python310-minimal, requirements: ''}
+  server_spec: null
+  server_spec_disabled: {base: python310-standard, requirements: XlsxWriter}
   server_version: python3-full
   version: 2
 secrets: null
