@@ -1,6 +1,11 @@
 components: []
 container:
-  properties: {html: ''}
+  properties:
+    html: |-
+      <center style="font-style:italic; color:#888; margin: 3em;">
+        (Insert your custom HTML here)
+      </center>
+      <div anvil-slot="default"></div>
   type: HtmlTemplate
 custom_component: true
 is_package: true
