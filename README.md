@@ -54,7 +54,7 @@ Aplikace je postavena na frameworku Anvil, proto budete potřebovat:
 
 1. **Naklonujte tento repozitář**:
    ```
-   git clone https://github.com/yourusername/mcapp.git
+   git clone https://github.com/langerlad/mcaplikace.git
    ```
 
 2. **Importujte aplikaci do svého Anvil účtu**:
