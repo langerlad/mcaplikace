@@ -54,7 +54,7 @@ Aplikace je postavena na frameworku Anvil, proto budete potřebovat:
 
 1. **Naklonujte tento repozitář**:
    ```
-   git clone https://github.com/langerlad/mcaplikace.git
+   git clone https://github.com/yourusername/mcapp.git
    ```
 
 2. **Importujte aplikaci do svého Anvil účtu**:
@@ -67,13 +67,11 @@ Aplikace je postavena na frameworku Anvil, proto budete potřebovat:
    - Vytvořte požadované tabulky (users, analyzy)
    - Nastavte vhodné datové typy a vztahy
 
-    ### Databázová struktura aplikace MCApp
+   #### Databázová struktura aplikace MCApp
 
 Aplikace MCApp používá relační databázový model s následujícími tabulkami:
 
-### Tabulka: `users`
-
-Tabulka obsahuje informace o uživatelích aplikace a jejich nastavení.
+Tabulka: `users` obsahuje informace o uživatelích aplikace a jejich nastavení.
 
 | Sloupec | Datový typ | Popis |
 |---------|------------|-------|
@@ -87,9 +85,7 @@ Tabulka obsahuje informace o uživatelích aplikace a jejich nastavení.
 | `electre_index_nesouhlasu` | Decimal | Parametr pro metodu ELECTRE (výchozí: 0.3) |
 | `stanoveni_vah` | Text | Preferovaná metoda stanovení vah ('manual', 'rank', 'ahp', 'entropie') |
 
-### Tabulka: `analyzy`
-
-Tabulka ukládá analýzy vytvořené uživateli.
+Tabulka: `analyzy` ukládá analýzy vytvořené uživateli.
 
 | Sloupec | Datový typ | Popis |
 |---------|------------|-------|
@@ -100,9 +96,7 @@ Tabulka ukládá analýzy vytvořené uživateli.
 | `datum_upravy` | DateTime | Datum a čas poslední úpravy analýzy |
 | `data_json` | JSON | Strukturovaná data analýzy v JSON formátu |
 
-#### Struktura pole `data_json`
-
-JSON pole obsahuje všechna data analýzy v následující struktuře:
+Struktura pole `data_json` obsahuje všechna data analýzy v následující struktuře:
 
 ```json
 {
@@ -136,23 +130,12 @@ JSON pole obsahuje všechna data analýzy v následující struktuře:
 }
 ```
 
-### Doporučené indexy
-
-Pro optimální výkon aplikace doporučujeme vytvořit následující indexy:
-
-| Tabulka | Sloupce | Typ indexu | Účel |
-|---------|---------|------------|------|
-| `users` | `email` | Unikátní | Rychlé vyhledávání uživatelů podle emailu |
-| `analyzy` | `uzivatel` | Standardní | Rychlé vyhledávání analýz konkrétního uživatele |
-| `analyzy` | `datum_vytvoreni` | Standardní | Řazení a filtrování analýz podle data |
-| `analyzy` | `datum_upravy` | Standardní | Řazení a filtrování analýz podle data úpravy |
-
-### Relace mezi tabulkami
+Relace mezi tabulkami
 
 - Tabulka `analyzy` obsahuje referenci na tabulku `users` prostřednictvím sloupce `uzivatel`
 - Relace mezi uživatelem a analýzami je typu 1:N (jeden uživatel může mít více analýz)
 
-### Diagram databázové struktury
+Diagram databázové struktury
 
 ```
 +----------------+       +-------------------+
@@ -169,27 +152,9 @@ Pro optimální výkon aplikace doporučujeme vytvořit následující indexy:
 +----------------+       +-------------------+
 ```
 
-### Správa databáze v Anvil
-
-Anvil poskytuje grafické rozhraní pro správu databázových tabulek. Pro přístup:
-
-1. Přihlaste se do Anvil Builder
-2. Otevřete projekt MCApp
-3. Klikněte na kartu "Data" v horní navigaci
-4. Zde můžete vytvářet, upravovat a prohlížet tabulky
-
-### Migrace a zálohování
-
-Pro zachování dat doporučujeme pravidelně:
-
-1. Vytvářet zálohy dat pomocí funkce "Export Data" v Anvil
-2. Dokumentovat změny schématu při aktualizacích aplikace
-3. Při větších změnách struktury databáze vytvořit migrační skripty
-
-
 4. **Spusťte aplikaci**:
    - Klikněte na tlačítko "Run" v editoru Anvil
-   - Nebo nasaďte na vlastní doménu
+   - Nebo nasaďte na vlastní doménu: Pro self-hosting na vlastním VPS (DigitalOcean, AWS, Linode apod.) použijte oficiální průvodce [Anvil App Server](https://anvil.works/docs/how-to/app-server/cloud-deployment-guides)
 
 ## Použití
 
@@ -237,12 +202,6 @@ Příspěvky jsou vítány! Neváhejte odeslat Pull Request.
 ## Licence
 
 Tento projekt je licencován pod licencí MIT - podrobnosti viz soubor LICENSE.
-
-## Poděkování
-
-- Založeno na etablovaných metodikách vícekriteriálního rozhodování
-- Inspirováno potřebou dostupných nástrojů pro analýzu rozhodování
-- Zvláštní poděkování patří přispěvatelům a výzkumné komunitě MCDA
 
 ## Kontakt
 
